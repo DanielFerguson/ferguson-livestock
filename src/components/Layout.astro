@@ -3,22 +3,145 @@ import "../styles/global.css";
 
 interface Props {
 	title: string;
+	description?: string;
+	image?: string;
+	canonicalUrl?: string;
 }
 
-const { title } = Astro.props;
+const { 
+	title, 
+	description = "Premium grass-fed Murray Grey beef boxes delivered direct from our family farm in Snake Valley, Victoria. Hormone-free, ethically raised cattle.",
+	image = "/og-image.jpg",
+	canonicalUrl
+} = Astro.props;
+
+const siteUrl = "https://fergusonlivestock.com.au";
+const fullImageUrl = image.startsWith('http') ? image : `${siteUrl}${image}`;
+const canonical = canonicalUrl || Astro.url.href;
 ---
 
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		
+		<!-- Primary Meta Tags -->
 		<title>{title}</title>
+		<meta name="title" content={title} />
+		<meta name="description" content={description} />
+		<link rel="canonical" href={canonical} />
+		
+		<!-- Favicon -->
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+		
+		<!-- Open Graph / Facebook -->
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content={canonical} />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:image" content={fullImageUrl} />
+		<meta property="og:site_name" content="Ferguson Livestock" />
+		<meta property="og:locale" content="en_AU" />
+		
+		<!-- Twitter -->
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:url" content={canonical} />
+		<meta name="twitter:title" content={title} />
+		<meta name="twitter:description" content={description} />
+		<meta name="twitter:image" content={fullImageUrl} />
+		
+		<!-- Additional SEO -->
+		<meta name="robots" content="index, follow" />
+		<meta name="author" content="Ferguson Livestock" />
+		<meta name="geo.region" content="AU-VIC" />
+		<meta name="geo.placename" content="Snake Valley" />
+		
+		<!-- Fonts with display swap for better LCP -->
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link
 			href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap"
 			rel="stylesheet"
 		/>
+		
+		<!-- JSON-LD Structured Data -->
+		<script type="application/ld+json" set:html={JSON.stringify({
+			"@context": "https://schema.org",
+			"@graph": [
+				{
+					"@type": "Organization",
+					"@id": `${siteUrl}/#organization`,
+					"name": "Ferguson Livestock",
+					"url": siteUrl,
+					"logo": {
+						"@type": "ImageObject",
+						"url": `${siteUrl}/favicon.svg`
+					},
+					"sameAs": []
+				},
+				{
+					"@type": "LocalBusiness",
+					"@id": `${siteUrl}/#localbusiness`,
+					"name": "Ferguson Livestock",
+					"description": "Family-owned Murray Grey cattle farm offering premium grass-fed beef boxes direct to consumers.",
+					"url": siteUrl,
+					"telephone": "+61427458706",
+					"address": {
+						"@type": "PostalAddress",
+						"addressLocality": "Snake Valley",
+						"addressRegion": "VIC",
+						"postalCode": "3351",
+						"addressCountry": "AU"
+					},
+					"geo": {
+						"@type": "GeoCoordinates",
+						"latitude": -37.5833,
+						"longitude": 143.6833
+					},
+					"areaServed": {
+						"@type": "GeoCircle",
+						"geoMidpoint": {
+							"@type": "GeoCoordinates",
+							"latitude": -37.5833,
+							"longitude": 143.6833
+						},
+						"geoRadius": "100000"
+					},
+					"priceRange": "$$"
+				},
+				{
+					"@type": "Product",
+					"@id": `${siteUrl}/#product`,
+					"name": "Ferguson Livestock Beef Box",
+					"description": "Premium grass-fed Murray Grey beef box containing a variety of cuts, delivered fresh from our family farm.",
+					"brand": {
+						"@type": "Brand",
+						"name": "Ferguson Livestock"
+					},
+					"offers": {
+						"@type": "Offer",
+						"availability": "https://schema.org/PreOrder",
+						"priceRange": "$$",
+						"areaServed": {
+							"@type": "Place",
+							"name": "Victoria, Australia"
+						}
+					},
+					"category": "Beef",
+					"material": "Grass-fed Murray Grey beef"
+				},
+				{
+					"@type": "WebSite",
+					"@id": `${siteUrl}/#website`,
+					"url": siteUrl,
+					"name": "Ferguson Livestock",
+					"publisher": {
+						"@id": `${siteUrl}/#organization`
+					}
+				}
+			]
+		})} />
 	</head>
 	<body class="bg-cream text-gray-800 leading-relaxed overflow-x-hidden">
 		<slot />
