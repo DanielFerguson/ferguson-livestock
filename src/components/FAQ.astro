@@ -1,84 +1,123 @@
 ---
 const faqs = [
-	{
-		question: "How does ordering work?",
-		answer: "Once you're on our wait list, we'll text you when we're about to process a cow (typically 2 weeks notice). You'll get first dibs on the available boxes. Pay online, and we'll personally deliver to your door on the scheduled delivery day.",
-	},
-	{
-		question: "Do you deliver to my area?",
-		answer: "We deliver to Ballarat and surrounding suburbs, including Snake Valley, Smythesdale, Buninyong, Sebastopol, Wendouree, and surrounding areas. If you're unsure, pop in your postcode when you register and we'll confirm.",
-	},
-	{
-		question: "Is the beef really grass-fed and hormone-free?",
-		answer: "Absolutely. Our Murray Grey cattle graze on our Snake Valley pastures year-round. No feedlots, no grain finishing, no added hormones—ever. We're happy to show you around the farm if you'd like to see for yourself.",
-	},
-	{
-		question: "How much does a box cost?",
-		answer: "We'll share exact pricing when we text you about each drop. Our prices are competitive with quality butchers but you're getting farm-direct freshness and complete traceability. Plus, delivery is always free.",
-	},
-	{
-		question: "How is the beef packaged?",
-		answer: "All cuts are professionally vacuum-sealed and packed in custom insulated boxes with ice packs. It'll stay perfectly chilled during delivery and is ready to go straight into your freezer.",
-	},
-	{
-		question: "What if I'm not home during delivery?",
-		answer: "No worries! Just let us know a safe spot to leave it (like an esky on the porch) and we'll make sure it's secure. With our insulated packaging, it'll stay cold for hours.",
-	},
+    {
+        question: "How does ordering work?",
+        answer: "Once you're on our wait list, we'll text you when we're about to process a cow (typically 2 weeks notice). You'll get first dibs on the available boxes. Pay online, and we'll personally deliver to your door on the scheduled delivery day.",
+    },
+    {
+        question: "Do you deliver to my area?",
+        answer: "We deliver to Ballarat and surrounding suburbs, including Snake Valley, Smythesdale, Buninyong, Sebastopol, Wendouree, and surrounding areas. If you're unsure, pop in your postcode when you register and we'll confirm.",
+    },
+    {
+        question: "Is the beef really grass-fed and hormone-free?",
+        answer: "Absolutely. Our Murray Grey cattle graze on our Snake Valley pastures year-round. No feedlots, no grain finishing, no added hormones—ever. We're happy to show you around the farm if you'd like to see for yourself.",
+    },
+    {
+        question: "How much does a box cost?",
+        answer: "We'll share exact pricing when we text you about each drop. Our prices are competitive with quality butchers but you're getting farm-direct freshness and complete traceability. Plus, delivery is always free.",
+    },
+    {
+        question: "How is the beef packaged?",
+        answer: "All cuts are professionally vacuum-sealed and packed in custom insulated boxes with ice packs. It'll stay perfectly chilled during delivery and is ready to go straight into your freezer.",
+    },
+    {
+        question: "What if I'm not home during delivery?",
+        answer: "No worries! Just let us know a safe spot to leave it (like an esky on the porch) and we'll make sure it's secure. With our insulated packaging, it'll stay cold for hours.",
+    },
 ];
+
+// Generate FAQ Schema for rich snippets
+const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((faq) => ({
+        "@type": "Question",
+        name: faq.question,
+        acceptedAnswer: {
+            "@type": "Answer",
+            text: faq.answer,
+        },
+    })),
+};
 ---
 
+<!-- FAQ Schema for Rich Snippets -->
+<script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
+
 <section class="py-24 bg-cream">
-	<div class="max-w-6xl mx-auto px-6">
-		<div class="text-center mb-16">
-			<span
-				class="inline-block text-xs font-semibold uppercase tracking-widest text-sage mb-4"
-				>Got Questions?</span
-			>
-			<h2
-				class="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-forest mb-4 tracking-tight"
-			>
-				Frequently Asked Questions
-			</h2>
-			<p class="text-lg text-gray-500 max-w-xl mx-auto">
-				Here's what others have asked before signing up
-			</p>
-		</div>
-		<div class="max-w-3xl mx-auto space-y-4">
-			{
-				faqs.map((faq) => (
-					<div class="faq-item bg-white rounded-xl border border-forest/5 overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-forest/5">
-						<button class="faq-question w-full px-7 py-6 bg-transparent border-0 text-left cursor-pointer flex items-center justify-between gap-4 text-lg font-semibold text-forest transition-colors duration-300 hover:text-sage">
-							{faq.question}
-							<svg
-								class="faq-icon w-6 h-6 fill-sage flex-shrink-0 transition-transform duration-300"
-								viewBox="0 0 24 24"
-							>
-								<path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-							</svg>
-						</button>
-						<div class="faq-answer">
-							<div class="px-7 pb-6 text-gray-500 leading-relaxed">
-								{faq.answer}
-							</div>
-						</div>
-					</div>
-				))
-			}
-		</div>
-	</div>
+    <div class="max-w-6xl mx-auto px-6">
+        <div class="text-center mb-16">
+            <span
+                class="inline-block text-xs font-semibold uppercase tracking-widest text-sage mb-4"
+                >Got Questions?</span
+            >
+            <h2
+                class="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-forest mb-4 tracking-tight"
+            >
+                Frequently Asked Questions
+            </h2>
+            <p class="text-lg text-gray-500 max-w-xl mx-auto">
+                Here's what others have asked before signing up
+            </p>
+        </div>
+        <div class="max-w-3xl mx-auto space-y-4" role="list">
+            {
+                faqs.map((faq, index) => (
+                    <div
+                        class="faq-item bg-white rounded-xl border border-forest/5 overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-forest/5"
+                        role="listitem"
+                    >
+                        <button
+                            class="faq-question w-full px-7 py-6 bg-transparent border-0 text-left cursor-pointer flex items-center justify-between gap-4 text-lg font-semibold text-forest transition-colors duration-300 hover:text-sage"
+                            aria-expanded="false"
+                            aria-controls={`faq-answer-${index}`}
+                            id={`faq-question-${index}`}
+                        >
+                            {faq.question}
+                            <svg
+                                class="faq-icon w-6 h-6 fill-sage shrink-0 transition-transform duration-300"
+                                viewBox="0 0 24 24"
+                                aria-hidden="true"
+                            >
+                                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                            </svg>
+                        </button>
+                        <div
+                            class="faq-answer"
+                            id={`faq-answer-${index}`}
+                            role="region"
+                            aria-labelledby={`faq-question-${index}`}
+                        >
+                            <div class="px-7 pb-6 text-gray-500 leading-relaxed">
+                                {faq.answer}
+                            </div>
+                        </div>
+                    </div>
+                ))
+            }
+        </div>
+    </div>
 </section>
 
 <script>
-	document.querySelectorAll(".faq-question").forEach((button) => {
-		button.addEventListener("click", () => {
-			const item = button.parentElement;
-			if (!item) return;
-			const isActive = item.classList.contains("active");
-			document
-				.querySelectorAll(".faq-item")
-				.forEach((faq) => faq.classList.remove("active"));
-			if (!isActive) item.classList.add("active");
-		});
-	});
-</script>
+    document.querySelectorAll(".faq-question").forEach((button) => {
+        button.addEventListener("click", () => {
+            const item = button.parentElement;
+            if (!item) return;
+            const isActive = item.classList.contains("active");
 
+            // Close all FAQs and update aria-expanded
+            document.querySelectorAll(".faq-item").forEach((faq) => {
+                faq.classList.remove("active");
+                const btn = faq.querySelector(".faq-question");
+                if (btn) btn.setAttribute("aria-expanded", "false");
+            });
+
+            // Open clicked FAQ if it wasn't already active
+            if (!isActive) {
+                item.classList.add("active");
+                button.setAttribute("aria-expanded", "true");
+            }
+        });
+    });
+</script>

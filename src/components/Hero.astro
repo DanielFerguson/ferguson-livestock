@@ -2,197 +2,204 @@
 
 ---
 
-<section
-	class="noise-overlay relative bg-linear-to-br from-forest via-forest-light to-sage min-h-[90vh] flex items-center py-16 lg:py-0"
->
-	<div class="max-w-6xl mx-auto px-6 relative z-10">
-		<div class="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-			<div class="text-cream">
-				<div
-					class="animate-fade-in-up inline-flex items-center gap-2 bg-mint/15 border border-mint/30 px-4 py-2 rounded-full text-sm font-medium text-mint-light mb-6"
-				>
-					<svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"
-						><path
-							d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-						></path></svg
-					>
-					100% Grass-Fed Murray Grey Beef
-				</div>
-				<h1
-					class="animate-fade-in-up animation-delay-100 font-display text-4xl md:text-5xl lg:text-6xl font-semibold leading-tight tracking-tight mb-6"
-				>
-					Paddock to Door Beef Boxes,<br /><em
-						class="not-italic text-mint-light">Delivered by Us</em
-					>
-				</h1>
-				<p
-					class="animate-fade-in-up animation-delay-200 text-lg text-cream/85 mb-8 max-w-xl leading-relaxed"
-				>
-					Premium grass-fed beef from our family farm in Snake Valley,
-					personally delivered to your door in Ballarat and surrounds.
-					No middlemen. No supermarkets. Just quality beef you can
-					trust.
-				</p>
-				<div
-					class="animate-fade-in-up animation-delay-300 flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-6"
-				>
-					<div class="flex items-center gap-2.5 text-cream">
-						<svg class="w-5 h-5 fill-mint" viewBox="0 0 24 24"
-							><path
-								d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
-							></path></svg
-						>100% Grass-Fed & Hormone-Free
-					</div>
-					<div class="flex items-center gap-2.5 text-cream">
-						<svg class="w-5 h-5 fill-mint" viewBox="0 0 24 24"
-							><path
-								d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
-							></path></svg
-						>Free Personal Delivery
-					</div>
-					<div class="flex items-center gap-2.5 text-cream">
-						<svg class="w-5 h-5 fill-mint" viewBox="0 0 24 24"
-							><path
-								d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
-							></path></svg
-						>Supporting Local Farmers
-					</div>
-				</div>
-			</div>
-			<div
-				id="reserve"
-				class="animate-fade-in-up animation-delay-400 relative bg-cream rounded-2xl p-8 md:p-10 shadow-2xl shadow-black/25"
-			>
-				<div
-					class="absolute -inset-0.5 bg-linear-to-br from-mint to-warm rounded-2xl -z-10 opacity-50"
-				>
-				</div>
-				<div class="text-center mb-8">
-					<h2
-						class="font-display text-2xl md:text-3xl font-semibold text-forest mb-2"
-					>
-						Join the Wait List
-					</h2>
-					<p class="text-gray-500">
-						Be first to know when the January drop opens
-					</p>
-				</div>
-				<form id="interest-form">
-					<div class="mb-4">
-						<label
-							class="block text-xs font-semibold text-forest mb-1.5 uppercase tracking-wide"
-							for="firstName">First Name</label
-						>
-						<input
-							type="text"
-							id="firstName"
-							name="firstName"
-							required
-							class="w-full px-5 py-4 border-2 border-cream-dark rounded-lg text-base bg-white transition-all duration-300 focus:outline-none focus:border-mint focus:ring-4 focus:ring-mint/15"
-							placeholder="Your first name"
-						/>
-					</div>
-					<div class="mb-4">
-						<label
-							class="block text-xs font-semibold text-forest mb-1.5 uppercase tracking-wide"
-							for="phone">Phone Number</label
-						>
-						<input
-							type="tel"
-							id="phone"
-							name="phone"
-							required
-							class="w-full px-5 py-4 border-2 border-cream-dark rounded-lg text-base bg-white transition-all duration-300 focus:outline-none focus:border-mint focus:ring-4 focus:ring-mint/15"
-							placeholder="0412 345 678"
-						/>
-						<p class="text-xs text-gray-500 mt-1">
-							We'll text you when orders open
-						</p>
-					</div>
-					<div class="mb-4">
-						<label
-							class="block text-xs font-semibold text-forest mb-1.5 uppercase tracking-wide"
-							for="postcode">Postcode</label
-						>
-						<input
-							type="text"
-							id="postcode"
-							name="postcode"
-							required
-							pattern="[0-9]{4}"
-							maxlength="4"
-							class="w-full px-5 py-4 border-2 border-cream-dark rounded-lg text-base bg-white transition-all duration-300 focus:outline-none focus:border-mint focus:ring-4 focus:ring-mint/15"
-							placeholder="3350"
-						/>
-						<p class="text-xs text-gray-500 mt-1">
-							To confirm you're in our delivery area
-						</p>
-					</div>
-					<button
-						type="submit"
-						class="w-full mt-2 py-4 px-8 bg-linear-to-br from-forest to-sage text-cream rounded-lg text-base font-semibold uppercase tracking-wider transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-forest/30 cursor-pointer border-0"
-						>Save My Spot</button
-					>
-				</form>
-				<div
-					class="flex items-center justify-center gap-2 mt-5 text-sm text-gray-500"
-				>
-					<svg class="w-4 h-4 fill-sage" viewBox="0 0 24 24"
-						><path
-							d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"
-						></path></svg
-					>
-					No spam, ever. Unsubscribe anytime.
-				</div>
-			</div>
-		</div>
-	</div>
-</section>
+<main id="main-content">
+    <section
+        class="noise-overlay relative bg-linear-to-br from-forest via-forest-light to-sage min-h-[90vh] flex items-center py-16 lg:py-0"
+    >
+        <div class="max-w-6xl mx-auto px-6 relative z-10">
+            <div class="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+                <div class="text-cream">
+                    <div
+                        class="animate-fade-in-up inline-flex items-center gap-2 bg-mint/15 border border-mint/30 px-4 py-2 rounded-full text-sm font-medium text-mint-light mb-6"
+                    >
+                        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"
+                            ><path
+                                d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                            ></path></svg
+                        >
+                        100% Grass-Fed Murray Grey Beef
+                    </div>
+                    <h1
+                        class="animate-fade-in-up animation-delay-100 font-display text-4xl md:text-5xl lg:text-6xl font-semibold leading-tight tracking-tight mb-6"
+                    >
+                        Paddock to Door Beef Boxes,<br /><em
+                            class="not-italic text-mint-light"
+                            >Delivered by Us</em
+                        >
+                    </h1>
+                    <p
+                        class="animate-fade-in-up animation-delay-200 text-lg text-cream/85 mb-8 max-w-xl leading-relaxed"
+                    >
+                        Premium grass-fed beef from our family farm in Snake
+                        Valley, personally delivered to your door in Ballarat
+                        and surrounds. No middlemen. No supermarkets. Just
+                        quality beef you can trust.
+                    </p>
+                    <div
+                        class="animate-fade-in-up animation-delay-300 flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-6"
+                    >
+                        <div class="flex items-center gap-2.5 text-cream">
+                            <svg class="w-5 h-5 fill-mint" viewBox="0 0 24 24"
+                                ><path
+                                    d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
+                                ></path></svg
+                            >100% Grass-Fed & Hormone-Free
+                        </div>
+                        <div class="flex items-center gap-2.5 text-cream">
+                            <svg class="w-5 h-5 fill-mint" viewBox="0 0 24 24"
+                                ><path
+                                    d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
+                                ></path></svg
+                            >Free Personal Delivery
+                        </div>
+                        <div class="flex items-center gap-2.5 text-cream">
+                            <svg class="w-5 h-5 fill-mint" viewBox="0 0 24 24"
+                                ><path
+                                    d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
+                                ></path></svg
+                            >Supporting Local Farmers
+                        </div>
+                    </div>
+                </div>
+                <div
+                    id="reserve"
+                    class="animate-fade-in-up animation-delay-400 relative bg-cream rounded-2xl p-8 md:p-10 shadow-2xl shadow-black/25"
+                >
+                    <div
+                        class="absolute -inset-0.5 bg-linear-to-br from-mint to-warm rounded-2xl -z-10 opacity-50"
+                    >
+                    </div>
+                    <div class="text-center mb-8">
+                        <h2
+                            class="font-display text-2xl md:text-3xl font-semibold text-forest mb-2"
+                        >
+                            Join the Wait List
+                        </h2>
+                        <p class="text-gray-500">
+                            Be first to know when the January drop opens
+                        </p>
+                    </div>
+                    <form id="interest-form">
+                        <div class="mb-4">
+                            <label
+                                class="block text-xs font-semibold text-forest mb-1.5 uppercase tracking-wide"
+                                for="firstName">First Name</label
+                            >
+                            <input
+                                type="text"
+                                id="firstName"
+                                name="firstName"
+                                required
+                                autocomplete="given-name"
+                                class="w-full px-5 py-4 border-2 border-cream-dark rounded-lg text-base bg-white transition-all duration-300 focus:outline-none focus:border-mint focus:ring-4 focus:ring-mint/15"
+                                placeholder="Your first name"
+                            />
+                        </div>
+                        <div class="mb-4">
+                            <label
+                                class="block text-xs font-semibold text-forest mb-1.5 uppercase tracking-wide"
+                                for="phone">Phone Number</label
+                            >
+                            <input
+                                type="tel"
+                                id="phone"
+                                name="phone"
+                                required
+                                autocomplete="tel"
+                                class="w-full px-5 py-4 border-2 border-cream-dark rounded-lg text-base bg-white transition-all duration-300 focus:outline-none focus:border-mint focus:ring-4 focus:ring-mint/15"
+                                placeholder="0412 345 678"
+                            />
+                            <p class="text-xs text-gray-500 mt-1">
+                                We'll text you when orders open
+                            </p>
+                        </div>
+                        <div class="mb-4">
+                            <label
+                                class="block text-xs font-semibold text-forest mb-1.5 uppercase tracking-wide"
+                                for="postcode">Postcode</label
+                            >
+                            <input
+                                type="text"
+                                id="postcode"
+                                name="postcode"
+                                required
+                                autocomplete="postal-code"
+                                pattern="[0-9]{4}"
+                                maxlength="4"
+                                inputmode="numeric"
+                                class="w-full px-5 py-4 border-2 border-cream-dark rounded-lg text-base bg-white transition-all duration-300 focus:outline-none focus:border-mint focus:ring-4 focus:ring-mint/15"
+                                placeholder="3350"
+                            />
+                            <p class="text-xs text-gray-500 mt-1">
+                                To confirm you're in our delivery area
+                            </p>
+                        </div>
+                        <button
+                            type="submit"
+                            class="w-full mt-2 py-4 px-8 bg-linear-to-br from-forest to-sage text-cream rounded-lg text-base font-semibold uppercase tracking-wider transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-forest/30 cursor-pointer border-0"
+                            >Save My Spot</button
+                        >
+                    </form>
+                    <div
+                        class="flex items-center justify-center gap-2 mt-5 text-sm text-gray-500"
+                    >
+                        <svg class="w-4 h-4 fill-sage" viewBox="0 0 24 24"
+                            ><path
+                                d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"
+                            ></path></svg
+                        >
+                        No spam, ever. Unsubscribe anytime.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-<script>
-	document
-		.getElementById("interest-form")
-		?.addEventListener("submit", function (e) {
-			e.preventDefault();
-			const form = e.target as HTMLFormElement;
-			const firstName = (
-				document.getElementById("firstName") as HTMLInputElement
-			)?.value;
-			console.log("Form submitted:", {
-				firstName,
-				phone: (document.getElementById("phone") as HTMLInputElement)
-					?.value,
-				postcode: (
-					document.getElementById("postcode") as HTMLInputElement
-				)?.value,
-			});
-			form.innerHTML =
-				'<div class="text-center py-10"><svg class="w-16 h-16 fill-sage mx-auto mb-4" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L18 8l-9 9z"/></svg><h3 class="font-display text-2xl text-forest mb-2">You\'re on the list, ' +
-				firstName +
-				'!</h3><p class="text-gray-500">We\'ll text you when the January drop opens.</p></div>';
-			const counter = document.getElementById("counter");
-			if (counter) {
-				counter.textContent = String(
-					parseInt(counter.textContent || "0") + 1,
-				);
-			}
-		});
+    <script>
+        document
+            .getElementById("interest-form")
+            ?.addEventListener("submit", function (e) {
+                e.preventDefault();
+                const form = e.target as HTMLFormElement;
+                const firstName = (
+                    document.getElementById("firstName") as HTMLInputElement
+                )?.value;
+                console.log("Form submitted:", {
+                    firstName,
+                    phone: (
+                        document.getElementById("phone") as HTMLInputElement
+                    )?.value,
+                    postcode: (
+                        document.getElementById("postcode") as HTMLInputElement
+                    )?.value,
+                });
+                form.innerHTML =
+                    '<div class="text-center py-10"><svg class="w-16 h-16 fill-sage mx-auto mb-4" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L18 8l-9 9z"/></svg><h3 class="font-display text-2xl text-forest mb-2">You\'re on the list, ' +
+                    firstName +
+                    '!</h3><p class="text-gray-500">We\'ll text you when the January drop opens.</p></div>';
+                const counter = document.getElementById("counter");
+                if (counter) {
+                    counter.textContent = String(
+                        parseInt(counter.textContent || "0") + 1,
+                    );
+                }
+            });
 
-	document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
-		anchor.addEventListener("click", function (e) {
-			e.preventDefault();
-			const href = (e.currentTarget as HTMLAnchorElement).getAttribute(
-				"href",
-			);
-			if (href) {
-				const target = document.querySelector(href);
-				if (target)
-					target.scrollIntoView({
-						behavior: "smooth",
-						block: "start",
-					});
-			}
-		});
-	});
-</script>
-
+        document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+            anchor.addEventListener("click", function (e) {
+                e.preventDefault();
+                const href = (
+                    e.currentTarget as HTMLAnchorElement
+                ).getAttribute("href");
+                if (href) {
+                    const target = document.querySelector(href);
+                    if (target)
+                        target.scrollIntoView({
+                            behavior: "smooth",
+                            block: "start",
+                        });
+                }
+            });
+        });
+    </script>
+</main>
