@@ -48,10 +48,11 @@ export const POST: APIRoute = async ({ request }) => {
             formattedPhone = '+61' + formattedPhone;
         }
 
-        const apiKey = import.meta.env.KLAVIYO_API_KEY;
+        const publicApiKey = import.meta.env.KLAVIYO_PUBLIC_API_KEY;
+        const privateApiKey = import.meta.env.KLAVIYO_API_KEY;
         const listId = import.meta.env.KLAVIYO_LIST_ID;
 
-        if (!apiKey || !listId) {
+        if (!publicApiKey || !listId) {
             console.error('Missing Klaviyo configuration');
             return new Response(
                 JSON.stringify({
@@ -65,22 +66,132 @@ export const POST: APIRoute = async ({ request }) => {
             );
         }
 
-        // Use the Subscribe Profiles endpoint to properly handle SMS consent
-        const subscribePayload = {
+        // Step 1: Try client subscription endpoint
+        const payload = {
             data: {
-                type: 'profile-subscription-bulk-create-job',
+                type: 'subscription',
                 attributes: {
-                    profiles: {
-                        data: [
-                            {
+                    list_id: listId,
+                    custom_source: 'Ferguson Livestock Website',
+                    phone_number: formattedPhone,
+                    properties: {
+                        first_name: data.firstName,
+                        postcode: data.postcode,
+                        signup_date: new Date().toISOString()
+                    }
+                }
+            }
+        };
+
+        console.log('Step 1 - Client subscription payload:', JSON.stringify(payload, null, 2));
+
+        const response = await fetch(`https://a.klaviyo.com/client/subscriptions/?company_id=${publicApiKey}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'revision': '2023-06-15'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const responseText = await response.text();
+        console.log('Step 1 - Client subscription response:', response.status, responseText);
+
+        // Step 2: Verify profile exists using private API key
+        if (privateApiKey) {
+            console.log('Step 2 - Checking if profile exists...');
+
+            // Wait a moment for Klaviyo to process
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            // Search for profile by phone number
+            const searchUrl = `https://a.klaviyo.com/api/profiles/?filter=equals(phone_number,"${encodeURIComponent(formattedPhone)}")`;
+            console.log('Step 2 - Search URL:', searchUrl);
+
+            const searchResponse = await fetch(searchUrl, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Klaviyo-API-Key ${privateApiKey}`,
+                    'Content-Type': 'application/json',
+                    'revision': '2024-02-15'
+                }
+            });
+
+            const searchText = await searchResponse.text();
+            console.log('Step 2 - Profile search response:', searchResponse.status, searchText);
+
+            if (searchResponse.ok) {
+                try {
+                    const searchData = JSON.parse(searchText);
+                    if (searchData.data && searchData.data.length > 0) {
+                        console.log('Step 2 - Profile FOUND:', searchData.data[0].id);
+
+                        // Profile exists - update it with first_name and add to list
+                        const profileId = searchData.data[0].id;
+
+                        // Update profile with first_name
+                        const updatePayload = {
+                            data: {
+                                type: 'profile',
+                                id: profileId,
+                                attributes: {
+                                    first_name: data.firstName,
+                                    properties: {
+                                        postcode: data.postcode,
+                                        source: 'Ferguson Livestock Website'
+                                    }
+                                }
+                            }
+                        };
+
+                        console.log('Step 3 - Updating profile:', JSON.stringify(updatePayload, null, 2));
+
+                        const updateResponse = await fetch(`https://a.klaviyo.com/api/profiles/${profileId}/`, {
+                            method: 'PATCH',
+                            headers: {
+                                'Authorization': `Klaviyo-API-Key ${privateApiKey}`,
+                                'Content-Type': 'application/json',
+                                'revision': '2024-02-15'
+                            },
+                            body: JSON.stringify(updatePayload)
+                        });
+
+                        console.log('Step 3 - Profile update response:', updateResponse.status);
+
+                        // Add to list
+                        const listPayload = {
+                            data: [
+                                {
+                                    type: 'profile',
+                                    id: profileId
+                                }
+                            ]
+                        };
+
+                        console.log('Step 4 - Adding to list:', listId);
+
+                        const listResponse = await fetch(`https://a.klaviyo.com/api/lists/${listId}/relationships/profiles/`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Klaviyo-API-Key ${privateApiKey}`,
+                                'Content-Type': 'application/json',
+                                'revision': '2024-02-15'
+                            },
+                            body: JSON.stringify(listPayload)
+                        });
+
+                        console.log('Step 4 - Add to list response:', listResponse.status);
+
+                    } else {
+                        console.log('Step 2 - Profile NOT found, creating new one...');
+
+                        // Profile doesn't exist - create it
+                        const createPayload = {
+                            data: {
                                 type: 'profile',
                                 attributes: {
                                     phone_number: formattedPhone,
                                     first_name: data.firstName,
-                                    location: {
-                                        zip: data.postcode,
-                                        country: 'Australia'
-                                    },
                                     properties: {
                                         postcode: data.postcode,
                                         source: 'Ferguson Livestock Website',
@@ -88,35 +199,58 @@ export const POST: APIRoute = async ({ request }) => {
                                     }
                                 }
                             }
-                        ]
-                    },
-                    historical_import: false
-                },
-                relationships: {
-                    list: {
-                        data: {
-                            type: 'list',
-                            id: listId
+                        };
+
+                        console.log('Step 3 - Creating profile:', JSON.stringify(createPayload, null, 2));
+
+                        const createResponse = await fetch('https://a.klaviyo.com/api/profiles/', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Klaviyo-API-Key ${privateApiKey}`,
+                                'Content-Type': 'application/json',
+                                'revision': '2024-02-15'
+                            },
+                            body: JSON.stringify(createPayload)
+                        });
+
+                        const createText = await createResponse.text();
+                        console.log('Step 3 - Create profile response:', createResponse.status, createText);
+
+                        if (createResponse.ok || createResponse.status === 201) {
+                            const createData = JSON.parse(createText);
+                            const newProfileId = createData.data.id;
+
+                            // Add to list
+                            const listPayload = {
+                                data: [
+                                    {
+                                        type: 'profile',
+                                        id: newProfileId
+                                    }
+                                ]
+                            };
+
+                            console.log('Step 4 - Adding new profile to list:', listId);
+
+                            const listResponse = await fetch(`https://a.klaviyo.com/api/lists/${listId}/relationships/profiles/`, {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': `Klaviyo-API-Key ${privateApiKey}`,
+                                    'Content-Type': 'application/json',
+                                    'revision': '2024-02-15'
+                                },
+                                body: JSON.stringify(listPayload)
+                            });
+
+                            console.log('Step 4 - Add to list response:', listResponse.status);
                         }
                     }
+                } catch (e) {
+                    console.error('Error parsing search response:', e);
                 }
             }
-        };
-
-        const response = await fetch('https://a.klaviyo.com/api/profile-subscription-bulk-create-jobs', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Klaviyo-API-Key ${apiKey}`,
-                'Content-Type': 'application/json',
-                'revision': '2024-02-15'
-            },
-            body: JSON.stringify(subscribePayload)
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Klaviyo subscription failed:', errorText);
-            throw new Error('Failed to subscribe');
+        } else {
+            console.log('No private API key - skipping verification');
         }
 
         return new Response(
@@ -135,7 +269,7 @@ export const POST: APIRoute = async ({ request }) => {
         return new Response(
             JSON.stringify({
                 success: false,
-                error: 'An error occurred. Please try again.'
+                error: error instanceof Error ? error.message : 'An error occurred'
             }),
             {
                 status: 500,
@@ -144,4 +278,3 @@ export const POST: APIRoute = async ({ request }) => {
         );
     }
 };
-

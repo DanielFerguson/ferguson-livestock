@@ -1,273 +1,316 @@
 ---
-import { Image } from 'astro:assets';
-import image1 from '../assets/images/1.webp';
-import image2 from '../assets/images/2.webp';
-import image3 from '../assets/images/3.webp';
-import image4 from '../assets/images/4.webp';
-import image5 from '../assets/images/5.webp';
-import image6 from '../assets/images/6.webp';
-import image7 from '../assets/images/7.webp';
-import image8 from '../assets/images/8.webp';
-import image9 from '../assets/images/9.webp';
+import { Image } from "astro:assets";
+import image1 from "../assets/images/1.webp";
+import image2 from "../assets/images/2.webp";
+import image3 from "../assets/images/3.webp";
+import image4 from "../assets/images/4.webp";
+import image5 from "../assets/images/5.webp";
+import image6 from "../assets/images/6.webp";
+import image7 from "../assets/images/7.webp";
+import image8 from "../assets/images/8.webp";
+import image9 from "../assets/images/9.webp";
 
 const images = [
-	{ src: image1, alt: "Daniel relaxing with a Murray Grey cow" },
-	{ src: image2, alt: "Daniel and Tahlia Ferguson with their Murray Grey cattle" },
-	{ src: image3, alt: "Tahlia with a Murray Grey cow at a show" },
-	{ src: image4, alt: "Close-up of a Murray Grey cow named Hovea" },
-	{ src: image5, alt: "The Ferguson family winning Reserve Senior Champion" },
-	{ src: image6, alt: "Tahlia showing a Murray Grey cow in the ring" },
-	{ src: image7, alt: "Ferguson Livestock display at a cattle show" },
-	{ src: image8, alt: "Showing Murray Grey cattle at competition" },
-	{ src: image9, alt: "Tahlia with Murray Grey cattle outdoors" },
+    { src: image1, alt: "Daniel relaxing with a Murray Grey cow" },
+    {
+        src: image2,
+        alt: "Daniel and Tahlia Ferguson with their Murray Grey cattle",
+    },
+    { src: image3, alt: "Tahlia with a Murray Grey cow at a show" },
+    { src: image4, alt: "Close-up of a Murray Grey cow named Hovea" },
+    { src: image5, alt: "The Ferguson family winning Reserve Senior Champion" },
+    { src: image6, alt: "Tahlia showing a Murray Grey cow in the ring" },
+    { src: image7, alt: "Ferguson Livestock display at a cattle show" },
+    { src: image8, alt: "Showing Murray Grey cattle at competition" },
+    { src: image9, alt: "Tahlia with Murray Grey cattle outdoors" },
 ];
 ---
 
 <section class="py-24 bg-cream-dark">
-	<div class="max-w-6xl mx-auto px-6">
-		<div class="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-			<div class="relative">
-				<div class="carousel relative overflow-hidden rounded-2xl shadow-xl">
-					<div class="carousel-track flex transition-transform duration-500 ease-out">
-						{images.map((image, index) => (
-							<div class="carousel-slide min-w-full">
-								<Image
-									src={image.src}
-									alt={image.alt}
-									class="aspect-[4/3] w-full object-cover"
-									widths={[400, 600, 800]}
-									sizes="(max-width: 1024px) 100vw, 50vw"
-								/>
-							</div>
-						))}
-					</div>
-					
-					<!-- Navigation Arrows -->
-					<button 
-						type="button"
-						class="carousel-prev absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110 cursor-pointer z-10"
-						aria-label="Previous image"
-					>
-						<svg class="w-5 h-5 text-forest" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-						</svg>
-					</button>
-					<button 
-						type="button"
-						class="carousel-next absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110 cursor-pointer z-10"
-						aria-label="Next image"
-					>
-						<svg class="w-5 h-5 text-forest" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-						</svg>
-					</button>
-					
-					<!-- Dot Indicators -->
-					<div class="carousel-dots absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-						{images.map((_, index) => (
-							<button 
-								type="button"
-								class={`carousel-dot w-2 h-2 rounded-full transition-all cursor-pointer ${index === 0 ? 'bg-white w-6' : 'bg-white/50 hover:bg-white/75'}`}
-								data-index={index}
-								aria-label={`Go to image ${index + 1}`}
-							/>
-						))}
-					</div>
-				</div>
-				
-				<div
-					class="absolute -bottom-6 -right-6 w-32 h-32 bg-mint/20 rounded-full -z-10"
-				>
-				</div>
-				<div
-					class="absolute -top-6 -left-6 w-24 h-24 bg-warm/20 rounded-full -z-10"
-				>
-				</div>
-			</div>
-			<div>
-				<span
-					class="inline-block text-xs font-semibold uppercase tracking-widest text-sage mb-4"
-					>Our Story</span
-				>
-				<h2
-					class="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-forest mb-6 tracking-tight"
-				>
-					Meet the Fergusons
-				</h2>
-				<div class="space-y-4 text-gray-600 leading-relaxed">
-					<p>
-						We're not a faceless corporation or a
-						marketing-invented "farm brand." We're a real family,
-						running real cattle on our property in Snake
-						Valley—about 30 minutes from Ballarat.
-					</p>
-					<p>
-						Our Murray Greys have grazed these paddocks for years.
-						We know each animal. We manage our pastures with care.
-						And when it comes time to process, we handle everything
-						personally to make sure the quality meets our own
-						family's standards.
-					</p>
-					<p>
-						When you buy from us, you're not just getting beef—you're
-						supporting a local family doing things the right way.
-						And if you ever want to see where your food comes from,
-						you're welcome to visit.
-					</p>
-				</div>
-				<div class="mt-8 flex flex-wrap gap-6">
-					<div class="flex items-center gap-3">
-						<div
-							class="w-12 h-12 bg-forest rounded-full flex items-center justify-center"
-						>
-							<svg
-								class="w-6 h-6 fill-mint-light"
-								viewBox="0 0 24 24"
-								><path
-									d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"
-								></path></svg
-							>
-						</div>
-						<div>
-							<div class="font-semibold text-forest">
-								Snake Valley, VIC
-							</div>
-							<div class="text-sm text-gray-500">
-								30 min from Ballarat
-							</div>
-						</div>
-					</div>
-					<div class="flex items-center gap-3">
-						<div
-							class="w-12 h-12 bg-forest rounded-full flex items-center justify-center"
-						>
-							<svg
-								class="w-6 h-6 fill-mint-light"
-								viewBox="0 0 24 24"
-								><path
-									d="M12 22c4.97 0 9-4.03 9-9-4.97 0-9 4.03-9 9zM5.6 10.25c0 1.38 1.12 2.5 2.5 2.5.53 0 1.01-.16 1.42-.44l-.02.19c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5l-.02-.19c.4.28.89.44 1.42.44 1.38 0 2.5-1.12 2.5-2.5 0-1-.59-1.85-1.43-2.25.84-.4 1.43-1.25 1.43-2.25 0-1.38-1.12-2.5-2.5-2.5-.53 0-1.01.16-1.42.44l.02-.19C14.5 4.12 13.38 3 12 3S9.5 4.12 9.5 5.5l.02.19c-.4-.28-.89-.44-1.42-.44-1.38 0-2.5 1.12-2.5 2.5 0 1 .59 1.85 1.43 2.25-.84.4-1.43 1.25-1.43 2.25zM12 5.5c1.38 0 2.5 1.12 2.5 2.5s-1.12 2.5-2.5 2.5S9.5 9.38 9.5 8s1.12-2.5 2.5-2.5zM3 13c0 4.97 4.03 9 9 9 0-4.97-4.03-9-9-9z"
-								></path></svg
-							>
-						</div>
-						<div>
-							<div class="font-semibold text-forest">
-								Murray Grey Cattle
-							</div>
-							<div class="text-sm text-gray-500">
-								Australian heritage breed
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+    <div class="max-w-6xl mx-auto px-6">
+        <div class="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+            <div class="relative">
+                <div
+                    class="carousel relative overflow-hidden rounded-2xl shadow-xl"
+                >
+                    <div
+                        class="carousel-track flex transition-transform duration-500 ease-out"
+                    >
+                        {
+                            images.map((image, index) => (
+                                <div class="carousel-slide min-w-full">
+                                    <Image
+                                        src={image.src}
+                                        alt={image.alt}
+                                        class="aspect-[4/3] w-full object-cover"
+                                        widths={[400, 600, 800]}
+                                        sizes="(max-width: 1024px) 100vw, 50vw"
+                                    />
+                                </div>
+                            ))
+                        }
+                    </div>
+
+                    <!-- Navigation Arrows -->
+                    <button
+                        type="button"
+                        class="carousel-prev absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110 cursor-pointer z-10"
+                        aria-label="Previous image"
+                    >
+                        <svg
+                            class="w-5 h-5 text-forest"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                    </button>
+                    <button
+                        type="button"
+                        class="carousel-next absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110 cursor-pointer z-10"
+                        aria-label="Next image"
+                    >
+                        <svg
+                            class="w-5 h-5 text-forest"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
+
+                    <!-- Dot Indicators -->
+                    <div
+                        class="carousel-dots absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10"
+                    >
+                        {
+                            images.map((_, index) => (
+                                <button
+                                    type="button"
+                                    class={`carousel-dot w-2 h-2 rounded-full transition-all cursor-pointer ${index === 0 ? "bg-white w-6" : "bg-white/50 hover:bg-white/75"}`}
+                                    data-index={index}
+                                    aria-label={`Go to image ${index + 1}`}
+                                />
+                            ))
+                        }
+                    </div>
+                </div>
+
+                <div
+                    class="absolute -bottom-6 -right-6 w-32 h-32 bg-mint/20 rounded-full -z-10"
+                >
+                </div>
+                <div
+                    class="absolute -top-6 -left-6 w-24 h-24 bg-warm/20 rounded-full -z-10"
+                >
+                </div>
+            </div>
+            <div>
+                <span
+                    class="inline-block text-xs font-semibold uppercase tracking-widest text-sage mb-4"
+                    >Our Story</span
+                >
+                <h2
+                    class="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-forest mb-6 tracking-tight"
+                >
+                    Meet the Fergusons
+                </h2>
+                <div class="space-y-4 text-gray-600 leading-relaxed">
+                    <p>
+                        We're not a faceless corporation or a marketing-invented
+                        "farm brand." We're a real family, running real cattle
+                        on our property in Snake Valley—about 30 minutes from
+                        Ballarat.
+                    </p>
+                    <p>
+                        Our Murray Greys have grazed these paddocks for years.
+                        We know each animal. We manage our pastures with care.
+                        And when it comes time to process, we handle everything
+                        personally to make sure the quality meets our own
+                        family's standards.
+                    </p>
+                    <p>
+                        When you buy from us, you're not just getting
+                        beef—you're supporting a local family doing things the
+                        right way. And if you ever want to see where your food
+                        comes from, you're welcome to visit.
+                    </p>
+                </div>
+                <div class="mt-8 flex flex-wrap gap-6">
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="w-12 h-12 bg-forest rounded-full flex items-center justify-center"
+                        >
+                            <svg
+                                class="w-6 h-6 fill-mint-light"
+                                viewBox="0 0 24 24"
+                                ><path
+                                    d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"
+                                ></path></svg
+                            >
+                        </div>
+                        <div>
+                            <div class="font-semibold text-forest">
+                                Snake Valley, VIC
+                            </div>
+                            <div class="text-sm text-gray-500">
+                                30 min from Ballarat
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="w-12 h-12 bg-forest rounded-full flex items-center justify-center"
+                        >
+                            <svg
+                                class="w-6 h-6 fill-mint-light"
+                                viewBox="0 0 24 24"
+                                ><path
+                                    d="M12 22c4.97 0 9-4.03 9-9-4.97 0-9 4.03-9 9zM5.6 10.25c0 1.38 1.12 2.5 2.5 2.5.53 0 1.01-.16 1.42-.44l-.02.19c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5l-.02-.19c.4.28.89.44 1.42.44 1.38 0 2.5-1.12 2.5-2.5 0-1-.59-1.85-1.43-2.25.84-.4 1.43-1.25 1.43-2.25 0-1.38-1.12-2.5-2.5-2.5-.53 0-1.01.16-1.42.44l.02-.19C14.5 4.12 13.38 3 12 3S9.5 4.12 9.5 5.5l.02.19c-.4-.28-.89-.44-1.42-.44-1.38 0-2.5 1.12-2.5 2.5 0 1 .59 1.85 1.43 2.25-.84.4-1.43 1.25-1.43 2.25zM12 5.5c1.38 0 2.5 1.12 2.5 2.5s-1.12 2.5-2.5 2.5S9.5 9.38 9.5 8s1.12-2.5 2.5-2.5zM3 13c0 4.97 4.03 9 9 9 0-4.97-4.03-9-9-9z"
+                                ></path></svg
+                            >
+                        </div>
+                        <div>
+                            <div class="font-semibold text-forest">
+                                Murray Grey Cattle
+                            </div>
+                            <div class="text-sm text-gray-500">
+                                Australian heritage breed
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </section>
 
 <script>
-	function initCarousel(element: HTMLElement) {
-		const track = element.querySelector('.carousel-track') as HTMLElement;
-		const slides = element.querySelectorAll('.carousel-slide');
-		const dots = element.querySelectorAll('.carousel-dot');
-		const prevBtn = element.querySelector('.carousel-prev') as HTMLButtonElement;
-		const nextBtn = element.querySelector('.carousel-next') as HTMLButtonElement;
-		
-		let currentIndex = 0;
-		const totalSlides = slides.length;
-		let autoPlayInterval: number | null = null;
-		
-		function goTo(index: number) {
-			currentIndex = index;
-			track.style.transform = `translateX(-${currentIndex * 100}%)`;
-			updateDots();
-		}
-		
-		function next() {
-			currentIndex = (currentIndex + 1) % totalSlides;
-			goTo(currentIndex);
-		}
-		
-		function prev() {
-			currentIndex = (currentIndex - 1 + totalSlides) % totalSlides;
-			goTo(currentIndex);
-		}
-		
-		function updateDots() {
-			dots.forEach((dot, index) => {
-				if (index === currentIndex) {
-					dot.classList.remove('bg-white/50', 'w-2');
-					dot.classList.add('bg-white', 'w-6');
-				} else {
-					dot.classList.remove('bg-white', 'w-6');
-					dot.classList.add('bg-white/50', 'w-2');
-				}
-			});
-		}
-		
-		function startAutoPlay() {
-			autoPlayInterval = window.setInterval(() => next(), 5000);
-		}
-		
-		function stopAutoPlay() {
-			if (autoPlayInterval) {
-				clearInterval(autoPlayInterval);
-				autoPlayInterval = null;
-			}
-		}
-		
-		// Event listeners
-		prevBtn.addEventListener('click', (e) => {
-			e.preventDefault();
-			prev();
-		});
-		
-		nextBtn.addEventListener('click', (e) => {
-			e.preventDefault();
-			next();
-		});
-		
-		dots.forEach((dot, index) => {
-			dot.addEventListener('click', (e) => {
-				e.preventDefault();
-				goTo(index);
-			});
-		});
-		
-		// Auto-play
-		startAutoPlay();
-		
-		// Pause on hover
-		element.addEventListener('mouseenter', () => stopAutoPlay());
-		element.addEventListener('mouseleave', () => startAutoPlay());
-		
-		// Touch support
-		let touchStartX = 0;
-		
-		element.addEventListener('touchstart', (e) => {
-			touchStartX = e.changedTouches[0].screenX;
-		}, { passive: true });
-		
-		element.addEventListener('touchend', (e) => {
-			const touchEndX = e.changedTouches[0].screenX;
-			if (touchStartX - touchEndX > 50) next();
-			if (touchEndX - touchStartX > 50) prev();
-		}, { passive: true });
-	}
-	
-	// Initialize when DOM is ready
-	document.addEventListener('DOMContentLoaded', () => {
-		document.querySelectorAll('.carousel').forEach((carousel) => {
-			initCarousel(carousel as HTMLElement);
-		});
-	});
-	
-	// Also try to initialize immediately in case DOMContentLoaded already fired
-	if (document.readyState !== 'loading') {
-		document.querySelectorAll('.carousel').forEach((carousel) => {
-			if (!(carousel as any)._carouselInitialized) {
-				(carousel as any)._carouselInitialized = true;
-				initCarousel(carousel as HTMLElement);
-			}
-		});
-	}
+    function initCarousel(element: HTMLElement) {
+        const track = element.querySelector(".carousel-track") as HTMLElement;
+        const slides = element.querySelectorAll(".carousel-slide");
+        const dots = element.querySelectorAll(".carousel-dot");
+        const prevBtn = element.querySelector(
+            ".carousel-prev",
+        ) as HTMLButtonElement;
+        const nextBtn = element.querySelector(
+            ".carousel-next",
+        ) as HTMLButtonElement;
+
+        let currentIndex = 0;
+        const totalSlides = slides.length;
+        let autoPlayInterval: number | null = null;
+
+        function goTo(index: number) {
+            currentIndex = index;
+            track.style.transform = `translateX(-${currentIndex * 100}%)`;
+            updateDots();
+        }
+
+        function next() {
+            currentIndex = (currentIndex + 1) % totalSlides;
+            goTo(currentIndex);
+        }
+
+        function prev() {
+            currentIndex = (currentIndex - 1 + totalSlides) % totalSlides;
+            goTo(currentIndex);
+        }
+
+        function updateDots() {
+            dots.forEach((dot, index) => {
+                if (index === currentIndex) {
+                    dot.classList.remove("bg-white/50", "w-2");
+                    dot.classList.add("bg-white", "w-6");
+                } else {
+                    dot.classList.remove("bg-white", "w-6");
+                    dot.classList.add("bg-white/50", "w-2");
+                }
+            });
+        }
+
+        function startAutoPlay() {
+            autoPlayInterval = window.setInterval(() => next(), 5000);
+        }
+
+        function stopAutoPlay() {
+            if (autoPlayInterval) {
+                clearInterval(autoPlayInterval);
+                autoPlayInterval = null;
+            }
+        }
+
+        // Event listeners
+        prevBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            prev();
+        });
+
+        nextBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            next();
+        });
+
+        dots.forEach((dot, index) => {
+            dot.addEventListener("click", (e) => {
+                e.preventDefault();
+                goTo(index);
+            });
+        });
+
+        // Auto-play
+        startAutoPlay();
+
+        // Pause on hover
+        element.addEventListener("mouseenter", () => stopAutoPlay());
+        element.addEventListener("mouseleave", () => startAutoPlay());
+
+        // Touch support
+        let touchStartX = 0;
+
+        element.addEventListener(
+            "touchstart",
+            (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            },
+            { passive: true },
+        );
+
+        element.addEventListener(
+            "touchend",
+            (e) => {
+                const touchEndX = e.changedTouches[0].screenX;
+                if (touchStartX - touchEndX > 50) next();
+                if (touchEndX - touchStartX > 50) prev();
+            },
+            { passive: true },
+        );
+    }
+
+    // Initialize when DOM is ready
+    document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll(".carousel").forEach((carousel) => {
+            initCarousel(carousel as HTMLElement);
+        });
+    });
+
+    // Also try to initialize immediately in case DOMContentLoaded already fired
+    if (document.readyState !== "loading") {
+        document.querySelectorAll(".carousel").forEach((carousel) => {
+            if (!(carousel as any)._carouselInitialized) {
+                (carousel as any)._carouselInitialized = true;
+                initCarousel(carousel as HTMLElement);
+            }
+        });
+    }
 </script>
