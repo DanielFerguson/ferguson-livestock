@@ -1,127 +1,124 @@
 ---
-
+import { Image } from "astro:assets";
+import boxImage from "../assets/images/box.webp";
 ---
 
 <section
-	class="noise-overlay relative py-24 bg-linear-to-br from-forest to-forest-light overflow-hidden"
+    class="noise-overlay relative py-24 bg-linear-to-br from-forest to-forest-light overflow-hidden"
 >
-	<div class="max-w-6xl mx-auto px-6 relative z-10">
-		<div class="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-			<div class="text-cream lg:order-1">
-				<span
-					class="inline-block text-xs font-semibold uppercase tracking-widest text-mint-light mb-4"
-					>What's in the Box</span
-				>
-				<h2
-					class="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-cream mb-6 tracking-tight"
-				>
-					Premium Cuts, Packed Fresh
-				</h2>
-				<p class="text-lg text-cream/85 leading-relaxed mb-8">
-					Each box contains a variety of premium cuts from a single
-					beast—steaks, roasts, mince, and more. Vacuum-sealed and
-					packed in custom insulated packaging to arrive at your door
-					fresh and ready for the freezer.
-				</p>
-				<div class="flex gap-5 mb-8">
-					<div
-						class="flex-1 bg-white/10 border border-white/15 rounded-xl p-6 text-center transition-all duration-300 hover:bg-white/15 hover:border-mint"
-					>
-						<div
-							class="font-display text-4xl font-bold text-mint-light leading-none"
-						>
-							5kg
-						</div>
-						<div class="text-sm text-cream/70 mt-1">
-							Perfect for couples
-						</div>
-					</div>
-					<div
-						class="flex-1 bg-white/10 border border-white/15 rounded-xl p-6 text-center transition-all duration-300 hover:bg-white/15 hover:border-mint"
-					>
-						<div
-							class="font-display text-4xl font-bold text-mint-light leading-none"
-						>
-							10kg
-						</div>
-						<div class="text-sm text-cream/70 mt-1">
-							Great for families
-						</div>
-					</div>
-				</div>
-				<ul class="space-y-0">
-					<li
-						class="flex items-center gap-3 py-3 border-b border-white/10 text-cream"
-					>
-						<svg
-							class="w-5 h-5 fill-mint flex-shrink-0"
-							viewBox="0 0 24 24"
-							><path
-								d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
-							></path></svg
-						>Variety of premium cuts (steaks, roasts, mince)
-					</li>
-					<li
-						class="flex items-center gap-3 py-3 border-b border-white/10 text-cream"
-					>
-						<svg
-							class="w-5 h-5 fill-mint flex-shrink-0"
-							viewBox="0 0 24 24"
-							><path
-								d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
-							></path></svg
-						>Custom insulated packaging
-					</li>
-					<li
-						class="flex items-center gap-3 py-3 border-b border-white/10 text-cream"
-					>
-						<svg
-							class="w-5 h-5 fill-mint flex-shrink-0"
-							viewBox="0 0 24 24"
-							><path
-								d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
-							></path></svg
-						>Hand-signed thank you card
-					</li>
-					<li
-						class="flex items-center gap-3 py-3 border-b border-white/10 text-cream"
-					>
-						<svg
-							class="w-5 h-5 fill-mint flex-shrink-0"
-							viewBox="0 0 24 24"
-							><path
-								d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
-							></path></svg
-						>Occasional bonus goodies (sauces, recipes)
-					</li>
-					<li class="flex items-center gap-3 py-3 text-cream">
-						<svg
-							class="w-5 h-5 fill-mint flex-shrink-0"
-							viewBox="0 0 24 24"
-							><path
-								d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
-							></path></svg
-						>Free delivery to your door
-					</li>
-				</ul>
-			</div>
-			<div class="lg:order-2">
-				<div
-					class="bg-linear-to-br from-white/10 to-white/5 rounded-2xl p-10 aspect-[4/3] flex flex-col items-center justify-center border border-white/10"
-				>
-					<svg
-						class="w-28 h-28 fill-mint opacity-50 mb-5"
-						viewBox="0 0 24 24"
-						><path
-							d="M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H4V5h16v14zm-9.41-7.41L14 15l4-4-1.41-1.41L14 12.17l-2-2-4 4 1.41 1.41L12 13z"
-						></path></svg
-					>
-					<span class="text-sm text-cream/50"
-						>Your beautifully packed beef box</span
-					>
-				</div>
-			</div>
-		</div>
-	</div>
+    <div class="max-w-6xl mx-auto px-6 relative z-10">
+        <div class="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+            <div class="text-cream lg:order-1">
+                <span
+                    class="inline-block text-xs font-semibold uppercase tracking-widest text-mint-light mb-4"
+                    >What's in the Box</span
+                >
+                <h2
+                    class="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-cream mb-6 tracking-tight"
+                >
+                    Premium Cuts, Packed Fresh
+                </h2>
+                <p class="text-lg text-cream/85 leading-relaxed mb-8">
+                    Each box contains a variety of premium cuts from a single
+                    beast—steaks, roasts, mince, and more. Vacuum-sealed and
+                    packed in custom insulated packaging to arrive at your door
+                    fresh and ready for the freezer.
+                </p>
+                <div class="flex gap-5 mb-8">
+                    <div
+                        class="flex-1 bg-white/10 border border-white/15 rounded-xl p-6 text-center transition-all duration-300 hover:bg-white/15 hover:border-mint"
+                    >
+                        <div
+                            class="font-display text-4xl font-bold text-mint-light leading-none"
+                        >
+                            5kg
+                        </div>
+                        <div class="text-sm text-cream/70 mt-1">
+                            Perfect for couples
+                        </div>
+                    </div>
+                    <div
+                        class="flex-1 bg-white/10 border border-white/15 rounded-xl p-6 text-center transition-all duration-300 hover:bg-white/15 hover:border-mint"
+                    >
+                        <div
+                            class="font-display text-4xl font-bold text-mint-light leading-none"
+                        >
+                            10kg
+                        </div>
+                        <div class="text-sm text-cream/70 mt-1">
+                            Great for families
+                        </div>
+                    </div>
+                </div>
+                <ul class="space-y-0">
+                    <li
+                        class="flex items-center gap-3 py-3 border-b border-white/10 text-cream"
+                    >
+                        <svg
+                            class="w-5 h-5 fill-mint flex-shrink-0"
+                            viewBox="0 0 24 24"
+                            ><path
+                                d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
+                            ></path></svg
+                        >Variety of premium cuts (steaks, roasts, mince)
+                    </li>
+                    <li
+                        class="flex items-center gap-3 py-3 border-b border-white/10 text-cream"
+                    >
+                        <svg
+                            class="w-5 h-5 fill-mint flex-shrink-0"
+                            viewBox="0 0 24 24"
+                            ><path
+                                d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
+                            ></path></svg
+                        >Custom insulated packaging
+                    </li>
+                    <li
+                        class="flex items-center gap-3 py-3 border-b border-white/10 text-cream"
+                    >
+                        <svg
+                            class="w-5 h-5 fill-mint flex-shrink-0"
+                            viewBox="0 0 24 24"
+                            ><path
+                                d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
+                            ></path></svg
+                        >Hand-signed thank you card
+                    </li>
+                    <li
+                        class="flex items-center gap-3 py-3 border-b border-white/10 text-cream"
+                    >
+                        <svg
+                            class="w-5 h-5 fill-mint flex-shrink-0"
+                            viewBox="0 0 24 24"
+                            ><path
+                                d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
+                            ></path></svg
+                        >Occasional bonus goodies (sauces, recipes)
+                    </li>
+                    <li class="flex items-center gap-3 py-3 text-cream">
+                        <svg
+                            class="w-5 h-5 fill-mint flex-shrink-0"
+                            viewBox="0 0 24 24"
+                            ><path
+                                d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
+                            ></path></svg
+                        >Free delivery to your door
+                    </li>
+                </ul>
+            </div>
+            <div class="lg:order-2">
+                <div
+                    class="bg-linear-to-br from-white/10 to-white/5 rounded-2xl aspect-[4/3] flex flex-col items-center justify-center border border-white/10"
+                >
+                    <Image
+                        src={boxImage}
+                        alt="Your beautifully packed beef box"
+                        class="w-full h-full object-cover rounded-2xl"
+                        widths={[400, 600, 800]}
+                        sizes="(max-width: 1024px) 100vw, 50vw"
+                    />
+                </div>
+            </div>
+        </div>
+    </div>
 </section>
-
