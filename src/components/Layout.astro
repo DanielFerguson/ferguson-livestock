@@ -77,6 +77,21 @@ const canonical = canonicalUrl || Astro.url.href;
             rel="stylesheet"
         />
 
+        <!-- Google Analytics -->
+        <script
+            is:inline
+            async
+            src="https://www.googletagmanager.com/gtag/js?id=G-EZVFVWV5YQ"
+        ></script>
+        <script is:inline>
+            window.dataLayer = window.dataLayer || [];
+            function gtag() {
+                dataLayer.push(arguments);
+            }
+            gtag("js", new Date());
+            gtag("config", "G-EZVFVWV5YQ");
+        </script>
+
         <!-- JSON-LD Structured Data -->
         <script
             type="application/ld+json"
