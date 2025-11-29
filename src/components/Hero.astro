@@ -156,6 +156,23 @@
     </section>
 
     <script>
+        // Declare gtag as global (loaded by Google Analytics in Layout)
+        declare const gtag: (...args: any[]) => void;
+
+        // Track form start when user focuses on first field
+        let formStarted = false;
+        document.getElementById("firstName")?.addEventListener("focus", () => {
+            if (!formStarted) {
+                formStarted = true;
+                if (typeof gtag === "function") {
+                    gtag("event", "form_start", {
+                        form_id: "interest-form",
+                        form_location: "hero",
+                    });
+                }
+            }
+        });
+
         document
             .getElementById("interest-form")
             ?.addEventListener("submit", async function (e) {
@@ -192,6 +209,14 @@
                     const result = await response.json();
 
                     if (result.success) {
+                        // Track successful lead generation
+                        if (typeof gtag === "function") {
+                            gtag("event", "generate_lead", {
+                                postcode: postcode,
+                                form_location: "hero",
+                            });
+                        }
+
                         // Show success message
                         form.innerHTML =
                             '<div class="text-center py-10"><svg class="w-16 h-16 fill-sage mx-auto mb-4" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L18 8l-9 9z"/></svg><h3 class="font-display text-2xl text-forest mb-2">You\'re on the list, ' +

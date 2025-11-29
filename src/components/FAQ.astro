@@ -100,7 +100,10 @@ const faqSchema = {
 </section>
 
 <script>
-    document.querySelectorAll(".faq-question").forEach((button) => {
+    // Declare gtag as global (loaded by Google Analytics in Layout)
+    declare const gtag: (...args: any[]) => void;
+
+    document.querySelectorAll(".faq-question").forEach((button, index) => {
         button.addEventListener("click", () => {
             const item = button.parentElement;
             if (!item) return;
@@ -117,6 +120,14 @@ const faqSchema = {
             if (!isActive) {
                 item.classList.add("active");
                 button.setAttribute("aria-expanded", "true");
+
+                // Track FAQ expand event
+                if (typeof gtag === "function") {
+                    gtag("event", "faq_expand", {
+                        question_text: button.textContent?.trim(),
+                        question_index: index,
+                    });
+                }
             }
         });
     });
