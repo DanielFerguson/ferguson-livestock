@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+@theme {
+	--color-forest: #1a2e1a;
+	--color-forest-light: #243524;
+	--color-sage: #4a6741;
+	--color-mint: #7db89e;
+	--color-mint-light: #a8d4be;
+	--color-cream: #f5f2eb;
+	--color-cream-dark: #e8e4d9;
+	--color-warm: #d4a574;
+	--color-warm-dark: #b8956a;
+
+	--font-display: "Cormorant Garamond", Georgia, serif;
+	--font-body: "Source Sans 3", -apple-system, sans-serif;
+}
+
+html {
+	scroll-behavior: smooth;
+}
+
+body {
+	font-family: var(--font-body);
+}
+
+.noise-overlay::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+	opacity: 0.04;
+	pointer-events: none;
+}
+
+@keyframes fadeInUp {
+	from {
+		opacity: 0;
+		transform: translateY(30px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.animate-fade-in-up {
+	animation: fadeInUp 0.8s ease forwards;
+	opacity: 0;
+}
+
+.animation-delay-100 {
+	animation-delay: 0.1s;
+}
+
+.animation-delay-200 {
+	animation-delay: 0.2s;
+}
+
+.animation-delay-300 {
+	animation-delay: 0.3s;
+}
+
+.animation-delay-400 {
+	animation-delay: 0.4s;
+}
+
+.faq-answer {
+	max-height: 0;
+	overflow: hidden;
+	transition: max-height 0.4s ease;
+}
+
+.faq-item.active .faq-answer {
+	max-height: 300px;
+}
+
+.faq-item.active .faq-icon {
+	transform: rotate(45deg);
+}
