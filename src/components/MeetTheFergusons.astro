@@ -1,19 +1,80 @@
 ---
 import { Image } from 'astro:assets';
-import fergusonFamily from '../assets/images/2.webp';
+import image1 from '../assets/images/1.webp';
+import image2 from '../assets/images/2.webp';
+import image3 from '../assets/images/3.webp';
+import image4 from '../assets/images/4.webp';
+import image5 from '../assets/images/5.webp';
+import image6 from '../assets/images/6.webp';
+import image7 from '../assets/images/7.webp';
+import image8 from '../assets/images/8.webp';
+import image9 from '../assets/images/9.webp';
+
+const images = [
+	{ src: image1, alt: "Daniel relaxing with a Murray Grey cow" },
+	{ src: image2, alt: "Daniel and Tahlia Ferguson with their Murray Grey cattle" },
+	{ src: image3, alt: "Tahlia with a Murray Grey cow at a show" },
+	{ src: image4, alt: "Close-up of a Murray Grey cow named Hovea" },
+	{ src: image5, alt: "The Ferguson family winning Reserve Senior Champion" },
+	{ src: image6, alt: "Tahlia showing a Murray Grey cow in the ring" },
+	{ src: image7, alt: "Ferguson Livestock display at a cattle show" },
+	{ src: image8, alt: "Showing Murray Grey cattle at competition" },
+	{ src: image9, alt: "Tahlia with Murray Grey cattle outdoors" },
+];
 ---
 
 <section class="py-24 bg-cream-dark">
 	<div class="max-w-6xl mx-auto px-6">
 		<div class="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
 			<div class="relative">
-				<Image
-					src={fergusonFamily}
-					alt="Daniel and Tahlia Ferguson with their Murray Grey cattle"
-					class="aspect-[4/3] object-cover rounded-2xl shadow-xl"
-					widths={[400, 600, 800]}
-					sizes="(max-width: 1024px) 100vw, 50vw"
-				/>
+				<div class="carousel relative overflow-hidden rounded-2xl shadow-xl">
+					<div class="carousel-track flex transition-transform duration-500 ease-out">
+						{images.map((image, index) => (
+							<div class="carousel-slide min-w-full">
+								<Image
+									src={image.src}
+									alt={image.alt}
+									class="aspect-[4/3] w-full object-cover"
+									widths={[400, 600, 800]}
+									sizes="(max-width: 1024px) 100vw, 50vw"
+								/>
+							</div>
+						))}
+					</div>
+					
+					<!-- Navigation Arrows -->
+					<button 
+						type="button"
+						class="carousel-prev absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110 cursor-pointer z-10"
+						aria-label="Previous image"
+					>
+						<svg class="w-5 h-5 text-forest" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+						</svg>
+					</button>
+					<button 
+						type="button"
+						class="carousel-next absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110 cursor-pointer z-10"
+						aria-label="Next image"
+					>
+						<svg class="w-5 h-5 text-forest" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+						</svg>
+					</button>
+					
+					<!-- Dot Indicators -->
+					<div class="carousel-dots absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+						{images.map((_, index) => (
+							<button 
+								type="button"
+								class={`carousel-dot w-2 h-2 rounded-full transition-all cursor-pointer ${index === 0 ? 'bg-white w-6' : 'bg-white/50 hover:bg-white/75'}`}
+								data-index={index}
+								aria-label={`Go to image ${index + 1}`}
+							/>
+						))}
+					</div>
+				</div>
+				
 				<div
 					class="absolute -bottom-6 -right-6 w-32 h-32 bg-mint/20 rounded-full -z-10"
 				>
@@ -103,3 +164,110 @@ import fergusonFamily from '../assets/images/2.webp';
 	</div>
 </section>
 
+<script>
+	function initCarousel(element: HTMLElement) {
+		const track = element.querySelector('.carousel-track') as HTMLElement;
+		const slides = element.querySelectorAll('.carousel-slide');
+		const dots = element.querySelectorAll('.carousel-dot');
+		const prevBtn = element.querySelector('.carousel-prev') as HTMLButtonElement;
+		const nextBtn = element.querySelector('.carousel-next') as HTMLButtonElement;
+		
+		let currentIndex = 0;
+		const totalSlides = slides.length;
+		let autoPlayInterval: number | null = null;
+		
+		function goTo(index: number) {
+			currentIndex = index;
+			track.style.transform = `translateX(-${currentIndex * 100}%)`;
+			updateDots();
+		}
+		
+		function next() {
+			currentIndex = (currentIndex + 1) % totalSlides;
+			goTo(currentIndex);
+		}
+		
+		function prev() {
+			currentIndex = (currentIndex - 1 + totalSlides) % totalSlides;
+			goTo(currentIndex);
+		}
+		
+		function updateDots() {
+			dots.forEach((dot, index) => {
+				if (index === currentIndex) {
+					dot.classList.remove('bg-white/50', 'w-2');
+					dot.classList.add('bg-white', 'w-6');
+				} else {
+					dot.classList.remove('bg-white', 'w-6');
+					dot.classList.add('bg-white/50', 'w-2');
+				}
+			});
+		}
+		
+		function startAutoPlay() {
+			autoPlayInterval = window.setInterval(() => next(), 5000);
+		}
+		
+		function stopAutoPlay() {
+			if (autoPlayInterval) {
+				clearInterval(autoPlayInterval);
+				autoPlayInterval = null;
+			}
+		}
+		
+		// Event listeners
+		prevBtn.addEventListener('click', (e) => {
+			e.preventDefault();
+			prev();
+		});
+		
+		nextBtn.addEventListener('click', (e) => {
+			e.preventDefault();
+			next();
+		});
+		
+		dots.forEach((dot, index) => {
+			dot.addEventListener('click', (e) => {
+				e.preventDefault();
+				goTo(index);
+			});
+		});
+		
+		// Auto-play
+		startAutoPlay();
+		
+		// Pause on hover
+		element.addEventListener('mouseenter', () => stopAutoPlay());
+		element.addEventListener('mouseleave', () => startAutoPlay());
+		
+		// Touch support
+		let touchStartX = 0;
+		
+		element.addEventListener('touchstart', (e) => {
+			touchStartX = e.changedTouches[0].screenX;
+		}, { passive: true });
+		
+		element.addEventListener('touchend', (e) => {
+			const touchEndX = e.changedTouches[0].screenX;
+			if (touchStartX - touchEndX > 50) next();
+			if (touchEndX - touchStartX > 50) prev();
+		}, { passive: true });
+	}
+	
+	// Initialize when DOM is ready
+	document.addEventListener('DOMContentLoaded', () => {
+		document.querySelectorAll('.carousel').forEach((carousel) => {
+			initCarousel(carousel as HTMLElement);
+		});
+	});
+	
+	// Also try to initialize immediately in case DOMContentLoaded already fired
+	if (document.readyState !== 'loading') {
+		document.querySelectorAll('.carousel').forEach((carousel) => {
+			if (!(carousel as any)._carouselInitialized) {
+				(carousel as any)._carouselInitialized = true;
+				initCarousel(carousel as HTMLElement);
+			}
+		});
+	}
+</script>
