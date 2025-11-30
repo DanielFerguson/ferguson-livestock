@@ -1,0 +1,181 @@
+---
+import Layout from "../components/Layout.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+
+const pageTitle = "Thank You | Ferguson Livestock";
+const pageDescription = "Thanks for joining our wait list! We'll be in touch when the next beef drop is ready.";
+
+// Get the name from URL params (will be handled client-side for static build)
+---
+
+<Layout title={pageTitle} description={pageDescription}>
+    <Header />
+    
+    <main class="min-h-[80vh] flex items-center justify-center py-16 px-6 bg-cream-dark">
+        <div class="max-w-2xl w-full">
+            <!-- Success Icon -->
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-20 h-20 bg-mint/20 rounded-full mb-6">
+                    <svg class="w-10 h-10 fill-sage" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L18 8l-9 9z"/>
+                    </svg>
+                </div>
+                <h1 class="font-display text-3xl md:text-4xl font-semibold text-forest mb-2">
+                    Thanks for joining, <span id="user-name">friend</span>!
+                </h1>
+                <p class="text-gray-500">You're now on our wait list</p>
+            </div>
+            
+            <!-- Thank You Letter Card -->
+            <div class="bg-white rounded-2xl shadow-xl border border-forest/5 p-8 md:p-12 mb-8">
+                <div class="prose prose-lg max-w-none text-gray-600">
+                    <p class="text-lg leading-relaxed mb-6">
+                        We're thrilled to have you join the Ferguson Livestock family. It means the world to us that you're interested in supporting our small family farm.
+                    </p>
+                    
+                    <p class="leading-relaxed mb-6">
+                        Here's what happens next: when our next batch of beef is ready (usually every few months), we'll send you a text message with all the details. You'll get first dibs on our premium beef boxes before we open orders to the public.
+                    </p>
+                    
+                    <p class="leading-relaxed mb-6">
+                        No spam, no weekly newsletters—just a friendly heads-up when it's time to stock your freezer with the best pasture-raised beef in the region.
+                    </p>
+                    
+                    <p class="leading-relaxed mb-8">
+                        In the meantime, feel free to share this with friends and family who might be interested. The more, the merrier!
+                    </p>
+                    
+                    <!-- Signature -->
+                    <div class="border-t border-gray-100 pt-8">
+                        <p class="text-gray-500 mb-2">With gratitude,</p>
+                        <p class="font-handwriting text-4xl text-forest mb-1">Daniel & Tahlia</p>
+                        <p class="text-sm text-gray-400">Ferguson Livestock, Snake Valley</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a 
+                    href="/" 
+                    class="inline-flex items-center justify-center gap-2 bg-forest text-cream px-8 py-4 rounded-lg font-semibold text-base transition-all duration-300 hover:bg-sage hover:-translate-y-0.5 hover:shadow-lg"
+                >
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                    </svg>
+                    Back to Homepage
+                </a>
+                
+                <button 
+                    id="share-button"
+                    class="inline-flex items-center justify-center gap-2 bg-white text-forest border-2 border-forest px-8 py-4 rounded-lg font-semibold text-base transition-all duration-300 hover:bg-forest hover:text-cream hover:-translate-y-0.5 hover:shadow-lg cursor-pointer"
+                >
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                        <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>
+                    </svg>
+                    <span id="share-text">Share with Friends</span>
+                </button>
+            </div>
+            
+            <!-- Social Share Options (hidden by default, shown on click) -->
+            <div id="share-options" class="hidden mt-6 flex flex-wrap gap-3 justify-center">
+                <a 
+                    href="https://www.facebook.com/sharer/sharer.php?u=https://fergusonlivestock.com.au"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-2 bg-[#1877f2] text-white px-5 py-3 rounded-lg font-medium text-sm transition-all hover:opacity-90"
+                >
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                    Facebook
+                </a>
+                
+                <button 
+                    id="copy-link"
+                    class="inline-flex items-center gap-2 bg-gray-100 text-gray-700 px-5 py-3 rounded-lg font-medium text-sm transition-all hover:bg-gray-200 cursor-pointer"
+                >
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                    </svg>
+                    <span id="copy-text">Copy Link</span>
+                </button>
+            </div>
+        </div>
+    </main>
+    
+    <Footer />
+</Layout>
+
+<script>
+    // Get name from URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    const name = urlParams.get('name');
+    
+    if (name) {
+        const nameElement = document.getElementById('user-name');
+        if (nameElement) {
+            nameElement.textContent = name;
+        }
+    }
+    
+    // Google Ads Conversion Tracking
+    // Replace 'AW-XXXXXXXXX/XXXXXXXXXXXXXXXXXXXX' with your actual conversion ID
+    declare const gtag: (...args: any[]) => void;
+    
+    if (typeof gtag === 'function') {
+        // GA4 custom event for lead tracking
+        gtag('event', 'sign_up', {
+            method: 'waitlist_form',
+            page_location: window.location.href,
+        });
+        
+        // Google Ads conversion (uncomment and add your conversion ID when ready)
+        // gtag('event', 'conversion', {
+        //     'send_to': 'AW-XXXXXXXXX/XXXXXXXXXXXXXXXXXXXX',
+        //     'value': 1.0,
+        //     'currency': 'AUD'
+        // });
+    }
+    
+    // Share button functionality
+    const shareButton = document.getElementById('share-button');
+    const shareOptions = document.getElementById('share-options');
+    
+    shareButton?.addEventListener('click', () => {
+        // Check if native share is available
+        if (navigator.share) {
+            navigator.share({
+                title: 'Ferguson Livestock - Premium Beef Boxes',
+                text: 'I just joined the wait list for farm-fresh beef from Ferguson Livestock! Check them out:',
+                url: 'https://fergusonlivestock.com.au'
+            }).catch(() => {
+                // User cancelled or error - show fallback options
+                shareOptions?.classList.toggle('hidden');
+            });
+        } else {
+            // Show share options
+            shareOptions?.classList.toggle('hidden');
+        }
+    });
+    
+    // Copy link functionality
+    const copyLinkButton = document.getElementById('copy-link');
+    const copyText = document.getElementById('copy-text');
+    
+    copyLinkButton?.addEventListener('click', async () => {
+        try {
+            await navigator.clipboard.writeText('https://fergusonlivestock.com.au');
+            if (copyText) {
+                copyText.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyText.textContent = 'Copy Link';
+                }, 2000);
+            }
+        } catch (err) {
+            console.error('Failed to copy:', err);
+        }
+    });
+</script>
+

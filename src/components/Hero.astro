@@ -250,19 +250,8 @@ import heroImage from "../assets/images/cows-10.webp";
                             });
                         }
 
-                        // Show success message
-                        form.innerHTML =
-                            '<div class="text-center py-10"><svg class="w-16 h-16 fill-sage mx-auto mb-4" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L18 8l-9 9z"/></svg><h3 class="font-display text-2xl text-forest mb-2">You\'re on the list, ' +
-                            firstName +
-                            '!</h3><p class="text-gray-500">We\'ll text you when the January drop opens.</p></div>';
-
-                        // Update counter
-                        const counter = document.getElementById("counter");
-                        if (counter) {
-                            counter.textContent = String(
-                                parseInt(counter.textContent || "0") + 1,
-                            );
-                        }
+                        // Redirect to thank you page for Google Ads conversion tracking
+                        window.location.href = `/thank-you?name=${encodeURIComponent(firstName)}`;
                     } else {
                         // Show error message
                         alert(
