@@ -1,6 +1,21 @@
 ---
 import "../styles/global.css";
 
+// Import Fontsource fonts (self-hosted, no render-blocking external requests)
+import "@fontsource-variable/source-sans-3";
+import "@fontsource/cormorant-garamond/400.css";
+import "@fontsource/cormorant-garamond/500.css";
+import "@fontsource/cormorant-garamond/600.css";
+import "@fontsource/cormorant-garamond/700.css";
+import "@fontsource/caveat/400.css";
+import "@fontsource/caveat/500.css";
+import "@fontsource/caveat/600.css";
+import "@fontsource/caveat/700.css";
+
+// Import critical font files for preloading (hero section)
+import sourceSansWoff2 from "@fontsource-variable/source-sans-3/files/source-sans-3-latin-wght-normal.woff2?url";
+import cormorantWoff2 from "@fontsource/cormorant-garamond/files/cormorant-garamond-latin-600-normal.woff2?url";
+
 interface Props {
     title: string;
     description?: string;
@@ -86,12 +101,20 @@ const canonical = canonicalUrl || Astro.url.href;
         <meta name="geo.placename" content="Snake Valley" />
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
 
-        <!-- Fonts with display swap for better LCP -->
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <!-- Preload critical fonts for hero section (improves LCP) -->
         <link
-            href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Cormorant+Garamond:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap"
-            rel="stylesheet"
+            rel="preload"
+            as="font"
+            type="font/woff2"
+            href={sourceSansWoff2}
+            crossorigin="anonymous"
+        />
+        <link
+            rel="preload"
+            as="font"
+            type="font/woff2"
+            href={cormorantWoff2}
+            crossorigin="anonymous"
         />
 
         <!-- Google Analytics -->
