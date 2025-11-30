@@ -10,7 +10,7 @@ interface Props {
 
 const {
     title,
-    description = "Premium grass-fed Murray Grey beef boxes delivered direct from our family farm in Snake Valley, Victoria. Hormone-free, ethically raised cattle.",
+    description = "Premium pasture-raised Murray Grey beef boxes delivered direct from our family farm in Snake Valley, Victoria. Hormone-free, ethically raised cattle.",
     image = "/og-image.jpg",
     canonicalUrl,
 } = Astro.props;
@@ -125,7 +125,7 @@ const canonical = canonicalUrl || Astro.url.href;
                         "@id": `${siteUrl}/#localbusiness`,
                         name: "Ferguson Livestock",
                         description:
-                            "Family-owned Murray Grey cattle farm offering premium grass-fed beef boxes direct to consumers.",
+                            "Family-owned Murray Grey cattle farm offering premium pasture-raised beef boxes direct to consumers.",
                         url: siteUrl,
                         telephone: "+61427458706",
                         address: {
@@ -156,7 +156,7 @@ const canonical = canonicalUrl || Astro.url.href;
                         "@id": `${siteUrl}/#product`,
                         name: "Ferguson Livestock Beef Box",
                         description:
-                            "Premium grass-fed Murray Grey beef box containing a variety of cuts, delivered fresh from our family farm.",
+                            "Premium pasture-raised Murray Grey beef box containing a variety of cuts, delivered fresh from our family farm.",
                         brand: {
                             "@type": "Brand",
                             name: "Ferguson Livestock",
@@ -171,7 +171,7 @@ const canonical = canonicalUrl || Astro.url.href;
                             },
                         },
                         category: "Beef",
-                        material: "Grass-fed Murray Grey beef",
+                        material: "Pasture-raised Murray Grey beef",
                     },
                     {
                         "@type": "WebSite",
