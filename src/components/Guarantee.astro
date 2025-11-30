@@ -9,7 +9,7 @@ import guaranteeImage from "../assets/images/6.webp";
 			class="rounded-3xl p-8 md:p-12 lg:p-16 relative overflow-hidden"
 		>
 			<!-- Background Image -->
-			<div class="absolute inset-0 -z-20">
+			<div class="absolute inset-0">
 				<Image
 					src={guaranteeImage}
 					alt=""
@@ -18,8 +18,8 @@ import guaranteeImage from "../assets/images/6.webp";
 					sizes="100vw"
 				/>
 			</div>
-			<!-- Gradient Overlay -->
-			<div class="absolute inset-0 -z-10 bg-linear-to-br from-forest/95 to-forest-light/90"></div>
+			<!-- Gradient Overlay - stronger opacity -->
+			<div class="absolute inset-0 bg-forest/95"></div>
 			<div
 				class="absolute top-0 right-0 w-64 h-64 bg-mint/10 rounded-full blur-3xl"
 			>
