@@ -24,3 +24,6 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# OG image generation fonts (downloaded at build time)
+scripts/fonts/

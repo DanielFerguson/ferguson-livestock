@@ -64,6 +64,9 @@ const canonical = canonicalUrl || Astro.url.href;
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
         <meta property="og:image" content={fullImageUrl} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:type" content="image/jpeg" />
         <meta property="og:site_name" content="Ferguson Livestock" />
         <meta property="og:locale" content="en_AU" />
 
@@ -73,12 +76,15 @@ const canonical = canonicalUrl || Astro.url.href;
         <meta name="twitter:title" content={title} />
         <meta name="twitter:description" content={description} />
         <meta name="twitter:image" content={fullImageUrl} />
+        <meta name="twitter:image:width" content="1200" />
+        <meta name="twitter:image:height" content="630" />
 
         <!-- Additional SEO -->
         <meta name="robots" content="index, follow" />
         <meta name="author" content="Ferguson Livestock" />
         <meta name="geo.region" content="AU-VIC" />
         <meta name="geo.placename" content="Snake Valley" />
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
 
         <!-- Fonts with display swap for better LCP -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -116,18 +122,32 @@ const canonical = canonicalUrl || Astro.url.href;
                         url: siteUrl,
                         logo: {
                             "@type": "ImageObject",
-                            url: `${siteUrl}/favicon.webp`,
+                            url: `${siteUrl}/android-chrome-512x512.png`,
+                            width: 512,
+                            height: 512,
                         },
-                        sameAs: [],
+                        image: `${siteUrl}/og-image.jpg`,
+                        sameAs: [
+                            "https://www.facebook.com/FergusonLivestockMG",
+                        ],
+                        contactPoint: {
+                            "@type": "ContactPoint",
+                            telephone: "+61427458706",
+                            contactType: "sales",
+                            areaServed: "AU",
+                            availableLanguage: "English",
+                        },
                     },
                     {
-                        "@type": "LocalBusiness",
+                        "@type": ["LocalBusiness", "FoodEstablishment"],
                         "@id": `${siteUrl}/#localbusiness`,
                         name: "Ferguson Livestock",
                         description:
-                            "Family-owned Murray Grey cattle farm offering premium pasture-raised beef boxes direct to consumers.",
+                            "Family-owned Murray Grey cattle farm offering premium pasture-raised beef boxes direct to consumers in Ballarat and surrounding areas.",
                         url: siteUrl,
                         telephone: "+61427458706",
+                        email: "ferguson.livestock.mg@outlook.com",
+                        image: `${siteUrl}/og-image.jpg`,
                         address: {
                             "@type": "PostalAddress",
                             addressLocality: "Snake Valley",
@@ -140,46 +160,126 @@ const canonical = canonicalUrl || Astro.url.href;
                             latitude: -37.5833,
                             longitude: 143.6833,
                         },
-                        areaServed: {
-                            "@type": "GeoCircle",
-                            geoMidpoint: {
-                                "@type": "GeoCoordinates",
-                                latitude: -37.5833,
-                                longitude: 143.6833,
+                        areaServed: [
+                            {
+                                "@type": "City",
+                                name: "Ballarat",
+                                sameAs: "https://en.wikipedia.org/wiki/Ballarat",
                             },
-                            geoRadius: "100000",
-                        },
+                            {
+                                "@type": "Place",
+                                name: "Snake Valley",
+                            },
+                            {
+                                "@type": "Place",
+                                name: "Smythesdale",
+                            },
+                            {
+                                "@type": "Place",
+                                name: "Buninyong",
+                            },
+                        ],
                         priceRange: "$$",
+                        currenciesAccepted: "AUD",
+                        paymentAccepted: "Credit Card, Bank Transfer",
+                        servesCuisine: "Beef",
+                        hasOfferCatalog: {
+                            "@type": "OfferCatalog",
+                            name: "Beef Boxes",
+                            itemListElement: [
+                                {
+                                    "@type": "Offer",
+                                    itemOffered: {
+                                        "@type": "Product",
+                                        name: "5kg Beef Box",
+                                    },
+                                },
+                                {
+                                    "@type": "Offer",
+                                    itemOffered: {
+                                        "@type": "Product",
+                                        name: "10kg Beef Box",
+                                    },
+                                },
+                            ],
+                        },
                     },
                     {
                         "@type": "Product",
                         "@id": `${siteUrl}/#product`,
                         name: "Ferguson Livestock Beef Box",
                         description:
-                            "Premium pasture-raised Murray Grey beef box containing a variety of cuts, delivered fresh from our family farm.",
+                            "Premium pasture-raised Murray Grey beef box containing a variety of cuts including steaks, roasts, mince, and sausages. Vacuum-sealed and delivered fresh from our family farm.",
+                        image: `${siteUrl}/og-image.jpg`,
                         brand: {
                             "@type": "Brand",
                             name: "Ferguson Livestock",
                         },
                         offers: {
-                            "@type": "Offer",
+                            "@type": "AggregateOffer",
                             availability: "https://schema.org/PreOrder",
-                            priceRange: "$$",
+                            priceCurrency: "AUD",
+                            lowPrice: "150",
+                            highPrice: "300",
+                            offerCount: "2",
                             areaServed: {
-                                "@type": "Place",
-                                name: "Victoria, Australia",
+                                "@type": "State",
+                                name: "Victoria",
+                                sameAs: "https://en.wikipedia.org/wiki/Victoria_(state)",
                             },
                         },
                         category: "Beef",
                         material: "Pasture-raised Murray Grey beef",
+                        additionalProperty: [
+                            {
+                                "@type": "PropertyValue",
+                                name: "Breed",
+                                value: "Murray Grey",
+                            },
+                            {
+                                "@type": "PropertyValue",
+                                name: "Raised",
+                                value: "Pasture-raised",
+                            },
+                            {
+                                "@type": "PropertyValue",
+                                name: "Hormones",
+                                value: "No added hormones",
+                            },
+                            {
+                                "@type": "PropertyValue",
+                                name: "Aged",
+                                value: "Dry-aged 7-10 days",
+                            },
+                        ],
                     },
                     {
                         "@type": "WebSite",
                         "@id": `${siteUrl}/#website`,
                         url: siteUrl,
                         name: "Ferguson Livestock",
+                        description:
+                            "Premium pasture-raised Murray Grey beef boxes delivered direct from our family farm in Snake Valley, Victoria.",
                         publisher: {
                             "@id": `${siteUrl}/#organization`,
+                        },
+                        inLanguage: "en-AU",
+                    },
+                    {
+                        "@type": "WebPage",
+                        "@id": `${siteUrl}/#webpage`,
+                        url: siteUrl,
+                        name: title,
+                        description: description,
+                        isPartOf: {
+                            "@id": `${siteUrl}/#website`,
+                        },
+                        about: {
+                            "@id": `${siteUrl}/#localbusiness`,
+                        },
+                        primaryImageOfPage: {
+                            "@type": "ImageObject",
+                            url: `${siteUrl}/og-image.jpg`,
                         },
                     },
                 ],
