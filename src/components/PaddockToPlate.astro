@@ -1,5 +1,9 @@
 ---
-
+import { Image } from "astro:assets";
+import step1Image from "../assets/images/cows-10.webp";
+import step2Image from "../assets/images/ute-1.webp";
+import step3Image from "../assets/images/box.webp";
+import step4Image from "../assets/images/family-1.webp";
 ---
 
 <section class="py-24 bg-cream-dark">
@@ -32,43 +36,41 @@
                 <!-- Step 1 -->
                 <div class="relative">
                     <div
-                        class="bg-white rounded-2xl p-8 border border-forest/5 shadow-sm h-full"
+                        class="bg-white rounded-2xl border border-forest/5 shadow-sm h-full overflow-hidden"
                     >
-                        <div
-                            class="w-16 h-16 bg-linear-to-br from-forest to-sage rounded-full flex items-center justify-center mb-6 relative z-10 mx-auto lg:mx-0"
-                        >
-                            <span
-                                class="font-display text-2xl font-bold text-mint-light"
-                                >1</span
-                            >
+                        <div class="h-32 overflow-hidden">
+                            <Image
+                                src={step1Image}
+                                alt="Murray Grey cattle on pasture"
+                                class="w-full h-full object-cover"
+                                widths={[300, 400]}
+                                sizes="(max-width: 768px) 100vw, 25vw"
+                            />
                         </div>
-                        <div
-                            class="inline-block bg-forest/10 text-forest text-xs font-semibold px-3 py-1 rounded-full mb-4"
-                        >
-                            Their Whole Life
-                        </div>
-                        <h3
-                            class="font-display text-xl font-semibold text-forest mb-3"
-                        >
-                            Raised on Pasture
-                        </h3>
-                        <p class="text-gray-500 leading-relaxed">
-                            Our Murray Greys spend their entire lives grazing on
-                            our Snake Valley pastures. No feedlots, no
-                            confinement—just open paddocks, fresh grass, and
-                            clean water.
-                        </p>
-                        <div class="mt-4 flex items-center gap-2 text-sage">
-                            <svg
-                                class="w-5 h-5 fill-current"
-                                viewBox="0 0 24 24"
-                                ><path
-                                    d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"
-                                ></path></svg
+                        <div class="p-6">
+                            <div
+                                class="w-12 h-12 bg-linear-to-br from-forest to-sage rounded-full flex items-center justify-center mb-4 relative z-10 -mt-10 border-4 border-white shadow-lg"
                             >
-                            <span class="text-sm font-medium"
-                                >Snake Valley, VIC</span
+                                <span
+                                    class="font-display text-lg font-bold text-mint-light"
+                                    >1</span
+                                >
+                            </div>
+                            <div
+                                class="inline-block bg-forest/10 text-forest text-xs font-semibold px-3 py-1 rounded-full mb-3"
                             >
+                                Their Whole Life
+                            </div>
+                            <h3
+                                class="font-display text-lg font-semibold text-forest mb-2"
+                            >
+                                Raised on Pasture
+                            </h3>
+                            <p class="text-gray-500 text-sm leading-relaxed">
+                                Our Murray Greys spend their entire lives
+                                grazing on our Snake Valley pastures. No
+                                feedlots, no confinement.
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -76,43 +78,40 @@
                 <!-- Step 2 -->
                 <div class="relative">
                     <div
-                        class="bg-white rounded-2xl p-8 border border-forest/5 shadow-sm h-full"
+                        class="bg-white rounded-2xl border border-forest/5 shadow-sm h-full overflow-hidden"
                     >
-                        <div
-                            class="w-16 h-16 bg-linear-to-br from-forest to-sage rounded-full flex items-center justify-center mb-6 relative z-10 mx-auto lg:mx-0"
-                        >
-                            <span
-                                class="font-display text-2xl font-bold text-mint-light"
-                                >2</span
-                            >
+                        <div class="h-32 overflow-hidden">
+                            <Image
+                                src={step2Image}
+                                alt="Murray Grey cattle on pasture"
+                                class="w-full h-full object-cover"
+                                widths={[300, 400]}
+                                sizes="(max-width: 768px) 100vw, 25vw"
+                            />
                         </div>
-                        <div
-                            class="inline-block bg-forest/10 text-forest text-xs font-semibold px-3 py-1 rounded-full mb-4"
-                        >
-                            Day 1
-                        </div>
-                        <h3
-                            class="font-display text-xl font-semibold text-forest mb-3"
-                        >
-                            Local Processing
-                        </h3>
-                        <p class="text-gray-500 leading-relaxed">
-                            Processed at a licensed local facility we trust.
-                            Minimal transport time means minimal stress.
-                            Professionally butchered into premium cuts by
-                            experienced craftsmen.
-                        </p>
-                        <div class="mt-4 flex items-center gap-2 text-sage">
-                            <svg
-                                class="w-5 h-5 fill-current"
-                                viewBox="0 0 24 24"
-                                ><path
-                                    d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
-                                ></path></svg
+                        <div class="p-6">
+                            <div
+                                class="w-12 h-12 bg-linear-to-br from-forest to-sage rounded-full flex items-center justify-center mb-4 relative z-10 -mt-10 border-4 border-white shadow-lg"
                             >
-                            <span class="text-sm font-medium"
-                                >Licensed & Inspected</span
+                                <span
+                                    class="font-display text-lg font-bold text-mint-light"
+                                    >2</span
+                                >
+                            </div>
+                            <div
+                                class="inline-block bg-forest/10 text-forest text-xs font-semibold px-3 py-1 rounded-full mb-3"
                             >
+                                Day 1
+                            </div>
+                            <h3
+                                class="font-display text-lg font-semibold text-forest mb-2"
+                            >
+                                Local Processing
+                            </h3>
+                            <p class="text-gray-500 text-sm leading-relaxed">
+                                Processed at a licensed local facility we trust.
+                                Professionally butchered into premium cuts.
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -120,42 +119,41 @@
                 <!-- Step 3 -->
                 <div class="relative">
                     <div
-                        class="bg-white rounded-2xl p-8 border border-forest/5 shadow-sm h-full"
+                        class="bg-white rounded-2xl border border-forest/5 shadow-sm h-full overflow-hidden"
                     >
-                        <div
-                            class="w-16 h-16 bg-linear-to-br from-forest to-sage rounded-full flex items-center justify-center mb-6 relative z-10 mx-auto lg:mx-0"
-                        >
-                            <span
-                                class="font-display text-2xl font-bold text-mint-light"
-                                >3</span
-                            >
+                        <div class="h-32 overflow-hidden">
+                            <Image
+                                src={step3Image}
+                                alt="Beef box packed and ready for delivery"
+                                class="w-full h-full object-cover"
+                                widths={[300, 400]}
+                                sizes="(max-width: 768px) 100vw, 25vw"
+                            />
                         </div>
-                        <div
-                            class="inline-block bg-forest/10 text-forest text-xs font-semibold px-3 py-1 rounded-full mb-4"
-                        >
-                            Days 11-12
-                        </div>
-                        <h3
-                            class="font-display text-xl font-semibold text-forest mb-3"
-                        >
-                            Vacuum Sealed Fresh
-                        </h3>
-                        <p class="text-gray-500 leading-relaxed">
-                            Each cut is professionally vacuum-sealed to lock in
-                            freshness. Packed into insulated boxes with ice
-                            packs, ready for delivery to your door.
-                        </p>
-                        <div class="mt-4 flex items-center gap-2 text-sage">
-                            <svg
-                                class="w-5 h-5 fill-current"
-                                viewBox="0 0 24 24"
-                                ><path
-                                    d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l4.59-4.58L18 11l-6 6z"
-                                ></path></svg
+                        <div class="p-6">
+                            <div
+                                class="w-12 h-12 bg-linear-to-br from-forest to-sage rounded-full flex items-center justify-center mb-4 relative z-10 -mt-10 border-4 border-white shadow-lg"
                             >
-                            <span class="text-sm font-medium"
-                                >Peak Freshness</span
+                                <span
+                                    class="font-display text-lg font-bold text-mint-light"
+                                    >3</span
+                                >
+                            </div>
+                            <div
+                                class="inline-block bg-forest/10 text-forest text-xs font-semibold px-3 py-1 rounded-full mb-3"
                             >
+                                Days 11-12
+                            </div>
+                            <h3
+                                class="font-display text-lg font-semibold text-forest mb-2"
+                            >
+                                Vacuum Sealed Fresh
+                            </h3>
+                            <p class="text-gray-500 text-sm leading-relaxed">
+                                Each cut is vacuum-sealed and packed in
+                                insulated boxes with ice packs, ready for
+                                delivery.
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -163,44 +161,41 @@
                 <!-- Step 4 -->
                 <div class="relative">
                     <div
-                        class="bg-linear-to-br from-forest to-forest-light rounded-2xl p-8 text-cream h-full"
+                        class="bg-linear-to-br from-forest to-forest-light rounded-2xl text-cream h-full overflow-hidden"
                     >
-                        <div
-                            class="w-16 h-16 bg-mint/20 rounded-full flex items-center justify-center mb-6 relative z-10 mx-auto lg:mx-0"
-                        >
-                            <span
-                                class="font-display text-2xl font-bold text-mint-light"
-                                >4</span
-                            >
+                        <div class="h-32 overflow-hidden relative">
+                            <Image
+                                src={step4Image}
+                                alt="The Ferguson family delivering your beef"
+                                class="w-full h-full object-cover"
+                                widths={[300, 400]}
+                                sizes="(max-width: 768px) 100vw, 25vw"
+                            />
+                            <div class="absolute inset-0 bg-forest/20"></div>
                         </div>
-                        <div
-                            class="inline-block bg-mint/20 text-mint-light text-xs font-semibold px-3 py-1 rounded-full mb-4"
-                        >
-                            Days 13-14
-                        </div>
-                        <h3
-                            class="font-display text-xl font-semibold text-cream mb-3"
-                        >
-                            Delivered By Us
-                        </h3>
-                        <p class="text-cream/80 leading-relaxed">
-                            We personally deliver to your door—no couriers, no
-                            strangers. We'll shake your hand, answer any
-                            questions, and make sure you're completely happy.
-                        </p>
-                        <div
-                            class="mt-4 flex items-center gap-2 text-mint-light"
-                        >
-                            <svg
-                                class="w-5 h-5 fill-current"
-                                viewBox="0 0 24 24"
-                                ><path
-                                    d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"
-                                ></path></svg
+                        <div class="p-6">
+                            <div
+                                class="w-12 h-12 bg-mint/30 rounded-full flex items-center justify-center mb-4 relative z-10 -mt-10 border-4 border-forest shadow-lg"
                             >
-                            <span class="text-sm font-medium"
-                                >Free Delivery</span
+                                <span
+                                    class="font-display text-lg font-bold text-mint-light"
+                                    >4</span
+                                >
+                            </div>
+                            <div
+                                class="inline-block bg-mint/20 text-mint-light text-xs font-semibold px-3 py-1 rounded-full mb-3"
                             >
+                                Days 13-14
+                            </div>
+                            <h3
+                                class="font-display text-lg font-semibold text-cream mb-2"
+                            >
+                                Delivered By Us
+                            </h3>
+                            <p class="text-cream/80 text-sm leading-relaxed">
+                                We personally deliver to your door—no couriers.
+                                We'll shake your hand and answer any questions.
+                            </p>
                         </div>
                     </div>
                 </div>

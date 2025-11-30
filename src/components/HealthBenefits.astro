@@ -1,171 +1,190 @@
 ---
-
+import { Image } from "astro:assets";
+import pastureImage from "../assets/images/cows-13.webp";
 ---
 
 <section class="py-24 bg-linear-to-br from-sage/10 to-mint/10">
-	<div class="max-w-6xl mx-auto px-6">
-		<div class="text-center mb-16">
-			<span
-				class="inline-block text-xs font-semibold uppercase tracking-widest text-sage mb-4"
-				>The Difference</span
-			>
-			<h2
-				class="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-forest mb-4 tracking-tight"
-			>
-				Why Pasture-Raised Is Better
-			</h2>
-			<p class="text-lg text-gray-500 max-w-2xl mx-auto">
-				When cattle live the way nature intended—roaming open paddocks and
-				grazing fresh pasture—it shows in the quality of the beef.
-			</p>
-		</div>
+    <div class="max-w-6xl mx-auto px-6">
+        <!-- Header with Image -->
+        <div class="grid lg:grid-cols-2 gap-12 items-center mb-16">
+            <div>
+                <span
+                    class="inline-block text-xs font-semibold uppercase tracking-widest text-sage mb-4"
+                    >The Difference</span
+                >
+                <h2
+                    class="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-forest mb-4 tracking-tight"
+                >
+                    Why Pasture-Raised Is Better
+                </h2>
+                <p class="text-lg text-gray-500">
+                    When cattle live the way nature intended—roaming open
+                    paddocks and grazing fresh pasture—it shows in the quality
+                    of the beef.
+                </p>
+            </div>
+            <div class="relative">
+                <div class="rounded-2xl overflow-hidden shadow-xl">
+                    <Image
+                        src={pastureImage}
+                        alt="Murray Grey cattle grazing on pasture"
+                        class="w-full h-64 lg:h-80 object-cover"
+                        widths={[400, 600, 800]}
+                        sizes="(max-width: 1024px) 100vw, 50vw"
+                    />
+                </div>
+                <div
+                    class="absolute -bottom-4 -left-4 w-24 h-24 bg-mint/30 rounded-full -z-10 blur-xl"
+                >
+                </div>
+            </div>
+        </div>
 
-		<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-			<!-- Natural Diet -->
-			<div
-				class="bg-white rounded-2xl p-8 border border-forest/5 shadow-sm hover:shadow-xl hover:shadow-forest/5 transition-all duration-300 hover:-translate-y-1"
-			>
-				<div
-					class="w-14 h-14 bg-linear-to-br from-forest to-sage rounded-xl flex items-center justify-center mb-6"
-				>
-					<svg class="w-7 h-7 fill-mint-light" viewBox="0 0 24 24"
-						><path
-							d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 8 17 8 17 8z"
-						></path></svg
-					>
-				</div>
-				<h3 class="font-display text-xl font-semibold text-forest mb-3">
-					Natural Grazing
-				</h3>
-				<p class="text-gray-500 leading-relaxed">
-					Our Murray Greys spend their lives on open Snake Valley
-					pastures, eating what cattle were meant to eat—fresh grass
-					and natural forage.
-				</p>
-			</div>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Natural Diet -->
+            <div
+                class="bg-white rounded-2xl p-8 border border-forest/5 shadow-sm hover:shadow-xl hover:shadow-forest/5 transition-all duration-300 hover:-translate-y-1"
+            >
+                <div
+                    class="w-14 h-14 bg-linear-to-br from-forest to-sage rounded-xl flex items-center justify-center mb-6"
+                >
+                    <svg class="w-7 h-7 fill-mint-light" viewBox="0 0 24 24"
+                        ><path
+                            d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 8 17 8 17 8z"
+                        ></path></svg
+                    >
+                </div>
+                <h3 class="font-display text-xl font-semibold text-forest mb-3">
+                    Natural Grazing
+                </h3>
+                <p class="text-gray-500 leading-relaxed">
+                    Our Murray Greys spend their lives on open Snake Valley
+                    pastures, eating what cattle were meant to eat—fresh grass
+                    and natural forage.
+                </p>
+            </div>
 
-			<!-- Less Stress -->
-			<div
-				class="bg-white rounded-2xl p-8 border border-forest/5 shadow-sm hover:shadow-xl hover:shadow-forest/5 transition-all duration-300 hover:-translate-y-1"
-			>
-				<div
-					class="w-14 h-14 bg-linear-to-br from-forest to-sage rounded-xl flex items-center justify-center mb-6"
-				>
-					<svg class="w-7 h-7 fill-mint-light" viewBox="0 0 24 24"
-						><path
-							d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
-						></path></svg
-					>
-				</div>
-				<h3 class="font-display text-xl font-semibold text-forest mb-3">
-					Low-Stress Living
-				</h3>
-				<p class="text-gray-500 leading-relaxed">
-					Happy cattle produce better beef. Our herd roams freely
-					without the crowding and stress of feedlot conditions,
-					resulting in more tender, flavourful meat.
-				</p>
-			</div>
+            <!-- Less Stress -->
+            <div
+                class="bg-white rounded-2xl p-8 border border-forest/5 shadow-sm hover:shadow-xl hover:shadow-forest/5 transition-all duration-300 hover:-translate-y-1"
+            >
+                <div
+                    class="w-14 h-14 bg-linear-to-br from-forest to-sage rounded-xl flex items-center justify-center mb-6"
+                >
+                    <svg class="w-7 h-7 fill-mint-light" viewBox="0 0 24 24"
+                        ><path
+                            d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+                        ></path></svg
+                    >
+                </div>
+                <h3 class="font-display text-xl font-semibold text-forest mb-3">
+                    Low-Stress Living
+                </h3>
+                <p class="text-gray-500 leading-relaxed">
+                    Happy cattle produce better beef. Our herd roams freely
+                    without the crowding and stress of feedlot conditions,
+                    resulting in more tender, flavourful meat.
+                </p>
+            </div>
 
-			<!-- Better Flavour -->
-			<div
-				class="bg-white rounded-2xl p-8 border border-forest/5 shadow-sm hover:shadow-xl hover:shadow-forest/5 transition-all duration-300 hover:-translate-y-1"
-			>
-				<div
-					class="w-14 h-14 bg-linear-to-br from-forest to-sage rounded-xl flex items-center justify-center mb-6"
-				>
-					<svg class="w-7 h-7 fill-mint-light" viewBox="0 0 24 24"
-						><path
-							d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-						></path></svg
-					>
-				</div>
-				<h3 class="font-display text-xl font-semibold text-forest mb-3">
-					Richer Flavour
-				</h3>
-				<p class="text-gray-500 leading-relaxed">
-					Pasture-raised beef develops a deeper, more complex flavour
-					profile. You'll taste the difference that comes from cattle
-					raised the traditional way.
-				</p>
-			</div>
+            <!-- Better Flavour -->
+            <div
+                class="bg-white rounded-2xl p-8 border border-forest/5 shadow-sm hover:shadow-xl hover:shadow-forest/5 transition-all duration-300 hover:-translate-y-1"
+            >
+                <div
+                    class="w-14 h-14 bg-linear-to-br from-forest to-sage rounded-xl flex items-center justify-center mb-6"
+                >
+                    <svg class="w-7 h-7 fill-mint-light" viewBox="0 0 24 24"
+                        ><path
+                            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                        ></path></svg
+                    >
+                </div>
+                <h3 class="font-display text-xl font-semibold text-forest mb-3">
+                    Richer Flavour
+                </h3>
+                <p class="text-gray-500 leading-relaxed">
+                    Pasture-raised beef develops a deeper, more complex flavour
+                    profile. You'll taste the difference that comes from cattle
+                    raised the traditional way.
+                </p>
+            </div>
 
-			<!-- No Hormones -->
-			<div
-				class="bg-white rounded-2xl p-8 border border-forest/5 shadow-sm hover:shadow-xl hover:shadow-forest/5 transition-all duration-300 hover:-translate-y-1"
-			>
-				<div
-					class="w-14 h-14 bg-linear-to-br from-forest to-sage rounded-xl flex items-center justify-center mb-6"
-				>
-					<svg class="w-7 h-7 fill-mint-light" viewBox="0 0 24 24"
-						><path
-							d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.69L5.69 16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.69L18.31 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z"
-						></path></svg
-					>
-				</div>
-				<h3 class="font-display text-xl font-semibold text-forest mb-3">
-					No Added Hormones
-				</h3>
-				<p class="text-gray-500 leading-relaxed">
-					Our cattle are never given growth hormones or routine
-					antibiotics. Just pasture, fresh water, and the occasional
-					scratch behind the ears.
-				</p>
-			</div>
+            <!-- No Hormones -->
+            <div
+                class="bg-white rounded-2xl p-8 border border-forest/5 shadow-sm hover:shadow-xl hover:shadow-forest/5 transition-all duration-300 hover:-translate-y-1"
+            >
+                <div
+                    class="w-14 h-14 bg-linear-to-br from-forest to-sage rounded-xl flex items-center justify-center mb-6"
+                >
+                    <svg class="w-7 h-7 fill-mint-light" viewBox="0 0 24 24"
+                        ><path
+                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.69L5.69 16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.69L18.31 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z"
+                        ></path></svg
+                    >
+                </div>
+                <h3 class="font-display text-xl font-semibold text-forest mb-3">
+                    No Added Hormones
+                </h3>
+                <p class="text-gray-500 leading-relaxed">
+                    Our cattle are never given growth hormones or routine
+                    antibiotics. Just pasture, fresh water, and the occasional
+                    scratch behind the ears.
+                </p>
+            </div>
 
-			<!-- Natural Marbling -->
-			<div
-				class="bg-white rounded-2xl p-8 border border-forest/5 shadow-sm hover:shadow-xl hover:shadow-forest/5 transition-all duration-300 hover:-translate-y-1"
-			>
-				<div
-					class="w-14 h-14 bg-linear-to-br from-forest to-sage rounded-xl flex items-center justify-center mb-6"
-				>
-					<svg class="w-7 h-7 fill-mint-light" viewBox="0 0 24 24"
-						><path
-							d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"
-						></path></svg
-					>
-				</div>
-				<h3 class="font-display text-xl font-semibold text-forest mb-3">
-					Natural Marbling
-				</h3>
-				<p class="text-gray-500 leading-relaxed">
-					Murray Greys are renowned for developing beautiful
-					intramuscular fat on pasture—tender, juicy beef without
-					the need for intensive finishing.
-				</p>
-			</div>
+            <!-- Natural Marbling -->
+            <div
+                class="bg-white rounded-2xl p-8 border border-forest/5 shadow-sm hover:shadow-xl hover:shadow-forest/5 transition-all duration-300 hover:-translate-y-1"
+            >
+                <div
+                    class="w-14 h-14 bg-linear-to-br from-forest to-sage rounded-xl flex items-center justify-center mb-6"
+                >
+                    <svg class="w-7 h-7 fill-mint-light" viewBox="0 0 24 24"
+                        ><path
+                            d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"
+                        ></path></svg
+                    >
+                </div>
+                <h3 class="font-display text-xl font-semibold text-forest mb-3">
+                    Natural Marbling
+                </h3>
+                <p class="text-gray-500 leading-relaxed">
+                    Murray Greys are renowned for developing beautiful
+                    intramuscular fat on pasture—tender, juicy beef without the
+                    need for intensive finishing.
+                </p>
+            </div>
 
-			<!-- Ethical -->
-			<div
-				class="bg-white rounded-2xl p-8 border border-forest/5 shadow-sm hover:shadow-xl hover:shadow-forest/5 transition-all duration-300 hover:-translate-y-1"
-			>
-				<div
-					class="w-14 h-14 bg-linear-to-br from-forest to-sage rounded-xl flex items-center justify-center mb-6"
-				>
-					<svg class="w-7 h-7 fill-mint-light" viewBox="0 0 24 24"
-						><path
-							d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L18 8l-9 9z"
-						></path></svg
-					>
-				</div>
-				<h3 class="font-display text-xl font-semibold text-forest mb-3">
-					Ethically Raised
-				</h3>
-				<p class="text-gray-500 leading-relaxed">
-					We believe in raising cattle with respect. Our animals live
-					good lives on open pastures, cared for by family who know
-					each one by sight.
-				</p>
-			</div>
-		</div>
+            <!-- Ethical -->
+            <div
+                class="bg-white rounded-2xl p-8 border border-forest/5 shadow-sm hover:shadow-xl hover:shadow-forest/5 transition-all duration-300 hover:-translate-y-1"
+            >
+                <div
+                    class="w-14 h-14 bg-linear-to-br from-forest to-sage rounded-xl flex items-center justify-center mb-6"
+                >
+                    <svg class="w-7 h-7 fill-mint-light" viewBox="0 0 24 24"
+                        ><path
+                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L18 8l-9 9z"
+                        ></path></svg
+                    >
+                </div>
+                <h3 class="font-display text-xl font-semibold text-forest mb-3">
+                    Ethically Raised
+                </h3>
+                <p class="text-gray-500 leading-relaxed">
+                    We believe in raising cattle with respect. Our animals live
+                    good lives on open pastures, cared for by family who know
+                    each one by sight.
+                </p>
+            </div>
+        </div>
 
-		<div class="mt-16 text-center">
-			<p class="text-sm text-gray-400 max-w-2xl mx-auto">
-				Pasture-raised beef from cattle that live the way nature intended.
-				That's the Ferguson Livestock difference.
-			</p>
-		</div>
-	</div>
+        <div class="mt-16 text-center">
+            <p class="text-sm text-gray-400 max-w-2xl mx-auto">
+                Pasture-raised beef from cattle that live the way nature
+                intended. That's the Ferguson Livestock difference.
+            </p>
+        </div>
+    </div>
 </section>
-

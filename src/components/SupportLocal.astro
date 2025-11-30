@@ -1,5 +1,6 @@
 ---
-
+import { Image } from "astro:assets";
+import farmImage from "../assets/images/7.webp";
 ---
 
 <section
@@ -101,10 +102,26 @@
 
 		<!-- Impact breakdown -->
 		<div
-			class="bg-white rounded-2xl p-8 md:p-12 border border-forest/5 shadow-lg"
+			class="bg-white rounded-2xl overflow-hidden border border-forest/5 shadow-lg"
 		>
-			<div class="grid lg:grid-cols-2 gap-12 items-center">
-				<div>
+			<div class="grid lg:grid-cols-5 gap-0 items-stretch">
+				<!-- Image Column -->
+				<div class="lg:col-span-2 relative min-h-[300px] lg:min-h-full">
+					<Image
+						src={farmImage}
+						alt="Ferguson Livestock at a cattle show"
+						class="absolute inset-0 w-full h-full object-cover"
+						widths={[400, 600, 800]}
+						sizes="(max-width: 1024px) 100vw, 40vw"
+					/>
+					<div class="absolute inset-0 bg-linear-to-t from-forest/60 to-transparent lg:bg-linear-to-r"></div>
+					<div class="absolute bottom-6 left-6 right-6 text-white">
+						<div class="font-display text-3xl font-bold">~85%</div>
+						<div class="text-cream/90 text-sm">Goes directly to our family</div>
+					</div>
+				</div>
+				<!-- Content Column -->
+				<div class="lg:col-span-3 p-8 md:p-12">
 					<h3
 						class="font-display text-2xl md:text-3xl font-semibold text-forest mb-6"
 					>
@@ -161,88 +178,80 @@
 						</div>
 					</div>
 				</div>
-
-				<div class="space-y-6">
-					<div
-						class="flex items-start gap-4 p-5 bg-forest/5 rounded-xl border border-forest/10"
-					>
-						<div
-							class="w-10 h-10 bg-forest rounded-full flex items-center justify-center flex-shrink-0"
-						>
-							<svg
-								class="w-5 h-5 fill-mint-light"
-								viewBox="0 0 24 24"
-								><path
-									d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
-								></path></svg
-							>
-						</div>
-						<div>
-							<h4 class="font-semibold text-forest mb-1">
-								Keep Food Dollars Local
-							</h4>
-							<p class="text-sm text-gray-500">
-								Money spent locally circulates in the community
-								up to 3x more than money sent to distant
-								corporations.
-							</p>
-						</div>
-					</div>
-
-					<div
-						class="flex items-start gap-4 p-5 bg-forest/5 rounded-xl border border-forest/10"
-					>
-						<div
-							class="w-10 h-10 bg-forest rounded-full flex items-center justify-center flex-shrink-0"
-						>
-							<svg
-								class="w-5 h-5 fill-mint-light"
-								viewBox="0 0 24 24"
-								><path
-									d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
-								></path></svg
-							>
-						</div>
-						<div>
-							<h4 class="font-semibold text-forest mb-1">
-								Support Real Farming
-							</h4>
-							<p class="text-sm text-gray-500">
-								Help ensure small-scale, ethical farming remains
-								viable for future generations of Victorian
-								families.
-							</p>
-						</div>
-					</div>
-
-					<div
-						class="flex items-start gap-4 p-5 bg-forest/5 rounded-xl border border-forest/10"
-					>
-						<div
-							class="w-10 h-10 bg-forest rounded-full flex items-center justify-center flex-shrink-0"
-						>
-							<svg
-								class="w-5 h-5 fill-mint-light"
-								viewBox="0 0 24 24"
-								><path
-									d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
-								></path></svg
-							>
-						</div>
-						<div>
-							<h4 class="font-semibold text-forest mb-1">
-								Reduce Carbon Footprint
-							</h4>
-							<p class="text-sm text-gray-500">
-								Less transport, less refrigeration, less
-								packaging waste. Local food is lighter on the
-								planet.
-							</p>
-						</div>
-					</div>
 				</div>
+			</div>
+		</div>
+
+		<!-- Benefits Grid -->
+		<div class="mt-8 grid md:grid-cols-3 gap-6">
+			<div
+				class="bg-white/90 backdrop-blur rounded-xl p-6 border border-forest/5"
+			>
+				<div
+					class="w-10 h-10 bg-forest rounded-full flex items-center justify-center mb-4"
+				>
+					<svg
+						class="w-5 h-5 fill-mint-light"
+						viewBox="0 0 24 24"
+						><path
+							d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
+						></path></svg
+					>
+				</div>
+				<h4 class="font-semibold text-forest mb-2">
+					Keep Food Dollars Local
+				</h4>
+				<p class="text-sm text-gray-500">
+					Money spent locally circulates in the community
+					up to 3x more than money sent to distant corporations.
+				</p>
+			</div>
+
+			<div
+				class="bg-white/90 backdrop-blur rounded-xl p-6 border border-forest/5"
+			>
+				<div
+					class="w-10 h-10 bg-forest rounded-full flex items-center justify-center mb-4"
+				>
+					<svg
+						class="w-5 h-5 fill-mint-light"
+						viewBox="0 0 24 24"
+						><path
+							d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
+						></path></svg
+					>
+				</div>
+				<h4 class="font-semibold text-forest mb-2">
+					Support Real Farming
+				</h4>
+				<p class="text-sm text-gray-500">
+					Help ensure small-scale, ethical farming remains
+					viable for future generations of Victorian families.
+				</p>
+			</div>
+
+			<div
+				class="bg-white/90 backdrop-blur rounded-xl p-6 border border-forest/5"
+			>
+				<div
+					class="w-10 h-10 bg-forest rounded-full flex items-center justify-center mb-4"
+				>
+					<svg
+						class="w-5 h-5 fill-mint-light"
+						viewBox="0 0 24 24"
+						><path
+							d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
+						></path></svg
+					>
+				</div>
+				<h4 class="font-semibold text-forest mb-2">
+					Reduce Carbon Footprint
+				</h4>
+				<p class="text-sm text-gray-500">
+					Less transport, less refrigeration, less
+					packaging waste. Local food is lighter on the planet.
+				</p>
 			</div>
 		</div>
 	</div>
 </section>
-

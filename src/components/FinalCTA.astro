@@ -1,10 +1,24 @@
 ---
-
+import { Image } from "astro:assets";
+import ctaImage from "../assets/images/8.webp";
 ---
 
-<section
-    class="noise-overlay relative py-24 bg-linear-to-br from-warm to-warm-dark text-center overflow-hidden"
->
+<section class="noise-overlay relative py-24 text-center overflow-hidden">
+    <!-- Background Image -->
+    <div class="absolute inset-0 -z-20">
+        <Image
+            src={ctaImage}
+            alt=""
+            class="w-full h-full object-cover"
+            widths={[800, 1200, 1600]}
+            sizes="100vw"
+        />
+    </div>
+    <!-- Warm Gradient Overlay -->
+    <div
+        class="absolute inset-0 -z-10 bg-linear-to-br from-warm/90 to-warm-dark/95"
+    >
+    </div>
     <div class="max-w-6xl mx-auto px-6 relative z-10">
         <h2
             class="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-white mb-4 tracking-tight"

@@ -1,252 +1,204 @@
 ---
-
+import { Image } from "astro:assets";
+import practiceImage1 from "../assets/images/1.webp";
+import practiceImage2 from "../assets/images/family-1.webp";
+import practiceImage3 from "../assets/images/5.webp";
 ---
 
 <section class="py-24 bg-cream">
-	<div class="max-w-6xl mx-auto px-6">
-		<div class="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-			<div class="lg:order-2">
-				<span
-					class="inline-block text-xs font-semibold uppercase tracking-widest text-sage mb-4"
-					>Our Practices</span
-				>
-				<h2
-					class="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-forest mb-6 tracking-tight"
-				>
-					Farming the Way It Should Be
-				</h2>
-				<p class="text-lg text-gray-600 leading-relaxed mb-8">
-					We're not just raising cattle—we're stewarding land for
-					future generations. Our practices prioritise animal welfare,
-					soil health, and environmental sustainability.
-				</p>
+    <div class="max-w-6xl mx-auto px-6">
+        <div class="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+            <div class="lg:order-2">
+                <span
+                    class="inline-block text-xs font-semibold uppercase tracking-widest text-sage mb-4"
+                    >Our Practices</span
+                >
+                <h2
+                    class="font-display text-pretty text-3xl md:text-4xl lg:text-5xl font-semibold text-forest mb-6 tracking-tight"
+                >
+                    Farming the Way It Should Be
+                </h2>
+                <p class="text-lg text-gray-600 leading-relaxed mb-8">
+                    We're not just raising cattle—we're stewarding land for
+                    future generations. Our practices prioritise animal welfare,
+                    soil health, and environmental sustainability.
+                </p>
 
-				<div class="space-y-6">
-					<div
-						class="flex gap-4 p-4 rounded-xl bg-forest/5 border border-forest/10"
-					>
-						<div
-							class="w-12 h-12 bg-forest rounded-full flex items-center justify-center flex-shrink-0"
-						>
-							<svg
-								class="w-6 h-6 fill-mint-light"
-								viewBox="0 0 24 24"
-								><path
-									d="M12 22c4.97 0 9-4.03 9-9-4.97 0-9 4.03-9 9zM5.6 10.25c0 1.38 1.12 2.5 2.5 2.5.53 0 1.01-.16 1.42-.44l-.02.19c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5l-.02-.19c.4.28.89.44 1.42.44 1.38 0 2.5-1.12 2.5-2.5 0-1-.59-1.85-1.43-2.25.84-.4 1.43-1.25 1.43-2.25 0-1.38-1.12-2.5-2.5-2.5-.53 0-1.01.16-1.42.44l.02-.19C14.5 4.12 13.38 3 12 3S9.5 4.12 9.5 5.5l.02.19c-.4-.28-.89-.44-1.42-.44-1.38 0-2.5 1.12-2.5 2.5 0 1 .59 1.85 1.43 2.25-.84.4-1.43 1.25-1.43 2.25zM12 5.5c1.38 0 2.5 1.12 2.5 2.5s-1.12 2.5-2.5 2.5S9.5 9.38 9.5 8s1.12-2.5 2.5-2.5zM3 13c0 4.97 4.03 9 9 9 0-4.97-4.03-9-9-9z"
-								></path></svg
-							>
-						</div>
-						<div>
-							<h3
-								class="font-semibold text-forest text-lg mb-1"
-							>
-								Rotational Grazing
-							</h3>
-							<p class="text-gray-500 leading-relaxed">
-								Our cattle move between paddocks regularly,
-								giving pastures time to recover and promoting
-								healthy grass growth. Better for the land,
-								better for the cattle.
-							</p>
-						</div>
-					</div>
+                <div class="space-y-6">
+                    <div
+                        class="flex gap-4 p-4 rounded-xl bg-forest/5 border border-forest/10"
+                    >
+                        <div
+                            class="w-12 h-12 bg-forest rounded-full flex items-center justify-center flex-shrink-0"
+                        >
+                            <svg
+                                class="w-6 h-6 fill-mint-light"
+                                viewBox="0 0 24 24"
+                                ><path
+                                    d="M12 22c4.97 0 9-4.03 9-9-4.97 0-9 4.03-9 9zM5.6 10.25c0 1.38 1.12 2.5 2.5 2.5.53 0 1.01-.16 1.42-.44l-.02.19c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5l-.02-.19c.4.28.89.44 1.42.44 1.38 0 2.5-1.12 2.5-2.5 0-1-.59-1.85-1.43-2.25.84-.4 1.43-1.25 1.43-2.25 0-1.38-1.12-2.5-2.5-2.5-.53 0-1.01.16-1.42.44l.02-.19C14.5 4.12 13.38 3 12 3S9.5 4.12 9.5 5.5l.02.19c-.4-.28-.89-.44-1.42-.44-1.38 0-2.5 1.12-2.5 2.5 0 1 .59 1.85 1.43 2.25-.84.4-1.43 1.25-1.43 2.25zM12 5.5c1.38 0 2.5 1.12 2.5 2.5s-1.12 2.5-2.5 2.5S9.5 9.38 9.5 8s1.12-2.5 2.5-2.5zM3 13c0 4.97 4.03 9 9 9 0-4.97-4.03-9-9-9z"
+                                ></path></svg
+                            >
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-forest text-lg mb-1">
+                                Rotational Grazing
+                            </h3>
+                            <p class="text-gray-500 leading-relaxed">
+                                Our cattle move between paddocks regularly,
+                                giving pastures time to recover and promoting
+                                healthy grass growth. Better for the land,
+                                better for the cattle.
+                            </p>
+                        </div>
+                    </div>
 
-					<div
-						class="flex gap-4 p-4 rounded-xl bg-forest/5 border border-forest/10"
-					>
-						<div
-							class="w-12 h-12 bg-forest rounded-full flex items-center justify-center flex-shrink-0"
-						>
-							<svg
-								class="w-6 h-6 fill-mint-light"
-								viewBox="0 0 24 24"
-								><path
-									d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L18 8l-9 9z"
-								></path></svg
-							>
-						</div>
-						<div>
-							<h3
-								class="font-semibold text-forest text-lg mb-1"
-							>
-								No Chemical Inputs
-							</h3>
-							<p class="text-gray-500 leading-relaxed">
-								We don't use synthetic fertilisers or pesticides
-								on our pastures. The soil builds naturally
-								through good grazing management and organic
-								matter cycling.
-							</p>
-						</div>
-					</div>
+                    <div
+                        class="flex gap-4 p-4 rounded-xl bg-forest/5 border border-forest/10"
+                    >
+                        <div
+                            class="w-12 h-12 bg-forest rounded-full flex items-center justify-center flex-shrink-0"
+                        >
+                            <svg
+                                class="w-6 h-6 fill-mint-light"
+                                viewBox="0 0 24 24"
+                                ><path
+                                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L18 8l-9 9z"
+                                ></path></svg
+                            >
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-forest text-lg mb-1">
+                                No Chemical Inputs
+                            </h3>
+                            <p class="text-gray-500 leading-relaxed">
+                                We don't use synthetic fertilisers or pesticides
+                                on our pastures. The soil builds naturally
+                                through good grazing management and organic
+                                matter cycling.
+                            </p>
+                        </div>
+                    </div>
 
-					<div
-						class="flex gap-4 p-4 rounded-xl bg-forest/5 border border-forest/10"
-					>
-						<div
-							class="w-12 h-12 bg-forest rounded-full flex items-center justify-center flex-shrink-0"
-						>
-							<svg
-								class="w-6 h-6 fill-mint-light"
-								viewBox="0 0 24 24"
-								><path
-									d="M12 2c-5.33 4.55-8 8.48-8 11.8 0 4.98 3.8 8.2 8 8.2s8-3.22 8-8.2c0-3.32-2.67-7.25-8-11.8zm0 18c-3.35 0-6-2.57-6-6.2 0-2.34 1.95-5.44 6-9.14 4.05 3.7 6 6.79 6 9.14 0 3.63-2.65 6.2-6 6.2z"
-								></path></svg
-							>
-						</div>
-						<div>
-							<h3
-								class="font-semibold text-forest text-lg mb-1"
-							>
-								Water-Smart Farming
-							</h3>
-							<p class="text-gray-500 leading-relaxed">
-								Our healthy pastures retain water better,
-								reducing runoff and keeping our dams full.
-								Natural water sources mean happy, hydrated
-								cattle year-round.
-							</p>
-						</div>
-					</div>
+                    <div
+                        class="flex gap-4 p-4 rounded-xl bg-forest/5 border border-forest/10"
+                    >
+                        <div
+                            class="w-12 h-12 bg-forest rounded-full flex items-center justify-center flex-shrink-0"
+                        >
+                            <svg
+                                class="w-6 h-6 fill-mint-light"
+                                viewBox="0 0 24 24"
+                                ><path
+                                    d="M12 2c-5.33 4.55-8 8.48-8 11.8 0 4.98 3.8 8.2 8 8.2s8-3.22 8-8.2c0-3.32-2.67-7.25-8-11.8zm0 18c-3.35 0-6-2.57-6-6.2 0-2.34 1.95-5.44 6-9.14 4.05 3.7 6 6.79 6 9.14 0 3.63-2.65 6.2-6 6.2z"
+                                ></path></svg
+                            >
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-forest text-lg mb-1">
+                                Water-Smart Farming
+                            </h3>
+                            <p class="text-gray-500 leading-relaxed">
+                                Our healthy pastures retain water better,
+                                reducing runoff and keeping our dams full.
+                                Natural water sources mean happy, hydrated
+                                cattle year-round.
+                            </p>
+                        </div>
+                    </div>
 
-					<div
-						class="flex gap-4 p-4 rounded-xl bg-forest/5 border border-forest/10"
-					>
-						<div
-							class="w-12 h-12 bg-forest rounded-full flex items-center justify-center flex-shrink-0"
-						>
-							<svg
-								class="w-6 h-6 fill-mint-light"
-								viewBox="0 0 24 24"
-								><path
-									d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 8 17 8 17 8z"
-								></path></svg
-							>
-						</div>
-						<div>
-							<h3
-								class="font-semibold text-forest text-lg mb-1"
-							>
-								Building Soil Carbon
-							</h3>
-							<p class="text-gray-500 leading-relaxed">
-								Well-managed grasslands are carbon sinks.
-								Through rotational grazing, we're actively
-								building soil organic matter and sequestering
-								carbon.
-							</p>
-						</div>
-					</div>
-				</div>
-			</div>
+                    <div
+                        class="flex gap-4 p-4 rounded-xl bg-forest/5 border border-forest/10"
+                    >
+                        <div
+                            class="w-12 h-12 bg-forest rounded-full flex items-center justify-center flex-shrink-0"
+                        >
+                            <svg
+                                class="w-6 h-6 fill-mint-light"
+                                viewBox="0 0 24 24"
+                                ><path
+                                    d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 8 17 8 17 8z"
+                                ></path></svg
+                            >
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-forest text-lg mb-1">
+                                Building Soil Carbon
+                            </h3>
+                            <p class="text-gray-500 leading-relaxed">
+                                Well-managed grasslands are carbon sinks.
+                                Through rotational grazing, we're actively
+                                building soil organic matter and sequestering
+                                carbon.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-			<div class="lg:order-1">
-				<div class="relative">
-					<div
-						class="bg-linear-to-br from-forest to-forest-light rounded-2xl p-8 lg:p-12 text-cream"
-					>
-						<div class="mb-8">
-							<svg
-								class="w-16 h-16 fill-mint/30"
-								viewBox="0 0 24 24"
-								><path
-									d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L18 8l-9 9z"
-								></path></svg
-							>
-						</div>
-						<h3
-							class="font-display text-2xl md:text-3xl font-semibold mb-4"
-						>
-							Our Commitment
-						</h3>
-						<p class="text-cream/85 leading-relaxed mb-6">
-							We believe that farming done right is good for
-							animals, good for the environment, and produces
-							better food. It's not complicated—it's just doing
-							things properly.
-						</p>
-						<ul class="space-y-3">
-							<li class="flex items-center gap-3">
-								<svg
-									class="w-5 h-5 fill-mint flex-shrink-0"
-									viewBox="0 0 24 24"
-									><path
-										d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
-									></path></svg
-								>
-								<span class="text-cream/90"
-									>Animal welfare first, always</span
-								>
-							</li>
-							<li class="flex items-center gap-3">
-								<svg
-									class="w-5 h-5 fill-mint flex-shrink-0"
-									viewBox="0 0 24 24"
-									><path
-										d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
-									></path></svg
-								>
-								<span class="text-cream/90"
-									>Leave the land better than we found it</span
-								>
-							</li>
-							<li class="flex items-center gap-3">
-								<svg
-									class="w-5 h-5 fill-mint flex-shrink-0"
-									viewBox="0 0 24 24"
-									><path
-										d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
-									></path></svg
-								>
-								<span class="text-cream/90"
-									>Transparency in everything we do</span
-								>
-							</li>
-							<li class="flex items-center gap-3">
-								<svg
-									class="w-5 h-5 fill-mint flex-shrink-0"
-									viewBox="0 0 24 24"
-									><path
-										d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
-									></path></svg
-								>
-								<span class="text-cream/90"
-									>Quality over quantity, every time</span
-								>
-							</li>
-						</ul>
-
-						<div
-							class="mt-8 pt-6 border-t border-white/10 flex items-center gap-4"
-						>
-							<div
-								class="w-12 h-12 bg-mint/20 rounded-full flex items-center justify-center"
-							>
-								<svg
-									class="w-6 h-6 fill-mint-light"
-									viewBox="0 0 24 24"
-									><path
-										d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"
-									></path></svg
-								>
-							</div>
-							<div>
-								<div class="font-semibold text-cream">
-									Snake Valley, Victoria
-								</div>
-								<div class="text-sm text-cream/70">
-									Proudly local since day one
-								</div>
-							</div>
-						</div>
-					</div>
-					<div
-						class="absolute -bottom-4 -right-4 w-24 h-24 bg-warm/30 rounded-full -z-10 blur-xl"
-					>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+            <div class="lg:order-1">
+                <div class="relative">
+                    <!-- Photo Grid -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-4">
+                            <div class="rounded-2xl overflow-hidden shadow-lg">
+                                <Image
+                                    src={practiceImage1}
+                                    alt="Daniel relaxing with a Murray Grey cow"
+                                    class="w-full h-48 object-cover"
+                                    widths={[300, 400, 500]}
+                                    sizes="(max-width: 1024px) 50vw, 25vw"
+                                />
+                            </div>
+                            <div class="rounded-2xl overflow-hidden shadow-lg">
+                                <Image
+                                    src={practiceImage2}
+                                    alt="Daniel and Tahlia with their cattle"
+                                    class="w-full h-64 object-cover"
+                                    widths={[300, 400, 500]}
+                                    sizes="(max-width: 1024px) 50vw, 25vw"
+                                />
+                            </div>
+                        </div>
+                        <div class="space-y-4 pt-8">
+                            <div class="rounded-2xl overflow-hidden shadow-lg">
+                                <Image
+                                    src={practiceImage3}
+                                    alt="Ferguson Livestock winning Reserve Senior Champion"
+                                    class="w-full h-64 object-cover"
+                                    widths={[300, 400, 500]}
+                                    sizes="(max-width: 1024px) 50vw, 25vw"
+                                />
+                            </div>
+                            <div
+                                class="bg-linear-to-br from-forest to-forest-light rounded-2xl p-6 text-cream"
+                            >
+                                <div class="flex items-center gap-3 mb-3">
+                                    <svg
+                                        class="w-6 h-6 fill-mint"
+                                        viewBox="0 0 24 24"
+                                        ><path
+                                            d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"
+                                        ></path></svg
+                                    >
+                                    <span class="font-semibold"
+                                        >Snake Valley, VIC</span
+                                    >
+                                </div>
+                                <p
+                                    class="text-cream/80 text-sm leading-relaxed"
+                                >
+                                    Proudly farming our land the right way since
+                                    day one.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div
+                        class="absolute -bottom-4 -right-4 w-24 h-24 bg-warm/30 rounded-full -z-10 blur-xl"
+                    >
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </section>
-

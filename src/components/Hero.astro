@@ -1,11 +1,28 @@
 ---
-
+import { Image } from "astro:assets";
+import heroImage from "../assets/images/cows-10.webp";
 ---
 
 <main id="main-content">
     <section
-        class="noise-overlay relative bg-linear-to-br from-forest via-forest-light to-sage min-h-[90vh] flex items-center py-16 lg:py-0"
+        class="noise-overlay relative min-h-[90vh] flex items-center py-16 lg:py-0 overflow-hidden"
     >
+        <!-- Background Image -->
+        <div class="absolute inset-0 -z-20">
+            <Image
+                src={heroImage}
+                alt=""
+                class="w-full h-full object-cover"
+                widths={[800, 1200, 1600, 2000]}
+                sizes="100vw"
+                loading="eager"
+            />
+        </div>
+        <!-- Gradient Overlay -->
+        <div
+            class="absolute inset-0 -z-10 bg-linear-to-br from-forest/95 via-forest-light/90 to-sage/85"
+        >
+        </div>
         <div class="max-w-6xl mx-auto px-6 relative z-10">
             <div class="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
                 <div class="text-cream">
