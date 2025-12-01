@@ -1,4 +1,6 @@
 ---
+import PostHog from "../components/posthog.astro";
+
 import "../styles/global.css";
 
 // Import Fontsource fonts (self-hosted, no render-blocking external requests)
@@ -308,6 +310,8 @@ const canonical = canonicalUrl || Astro.url.href;
                 ],
             })}
         />
+
+        <PostHog />
     </head>
     <body class="bg-cream text-gray-800 leading-relaxed overflow-x-hidden">
         <!-- Skip to main content link for accessibility -->

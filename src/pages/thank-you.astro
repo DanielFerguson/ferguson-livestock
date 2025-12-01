@@ -140,81 +140,81 @@ const pageDescription =
     </main>
 
     <Footer />
-</Layout>
 
-<script>
-    // Get name from URL params
-    const urlParams = new URLSearchParams(window.location.search);
-    const name = urlParams.get("name");
+    <script>
+        // Get name from URL params
+        const urlParams = new URLSearchParams(window.location.search);
+        const name = urlParams.get("name");
 
-    if (name) {
-        const nameElement = document.getElementById("user-name");
-        if (nameElement) {
-            nameElement.textContent = name;
+        if (name) {
+            const nameElement = document.getElementById("user-name");
+            if (nameElement) {
+                nameElement.textContent = name;
+            }
         }
-    }
 
-    // Google Ads Conversion Tracking
-    // Replace 'AW-XXXXXXXXX/XXXXXXXXXXXXXXXXXXXX' with your actual conversion ID
-    declare const gtag: (...args: any[]) => void;
+        // Google Ads Conversion Tracking
+        // Replace 'AW-XXXXXXXXX/XXXXXXXXXXXXXXXXXXXX' with your actual conversion ID
+        declare const gtag: (...args: any[]) => void;
 
-    if (typeof gtag === "function") {
-        // GA4 custom event for lead tracking
-        gtag("event", "sign_up", {
-            method: "waitlist_form",
-            page_location: window.location.href,
+        if (typeof gtag === "function") {
+            // GA4 custom event for lead tracking
+            gtag("event", "sign_up", {
+                method: "waitlist_form",
+                page_location: window.location.href,
+            });
+
+            // Google Ads conversion (uncomment and add your conversion ID when ready)
+            // gtag('event', 'conversion', {
+            //     'send_to': 'AW-XXXXXXXXX/XXXXXXXXXXXXXXXXXXXX',
+            //     'value': 1.0,
+            //     'currency': 'AUD'
+            // });
+        }
+
+        gtag("event", "ads_conversion_Submit_lead_form_1");
+
+        // Share button functionality
+        const shareButton = document.getElementById("share-button");
+        const shareOptions = document.getElementById("share-options");
+
+        shareButton?.addEventListener("click", () => {
+            // Check if native share is available
+            if (navigator.share) {
+                navigator
+                    .share({
+                        title: "Ferguson Livestock - Premium Beef Boxes",
+                        text: "I just joined the wait list for farm-fresh beef from Ferguson Livestock! Check them out:",
+                        url: "https://fergusonlivestock.com.au",
+                    })
+                    .catch(() => {
+                        // User cancelled or error - show fallback options
+                        shareOptions?.classList.toggle("hidden");
+                    });
+            } else {
+                // Show share options
+                shareOptions?.classList.toggle("hidden");
+            }
         });
 
-        // Google Ads conversion (uncomment and add your conversion ID when ready)
-        // gtag('event', 'conversion', {
-        //     'send_to': 'AW-XXXXXXXXX/XXXXXXXXXXXXXXXXXXXX',
-        //     'value': 1.0,
-        //     'currency': 'AUD'
-        // });
-    }
+        // Copy link functionality
+        const copyLinkButton = document.getElementById("copy-link");
+        const copyText = document.getElementById("copy-text");
 
-    gtag("event", "ads_conversion_Submit_lead_form_1");
-
-    // Share button functionality
-    const shareButton = document.getElementById("share-button");
-    const shareOptions = document.getElementById("share-options");
-
-    shareButton?.addEventListener("click", () => {
-        // Check if native share is available
-        if (navigator.share) {
-            navigator
-                .share({
-                    title: "Ferguson Livestock - Premium Beef Boxes",
-                    text: "I just joined the wait list for farm-fresh beef from Ferguson Livestock! Check them out:",
-                    url: "https://fergusonlivestock.com.au",
-                })
-                .catch(() => {
-                    // User cancelled or error - show fallback options
-                    shareOptions?.classList.toggle("hidden");
-                });
-        } else {
-            // Show share options
-            shareOptions?.classList.toggle("hidden");
-        }
-    });
-
-    // Copy link functionality
-    const copyLinkButton = document.getElementById("copy-link");
-    const copyText = document.getElementById("copy-text");
-
-    copyLinkButton?.addEventListener("click", async () => {
-        try {
-            await navigator.clipboard.writeText(
-                "https://fergusonlivestock.com.au",
-            );
-            if (copyText) {
-                copyText.textContent = "Copied!";
-                setTimeout(() => {
-                    copyText.textContent = "Copy Link";
-                }, 2000);
+        copyLinkButton?.addEventListener("click", async () => {
+            try {
+                await navigator.clipboard.writeText(
+                    "https://fergusonlivestock.com.au",
+                );
+                if (copyText) {
+                    copyText.textContent = "Copied!";
+                    setTimeout(() => {
+                        copyText.textContent = "Copy Link";
+                    }, 2000);
+                }
+            } catch (err) {
+                console.error("Failed to copy:", err);
             }
-        } catch (err) {
-            console.error("Failed to copy:", err);
-        }
-    });
-</script>
+        });
+    </script>
+</Layout>
