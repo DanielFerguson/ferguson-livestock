@@ -26,12 +26,12 @@ const pageDescription =
 ---
 
 <Layout title={pageTitle} description={pageDescription} image="/og-image.jpg">
-	<!-- <AnnouncementBar /> -->
+	<AnnouncementBar />
 	<Header />
 	<div id="hero"><Hero /></div>
 	<div id="comparison"><Comparison /></div>
 	<div id="about"><MeetTheFergusons /></div>
-	<!-- <div id="testimonials"><Testimonials /></div> -->
+	<div id="testimonials"><Testimonials /></div>
 	<div id="why-us"><WhyChooseUs /></div>
 	<div id="murray-grey"><WhyMurrayGrey /></div>
 	<div id="how-it-works"><HowItWorks /></div>
@@ -45,3 +45,27 @@ const pageDescription =
 	<div id="contact"><FinalCTA /></div>
 	<Footer />
 </Layout>
+
+<script>
+	declare const posthog: { capture: (event: string, properties?: Record<string, any>) => void } | undefined;
+
+	let scrolledToBottom = false;
+
+	const footer = document.querySelector("footer");
+	if (footer && typeof IntersectionObserver !== "undefined") {
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries[0].isIntersecting && !scrolledToBottom) {
+					scrolledToBottom = true;
+					if (typeof posthog !== "undefined") {
+						posthog.capture("page_scrolled_to_bottom");
+					}
+					observer.disconnect();
+				}
+			},
+			{ threshold: 0.1 },
+		);
+
+		observer.observe(footer);
+	}
+</script>

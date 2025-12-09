@@ -167,6 +167,22 @@ import heroImage from "../assets/images/cows-10.webp";
                                 To confirm you're in our delivery area
                             </p>
                         </div>
+                        <div class="mb-4">
+                            <label
+                                class="flex items-start gap-3 cursor-pointer text-sm text-forest/80 leading-relaxed"
+                            >
+                                <input
+                                    type="checkbox"
+                                    name="smsConsent"
+                                    required
+                                    class="mt-0.5 w-5 h-5 rounded border-2 border-cream-dark text-sage focus:ring-mint/30 cursor-pointer flex-shrink-0"
+                                />
+                                <span
+                                    >I agree to receive SMS updates about beef
+                                    availability</span
+                                >
+                            </label>
+                        </div>
                         <button
                             type="submit"
                             class="w-full mt-2 py-4 px-8 bg-linear-to-br from-forest to-sage text-cream rounded-lg text-base font-semibold uppercase tracking-wider transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-forest/30 cursor-pointer border-0"
@@ -189,8 +205,9 @@ import heroImage from "../assets/images/cows-10.webp";
     </section>
 
     <script>
-        // Declare gtag as global (loaded by Google Analytics in Layout)
+        // Declare gtag and posthog as global (loaded in Layout)
         declare const gtag: (...args: any[]) => void;
+        declare const posthog: { capture: (event: string, properties?: Record<string, any>) => void } | undefined;
 
         // Track form start when user focuses on first field
         let formStarted = false;
@@ -199,6 +216,12 @@ import heroImage from "../assets/images/cows-10.webp";
                 formStarted = true;
                 if (typeof gtag === "function") {
                     gtag("event", "form_start", {
+                        form_id: "interest-form",
+                        form_location: "hero",
+                    });
+                }
+                if (typeof posthog !== "undefined") {
+                    posthog.capture("form_started", {
                         form_id: "interest-form",
                         form_location: "hero",
                     });
@@ -247,6 +270,13 @@ import heroImage from "../assets/images/cows-10.webp";
                             gtag("event", "generate_lead", {
                                 postcode: postcode,
                                 form_location: "hero",
+                            });
+                        }
+                        if (typeof posthog !== "undefined") {
+                            posthog.capture("form_submitted", {
+                                form_id: "interest-form",
+                                form_location: "hero",
+                                postcode: postcode,
                             });
                         }
 
