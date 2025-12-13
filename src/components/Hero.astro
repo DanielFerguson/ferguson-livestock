@@ -205,9 +205,10 @@ import heroImage from "../assets/images/cows-10.webp";
     </section>
 
     <script>
-        // Declare gtag and posthog as global (loaded in Layout)
+        // Declare gtag, posthog, and fbq as global (loaded in Layout)
         declare const gtag: (...args: any[]) => void;
         declare const posthog: { capture: (event: string, properties?: Record<string, any>) => void } | undefined;
+        declare const fbq: (...args: any[]) => void;
 
         // Track form start when user focuses on first field
         let formStarted = false;
@@ -228,6 +229,23 @@ import heroImage from "../assets/images/cows-10.webp";
                 }
             }
         });
+
+        // Track ViewContent when form scrolls into view
+        const formSection = document.getElementById("reserve");
+        if (formSection && typeof fbq === "function") {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        fbq("track", "ViewContent", {
+                            content_name: "Waitlist Form",
+                            content_category: "Lead Form"
+                        });
+                        observer.disconnect();
+                    }
+                });
+            }, { threshold: 0.5 });
+            observer.observe(formSection);
+        }
 
         document
             .getElementById("interest-form")
@@ -277,6 +295,12 @@ import heroImage from "../assets/images/cows-10.webp";
                                 form_id: "interest-form",
                                 form_location: "hero",
                                 postcode: postcode,
+                            });
+                        }
+                        if (typeof fbq === "function") {
+                            fbq("track", "Lead", {
+                                content_name: "Waitlist Signup",
+                                content_category: "Lead Form"
                             });
                         }
 

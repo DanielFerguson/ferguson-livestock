@@ -156,6 +156,7 @@ const pageDescription =
         // Google Ads Conversion Tracking
         // Replace 'AW-XXXXXXXXX/XXXXXXXXXXXXXXXXXXXX' with your actual conversion ID
         declare const gtag: (...args: any[]) => void;
+        declare const fbq: (...args: any[]) => void;
 
         if (typeof gtag === "function") {
             // GA4 custom event for lead tracking
@@ -173,6 +174,13 @@ const pageDescription =
         }
 
         gtag("event", "ads_conversion_Submit_lead_form_1");
+
+        if (typeof fbq === "function") {
+            fbq("track", "Lead", {
+                content_name: "Waitlist Signup",
+                content_category: "Lead Form"
+            });
+        }
 
         // Share button functionality
         const shareButton = document.getElementById("share-button");
