@@ -297,13 +297,6 @@ import heroImage from "../assets/images/cows-10.webp";
                                 postcode: postcode,
                             });
                         }
-                        if (typeof fbq === "function") {
-                            fbq("track", "Lead", {
-                                content_name: "Waitlist Signup",
-                                content_category: "Lead Form"
-                            });
-                        }
-
                         // Redirect to thank you page for Google Ads conversion tracking
                         window.location.href = `/thank-you?name=${encodeURIComponent(firstName)}`;
                     } else {
