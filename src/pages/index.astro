@@ -28,9 +28,9 @@ const pageDescription =
 
 <Layout title={pageTitle} description={pageDescription} image="/og-image.jpg">
 	<AnnouncementBar />
+	<AccoladesMarquee />
 	<Header />
 	<div id="hero"><Hero /></div>
-	<AccoladesMarquee />
 	<div id="comparison"><Comparison /></div>
 	<div id="about"><MeetTheFergusons /></div>
 	<div id="testimonials"><Testimonials /></div>
@@ -49,7 +49,9 @@ const pageDescription =
 </Layout>
 
 <script>
-	declare const posthog: { capture: (event: string, properties?: Record<string, any>) => void } | undefined;
+	declare const posthog:
+		| { capture: (event: string, properties?: Record<string, any>) => void }
+		| undefined;
 
 	let scrolledToBottom = false;
 
