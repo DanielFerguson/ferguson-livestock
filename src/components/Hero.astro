@@ -7,8 +7,8 @@ import heroImage from "../assets/images/cows-10.webp";
     <section
         class="noise-overlay relative min-h-[90vh] flex items-center py-16 lg:py-0 overflow-hidden"
     >
-        <!-- Background Image -->
-        <div class="absolute inset-0 -z-20">
+        <!-- Background Image with Parallax -->
+        <div id="hero-bg" class="absolute inset-0 -z-20 will-change-transform" style="top: -10%; height: 120%;">
             <Image
                 src={heroImage}
                 alt=""
@@ -49,9 +49,9 @@ import heroImage from "../assets/images/cows-10.webp";
                         class="animate-fade-in-up animation-delay-200 text-lg text-cream/85 mb-8 max-w-xl leading-relaxed"
                     >
                         Premium pasture-raised beef from our family farm in
-                        Snake Valley, personally delivered to your door in
-                        Ballarat and surrounds. No middlemen. No supermarkets.
-                        Just quality beef you can trust.
+                        Snake Valley, personally delivered to your door. No
+                        middlemen. No supermarkets. Just quality beef you can
+                        trust.
                     </p>
                     <div
                         class="animate-fade-in-up animation-delay-300 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4"
@@ -189,9 +189,28 @@ import heroImage from "../assets/images/cows-10.webp";
     </section>
 
     <script>
+        // Parallax effect for hero background
+        const heroBg = document.getElementById('hero-bg');
+        if (heroBg) {
+            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (!prefersReducedMotion) {
+                window.addEventListener('scroll', () => {
+                    const scrollY = window.scrollY;
+                    heroBg.style.transform = `translateY(${scrollY * 0.4}px)`;
+                }, { passive: true });
+            }
+        }
+
         // Declare gtag, posthog, and fbq as global (loaded in Layout)
         declare const gtag: (...args: any[]) => void;
-        declare const posthog: { capture: (event: string, properties?: Record<string, any>) => void } | undefined;
+        declare const posthog:
+            | {
+                  capture: (
+                      event: string,
+                      properties?: Record<string, any>,
+                  ) => void;
+              }
+            | undefined;
         declare const fbq: (...args: any[]) => void;
 
         // Track form start when user focuses on first field
@@ -217,17 +236,20 @@ import heroImage from "../assets/images/cows-10.webp";
         // Track ViewContent when form scrolls into view
         const formSection = document.getElementById("reserve");
         if (formSection && typeof fbq === "function") {
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        fbq("track", "ViewContent", {
-                            content_name: "Waitlist Form",
-                            content_category: "Lead Form"
-                        });
-                        observer.disconnect();
-                    }
-                });
-            }, { threshold: 0.5 });
+            const observer = new IntersectionObserver(
+                (entries) => {
+                    entries.forEach((entry) => {
+                        if (entry.isIntersecting) {
+                            fbq("track", "ViewContent", {
+                                content_name: "Waitlist Form",
+                                content_category: "Lead Form",
+                            });
+                            observer.disconnect();
+                        }
+                    });
+                },
+                { threshold: 0.5 },
+            );
             observer.observe(formSection);
         }
 
