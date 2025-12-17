@@ -5,7 +5,8 @@ import heroImage from "../assets/images/cows-10.webp";
 
 <main id="main-content">
     <section
-        class="noise-overlay relative min-h-[90vh] flex items-center py-16 lg:py-0 overflow-hidden"
+        id="pre-order"
+        class="noise-overlay relative min-h-[90vh] flex items-center py-16 lg:py-24 overflow-hidden"
     >
         <!-- Background Image with Parallax -->
         <div id="hero-bg" class="absolute inset-0 -z-20 will-change-transform" style="top: -10%; height: 120%;">
@@ -24,7 +25,8 @@ import heroImage from "../assets/images/cows-10.webp";
         >
         </div>
         <div class="max-w-6xl mx-auto px-6 relative z-10">
-            <div class="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+            <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+                <!-- Left Column - Value Prop -->
                 <div class="text-cream">
                     <div
                         class="animate-fade-in-up inline-flex items-center gap-2 bg-mint/15 border border-mint/30 px-4 py-2 rounded-full text-sm font-medium text-mint-light mb-6"
@@ -94,94 +96,86 @@ import heroImage from "../assets/images/cows-10.webp";
                         </div>
                     </div>
                 </div>
-                <div
-                    id="reserve"
-                    class="animate-fade-in-up animation-delay-400 relative bg-cream rounded-2xl p-8 md:p-10 shadow-2xl shadow-black/25"
-                >
-                    <div
-                        class="absolute -inset-0.5 bg-linear-to-br from-mint to-warm rounded-2xl -z-10 opacity-50"
-                    >
-                    </div>
-                    <div class="text-center mb-8">
-                        <h2
-                            class="font-display text-2xl md:text-3xl font-semibold text-forest mb-2"
-                        >
-                            Join the Wait List
-                        </h2>
-                        <p class="text-gray-500">
-                            Be first to know when the January drop opens
+
+                <!-- Right Column - Pricing Cards -->
+                <div class="animate-fade-in-up animation-delay-400 space-y-6">
+                    <!-- Delivery Info Banner -->
+                    <div class="bg-mint/20 border border-mint/30 rounded-xl px-5 py-4 text-center">
+                        <p class="text-cream font-medium">
+                            <svg class="w-5 h-5 fill-mint-light inline-block mr-2 -mt-0.5" viewBox="0 0 24 24">
+                                <path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"></path>
+                            </svg>
+                            Delivered <strong>Friday 13th & Saturday 14th February</strong>
                         </p>
+                        <p class="text-mint-light text-sm mt-1">Free delivery to Ballarat and surrounding areas</p>
                     </div>
-                    <form id="interest-form">
-                        <div class="mb-4">
-                            <label
-                                class="block text-xs font-semibold text-forest mb-1.5 uppercase tracking-wide"
-                                for="firstName">First Name</label
-                            >
-                            <input
-                                type="text"
-                                id="firstName"
-                                name="firstName"
-                                required
-                                autocomplete="given-name"
-                                class="w-full px-5 py-4 border-2 border-cream-dark rounded-lg text-base bg-white transition-all duration-300 focus:outline-none focus:border-mint focus:ring-4 focus:ring-mint/15"
-                                placeholder="Your first name"
-                            />
+
+                    <!-- Pricing Cards -->
+                    <div class="grid gap-4">
+                        <!-- 5kg Box -->
+                        <div class="relative bg-cream rounded-2xl p-6 shadow-xl shadow-black/20">
+                            <div class="absolute -inset-0.5 bg-linear-to-br from-mint to-sage rounded-2xl -z-10 opacity-40"></div>
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                <div>
+                                    <div class="flex items-baseline gap-2 mb-1">
+                                        <h3 class="font-display text-2xl font-semibold text-forest">5kg Beef Box</h3>
+                                        <span class="text-sm text-sage font-medium">$34/kg</span>
+                                    </div>
+                                    <p class="text-3xl font-bold text-forest mb-2">$170</p>
+                                    <p class="text-sm text-gray-500">Mixed cuts: steaks, roasts, mince & sausages</p>
+                                </div>
+                                <a
+                                    href="https://buy.stripe.com/test_cNi3cv7YKdRD6q21ef4sE05"
+                                    target="_blank"
+                                    rel="noopener"
+                                    class="inline-flex items-center justify-center gap-2 bg-linear-to-br from-forest to-sage text-cream px-6 py-3 rounded-lg font-semibold text-sm uppercase tracking-wider transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-forest/30 whitespace-nowrap"
+                                    onclick="if(typeof gtag==='function'){gtag('event','begin_checkout',{currency:'AUD',value:170,items:[{item_name:'5kg Beef Box',price:170}]});}"
+                                >
+                                    Pre-Order
+                                    <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                        <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path>
+                                    </svg>
+                                </a>
+                            </div>
                         </div>
-                        <div class="mb-4">
-                            <label
-                                class="block text-xs font-semibold text-forest mb-1.5 uppercase tracking-wide"
-                                for="phone">Phone Number</label
-                            >
-                            <input
-                                type="tel"
-                                id="phone"
-                                name="phone"
-                                required
-                                autocomplete="tel"
-                                class="w-full px-5 py-4 border-2 border-cream-dark rounded-lg text-base bg-white transition-all duration-300 focus:outline-none focus:border-mint focus:ring-4 focus:ring-mint/15"
-                                placeholder="0412 345 678"
-                            />
-                            <p class="text-xs text-gray-500 mt-1">
-                                We'll text you when orders open
-                            </p>
+
+                        <!-- 10kg Box - Featured -->
+                        <div class="relative bg-cream rounded-2xl p-6 shadow-xl shadow-black/20">
+                            <div class="absolute -inset-0.5 bg-linear-to-br from-warm to-warm-dark rounded-2xl -z-10 opacity-60"></div>
+                            <div class="absolute -top-3 left-6 bg-warm text-white text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full">
+                                Best Value
+                            </div>
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-2">
+                                <div>
+                                    <div class="flex items-baseline gap-2 mb-1">
+                                        <h3 class="font-display text-2xl font-semibold text-forest">10kg Beef Box</h3>
+                                        <span class="text-sm text-warm-dark font-medium">$28/kg</span>
+                                    </div>
+                                    <p class="text-3xl font-bold text-forest mb-2">$280</p>
+                                    <p class="text-sm text-gray-500">Mixed cuts: steaks, roasts, mince & sausages</p>
+                                </div>
+                                <a
+                                    href="https://buy.stripe.com/test_4gM7sLbaWdRDdSu9KL4sE04"
+                                    target="_blank"
+                                    rel="noopener"
+                                    class="inline-flex items-center justify-center gap-2 bg-linear-to-br from-warm to-warm-dark text-white px-6 py-3 rounded-lg font-semibold text-sm uppercase tracking-wider transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-warm/30 whitespace-nowrap"
+                                    onclick="if(typeof gtag==='function'){gtag('event','begin_checkout',{currency:'AUD',value:280,items:[{item_name:'10kg Beef Box',price:280}]});}"
+                                >
+                                    Pre-Order
+                                    <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                        <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path>
+                                    </svg>
+                                </a>
+                            </div>
                         </div>
-                        <div class="mb-4">
-                            <label
-                                class="block text-xs font-semibold text-forest mb-1.5 uppercase tracking-wide"
-                                for="postcode">Postcode</label
-                            >
-                            <input
-                                type="text"
-                                id="postcode"
-                                name="postcode"
-                                required
-                                autocomplete="postal-code"
-                                pattern="[0-9]{4}"
-                                maxlength="4"
-                                inputmode="numeric"
-                                class="w-full px-5 py-4 border-2 border-cream-dark rounded-lg text-base bg-white transition-all duration-300 focus:outline-none focus:border-mint focus:ring-4 focus:ring-mint/15"
-                                placeholder="3350"
-                            />
-                            <p class="text-xs text-gray-500 mt-1">
-                                To confirm you're in our delivery area
-                            </p>
-                        </div>
-                        <button
-                            type="submit"
-                            class="w-full mt-2 py-4 px-8 bg-linear-to-br from-forest to-sage text-cream rounded-lg text-base font-semibold uppercase tracking-wider transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-forest/30 cursor-pointer border-0"
-                            >Save My Spot</button
-                        >
-                    </form>
-                    <div
-                        class="flex items-center justify-center gap-2 mt-5 text-sm text-gray-500"
-                    >
-                        <svg class="w-4 h-4 fill-sage" viewBox="0 0 24 24"
-                            ><path
-                                d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"
-                            ></path></svg
-                        >
-                        No spam, ever. Unsubscribe anytime.
+                    </div>
+
+                    <!-- Urgency Message -->
+                    <div class="flex items-center justify-center gap-2 text-cream/80 text-sm">
+                        <svg class="w-4 h-4 fill-mint-light" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path>
+                        </svg>
+                        Limited boxes available — order early to secure yours
                     </div>
                 </div>
             </div>
@@ -201,131 +195,10 @@ import heroImage from "../assets/images/cows-10.webp";
             }
         }
 
-        // Declare gtag, posthog, and fbq as global (loaded in Layout)
+        // Declare gtag as global (loaded in Layout)
         declare const gtag: (...args: any[]) => void;
-        declare const posthog:
-            | {
-                  capture: (
-                      event: string,
-                      properties?: Record<string, any>,
-                  ) => void;
-              }
-            | undefined;
-        declare const fbq: (...args: any[]) => void;
 
-        // Track form start when user focuses on first field
-        let formStarted = false;
-        document.getElementById("firstName")?.addEventListener("focus", () => {
-            if (!formStarted) {
-                formStarted = true;
-                if (typeof gtag === "function") {
-                    gtag("event", "form_start", {
-                        form_id: "interest-form",
-                        form_location: "hero",
-                    });
-                }
-                if (typeof posthog !== "undefined") {
-                    posthog.capture("form_started", {
-                        form_id: "interest-form",
-                        form_location: "hero",
-                    });
-                }
-            }
-        });
-
-        // Track ViewContent when form scrolls into view
-        const formSection = document.getElementById("reserve");
-        if (formSection && typeof fbq === "function") {
-            const observer = new IntersectionObserver(
-                (entries) => {
-                    entries.forEach((entry) => {
-                        if (entry.isIntersecting) {
-                            fbq("track", "ViewContent", {
-                                content_name: "Waitlist Form",
-                                content_category: "Lead Form",
-                            });
-                            observer.disconnect();
-                        }
-                    });
-                },
-                { threshold: 0.5 },
-            );
-            observer.observe(formSection);
-        }
-
-        document
-            .getElementById("interest-form")
-            ?.addEventListener("submit", async function (e) {
-                e.preventDefault();
-                const form = e.target as HTMLFormElement;
-                const submitButton = form.querySelector(
-                    'button[type="submit"]',
-                ) as HTMLButtonElement;
-                const firstName = (
-                    document.getElementById("firstName") as HTMLInputElement
-                )?.value;
-                const phone = (
-                    document.getElementById("phone") as HTMLInputElement
-                )?.value;
-                const postcode = (
-                    document.getElementById("postcode") as HTMLInputElement
-                )?.value;
-
-                // Disable button and show loading state
-                if (submitButton) {
-                    submitButton.disabled = true;
-                    submitButton.textContent = "Saving...";
-                }
-
-                try {
-                    const response = await fetch("/api/subscribe", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({ firstName, phone, postcode }),
-                    });
-
-                    const result = await response.json();
-
-                    if (result.success) {
-                        // Track successful lead generation
-                        if (typeof gtag === "function") {
-                            gtag("event", "generate_lead", {
-                                postcode: postcode,
-                                form_location: "hero",
-                            });
-                        }
-                        if (typeof posthog !== "undefined") {
-                            posthog.capture("form_submitted", {
-                                form_id: "interest-form",
-                                form_location: "hero",
-                                postcode: postcode,
-                            });
-                        }
-                        // Redirect to thank you page for Google Ads conversion tracking
-                        window.location.href = `/thank-you?name=${encodeURIComponent(firstName)}`;
-                    } else {
-                        // Show error message
-                        alert(
-                            result.error ||
-                                "Something went wrong. Please try again.",
-                        );
-                        if (submitButton) {
-                            submitButton.disabled = false;
-                            submitButton.textContent = "Save My Spot";
-                        }
-                    }
-                } catch (error) {
-                    console.error("Submit error:", error);
-                    alert("Something went wrong. Please try again.");
-                    if (submitButton) {
-                        submitButton.disabled = false;
-                        submitButton.textContent = "Save My Spot";
-                    }
-                }
-            });
-
+        // Smooth scrolling for anchor links
         document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
             anchor.addEventListener("click", function (e) {
                 e.preventDefault();

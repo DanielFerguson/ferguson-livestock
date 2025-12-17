@@ -26,21 +26,22 @@ import ctaImage from "../assets/images/8.webp";
             Ready to Taste the Difference?
         </h2>
         <p class="text-lg text-white/90 mb-8 max-w-lg mx-auto">
-            Join our wait list today and be first to know when the January drop
-            opens. Limited boxes available.
+            Pre-order your beef box today for delivery on Friday 13th or Saturday 14th February. Limited boxes available.
         </p>
-        <a
-            href="#reserve"
-            class="inline-flex items-center gap-2.5 bg-white text-forest px-10 py-5 rounded-lg font-semibold text-base uppercase tracking-wider transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/20 no-underline"
-            onclick="if(typeof gtag==='function'){gtag('event','cta_click',{cta_location:'final_cta',cta_text:'Save My Spot'});}"
-            >Save My Spot<svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"
-                ><path
-                    d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"
-                ></path></svg
-            ></a
-        >
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a
+                href="#pre-order"
+                class="inline-flex items-center gap-2.5 bg-white text-forest px-10 py-5 rounded-lg font-semibold text-base uppercase tracking-wider transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/20 no-underline"
+                onclick="if(typeof gtag==='function'){gtag('event','cta_click',{cta_location:'final_cta',cta_text:'Pre-Order Now'});}"
+                >Pre-Order Now<svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"
+                    ><path
+                        d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"
+                    ></path></svg
+                ></a
+            >
+        </div>
         <p class="mt-6 text-white/70 text-sm">
-            No obligation. We'll just text you when the next drop is ready.
+            Not ready yet? <a href="#future-drops" class="text-white underline hover:text-mint-light transition-colors">Join our waitlist</a> for future drops.
         </p>
     </div>
 </section>
