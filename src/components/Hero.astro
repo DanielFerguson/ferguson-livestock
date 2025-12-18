@@ -315,6 +315,12 @@ import heroImage from "../assets/images/cows-10.webp";
                             });
                         }
                         if (typeof posthog !== "undefined") {
+                            posthog.identify(phone, {
+                                firstName: firstName,
+                                phone: phone,
+                                postcode: postcode,
+                                waitlist_signed_up_at: new Date().toISOString(),
+                            });
                             posthog.capture("form_submitted", {
                                 form_id: "interest-form",
                                 form_location: "hero",
