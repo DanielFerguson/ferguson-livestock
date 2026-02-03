@@ -1,0 +1,231 @@
+---
+---
+
+<section id="waitlist" class="py-24 bg-cream">
+    <div class="max-w-6xl mx-auto px-6">
+        <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <div>
+                <span
+                    class="inline-block text-xs font-semibold uppercase tracking-widest text-sage mb-4"
+                    >Future Drops</span
+                >
+                <h2
+                    class="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-forest mb-4 tracking-tight"
+                >
+                    Want the next drop instead?
+                </h2>
+                <p class="text-lg text-gray-500 max-w-xl">
+                    Join the wait list and we will text you when the next beef
+                    box drop opens. No pressure and no spam.
+                </p>
+            </div>
+            <div class="relative bg-white rounded-2xl p-8 md:p-10 shadow-xl shadow-forest/10">
+                <div
+                    class="absolute -inset-0.5 bg-linear-to-br from-mint to-warm rounded-2xl -z-10 opacity-30"
+                ></div>
+                <div class="text-center mb-8">
+                    <h3
+                        class="font-display text-2xl md:text-3xl font-semibold text-forest mb-2"
+                    >
+                        Join the Wait List
+                    </h3>
+                    <p class="text-gray-500">
+                        Be first to know when the next drop opens
+                    </p>
+                </div>
+                <form id="waitlist-form">
+                    <div class="mb-4">
+                        <label
+                            class="block text-xs font-semibold text-forest mb-1.5 uppercase tracking-wide"
+                            for="waitlistFirstName">First Name</label
+                        >
+                        <input
+                            type="text"
+                            id="waitlistFirstName"
+                            name="firstName"
+                            required
+                            autocomplete="given-name"
+                            class="w-full px-5 py-4 border-2 border-cream-dark rounded-lg text-base bg-white transition-all duration-300 focus:outline-none focus:border-mint focus:ring-4 focus:ring-mint/15"
+                            placeholder="Your first name"
+                        />
+                    </div>
+                    <div class="mb-4">
+                        <label
+                            class="block text-xs font-semibold text-forest mb-1.5 uppercase tracking-wide"
+                            for="waitlistPhone">Phone Number</label
+                        >
+                        <input
+                            type="tel"
+                            id="waitlistPhone"
+                            name="phone"
+                            required
+                            autocomplete="tel"
+                            class="w-full px-5 py-4 border-2 border-cream-dark rounded-lg text-base bg-white transition-all duration-300 focus:outline-none focus:border-mint focus:ring-4 focus:ring-mint/15"
+                            placeholder="0412 345 678"
+                        />
+                        <p class="text-xs text-gray-500 mt-1">
+                            We will text you when orders open
+                        </p>
+                    </div>
+                    <div class="mb-4">
+                        <label
+                            class="block text-xs font-semibold text-forest mb-1.5 uppercase tracking-wide"
+                            for="waitlistPostcode">Postcode</label
+                        >
+                        <input
+                            type="text"
+                            id="waitlistPostcode"
+                            name="postcode"
+                            required
+                            autocomplete="postal-code"
+                            pattern="[0-9]{4}"
+                            maxlength="4"
+                            inputmode="numeric"
+                            class="w-full px-5 py-4 border-2 border-cream-dark rounded-lg text-base bg-white transition-all duration-300 focus:outline-none focus:border-mint focus:ring-4 focus:ring-mint/15"
+                            placeholder="3350"
+                        />
+                        <p class="text-xs text-gray-500 mt-1">
+                            To confirm you are in our delivery area
+                        </p>
+                    </div>
+                    <button
+                        type="submit"
+                        class="w-full mt-2 py-4 px-8 bg-linear-to-br from-forest to-sage text-cream rounded-lg text-base font-semibold uppercase tracking-wider transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-forest/30 cursor-pointer border-0"
+                        >Join the Wait List</button
+                    >
+                </form>
+                <div
+                    class="flex items-center justify-center gap-2 mt-5 text-sm text-gray-500"
+                >
+                    <svg class="w-4 h-4 fill-sage" viewBox="0 0 24 24"
+                        ><path
+                            d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"
+                        ></path></svg
+                    >
+                    No spam, ever. Unsubscribe anytime.
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    declare const gtag: (...args: any[]) => void;
+    declare const posthog:
+        | {
+              capture: (event: string, properties?: Record<string, any>) => void;
+              identify: (id: string, properties?: Record<string, any>) => void;
+          }
+        | undefined;
+    declare const fbq: (...args: any[]) => void;
+
+    let formStarted = false;
+    document.getElementById("waitlistFirstName")?.addEventListener("focus", () => {
+        if (!formStarted) {
+            formStarted = true;
+            if (typeof gtag === "function") {
+                gtag("event", "form_start", {
+                    form_id: "waitlist-form",
+                    form_location: "waitlist",
+                });
+            }
+            if (typeof posthog !== "undefined") {
+                posthog.capture("form_started", {
+                    form_id: "waitlist-form",
+                    form_location: "waitlist",
+                });
+            }
+        }
+    });
+
+    const formSection = document.getElementById("waitlist");
+    if (formSection && typeof fbq === "function") {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        fbq("track", "ViewContent", {
+                            content_name: "Waitlist Form",
+                            content_category: "Lead Form",
+                        });
+                        observer.disconnect();
+                    }
+                });
+            },
+            { threshold: 0.5 },
+        );
+        observer.observe(formSection);
+    }
+
+    document
+        .getElementById("waitlist-form")
+        ?.addEventListener("submit", async function (e) {
+            e.preventDefault();
+            const form = e.target as HTMLFormElement;
+            const submitButton = form.querySelector(
+                'button[type="submit"]',
+            ) as HTMLButtonElement;
+            const firstName = (
+                document.getElementById("waitlistFirstName") as HTMLInputElement
+            )?.value;
+            const phone = (
+                document.getElementById("waitlistPhone") as HTMLInputElement
+            )?.value;
+            const postcode = (
+                document.getElementById("waitlistPostcode") as HTMLInputElement
+            )?.value;
+
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.textContent = "Saving...";
+            }
+
+            try {
+                const response = await fetch("/api/subscribe", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ firstName, phone, postcode }),
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    if (typeof gtag === "function") {
+                        gtag("event", "generate_lead", {
+                            postcode: postcode,
+                            form_location: "waitlist",
+                        });
+                    }
+                    if (typeof posthog !== "undefined") {
+                        posthog.identify(phone, {
+                            firstName: firstName,
+                            phone: phone,
+                            postcode: postcode,
+                            waitlist_signed_up_at: new Date().toISOString(),
+                        });
+                        posthog.capture("form_submitted", {
+                            form_id: "waitlist-form",
+                            form_location: "waitlist",
+                            postcode: postcode,
+                        });
+                    }
+                    window.location.href = `/thank-you?name=${encodeURIComponent(firstName)}`;
+                } else {
+                    alert(result.error || "Something went wrong. Please try again.");
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                        submitButton.textContent = "Join the Wait List";
+                    }
+                }
+            } catch (error) {
+                console.error("Submit error:", error);
+                alert("Something went wrong. Please try again.");
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = "Join the Wait List";
+                }
+            }
+        });
+</script>
