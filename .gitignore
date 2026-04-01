@@ -27,3 +27,6 @@ pnpm-debug.log*
 
 # OG image generation fonts (downloaded at build time)
 scripts/fonts/
+
+# worktrees
+.worktrees/
