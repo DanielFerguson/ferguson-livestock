@@ -1,0 +1,689 @@
+---
+import Layout from "../components/Layout.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import WaitlistForm from "../components/WaitlistForm.astro";
+
+export const prerender = false;
+
+const pageTitle = "Order Your Beef Box | Ferguson Livestock";
+const pageDescription =
+  "Order premium pasture-raised Murray Grey beef boxes direct from our family farm. Choose your box size and add optional extras.";
+---
+
+<Layout title={pageTitle} description={pageDescription}>
+  <Header />
+
+  <main class="bg-cream-dark min-h-screen">
+    <!-- Hero Banner -->
+    <section class="bg-forest py-16 lg:py-20">
+      <div class="max-w-4xl mx-auto px-6 text-center">
+        <div
+          class="inline-flex items-center gap-2 bg-mint/15 border border-mint/30 px-4 py-2 rounded-full text-sm font-medium text-mint-light mb-6"
+        >
+          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+            <path
+              d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+            ></path>
+          </svg>
+          Beef Box Drop — Now Open
+        </div>
+        <h1
+          class="font-display text-4xl md:text-5xl font-semibold text-cream tracking-tight mb-4"
+        >
+          Order Your Beef Box
+        </h1>
+        <p class="text-lg text-cream/80 max-w-2xl mx-auto">
+          Premium pasture-raised Murray Grey beef, vacuum-sealed and personally
+          delivered to your door. Free delivery to Ballarat and surrounding
+          areas.
+        </p>
+      </div>
+    </section>
+
+    <!-- Order Form -->
+    <section class="py-12 lg:py-16">
+      <div class="max-w-4xl mx-auto px-6">
+        <!-- Loading State -->
+        <div id="loading-state" class="text-center py-20">
+          <div
+            class="inline-block w-8 h-8 border-4 border-sage/30 border-t-sage rounded-full animate-spin"
+          >
+          </div>
+          <p class="text-gray-500 mt-4">Loading available products...</p>
+        </div>
+
+        <!-- Drop Inactive / All Sold Out -->
+        <div id="inactive-state" class="hidden">
+          <div
+            class="bg-white rounded-2xl shadow-xl border border-forest/5 p-8 md:p-12 text-center max-w-2xl mx-auto"
+          >
+            <div
+              class="inline-flex items-center justify-center w-16 h-16 bg-warm/20 rounded-full mb-6"
+            >
+              <svg class="w-8 h-8 fill-warm" viewBox="0 0 24 24">
+                <path
+                  d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
+                ></path>
+              </svg>
+            </div>
+            <h2
+              class="font-display text-2xl md:text-3xl font-semibold text-forest mb-3"
+            >
+              All Sold Out!
+            </h2>
+            <p class="text-gray-500 mb-8 max-w-md mx-auto">
+              This drop is completely sold out. Join the wait list below and
+              we'll text you when the next batch is ready.
+            </p>
+          </div>
+        </div>
+
+        <!-- Order Form (active state) -->
+        <div id="order-form" class="hidden space-y-8">
+          <!-- Step 1: Choose Your Box -->
+          <div
+            class="bg-white rounded-2xl shadow-xl border border-forest/5 p-6 md:p-8"
+          >
+            <div class="flex items-center gap-3 mb-6">
+              <span
+                class="inline-flex items-center justify-center w-8 h-8 bg-forest text-cream text-sm font-bold rounded-full"
+                >1</span
+              >
+              <h2
+                class="font-display text-2xl md:text-3xl font-semibold text-forest"
+              >
+                Choose Your Box
+              </h2>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-4" id="box-options">
+              <!-- 5kg Box -->
+              <button
+                type="button"
+                data-box="5kg"
+                class="box-option group relative bg-cream rounded-xl p-6 border-2 border-transparent transition-all duration-200 hover:border-sage hover:shadow-md text-left cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-transparent disabled:hover:shadow-none"
+              >
+                <div
+                  class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+                >
+                  <div>
+                    <div class="flex items-baseline gap-2 mb-1">
+                      <h3
+                        class="font-display text-xl font-semibold text-forest"
+                      >
+                        5kg Beef Box
+                      </h3>
+                      <span class="text-sm text-sage font-medium">$30/kg</span>
+                    </div>
+                    <p class="text-2xl font-bold text-forest">$150</p>
+                    <p class="text-sm text-gray-500 mt-1">
+                      Mixed cuts: steaks, roasts, mince & sausages
+                    </p>
+                  </div>
+                  <div class="flex flex-col items-end gap-2">
+                    <span
+                      class="box-stock text-xs font-medium text-sage"
+                      data-product="beef-box-5kg"></span>
+                    <div
+                      class="box-check hidden w-6 h-6 bg-sage rounded-full items-center justify-center"
+                    >
+                      <svg
+                        class="w-4 h-4 fill-white"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
+                        ></path>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  class="box-sold-out hidden absolute inset-0 bg-cream/80 rounded-xl flex items-center justify-center"
+                >
+                  <span
+                    class="px-4 py-2 bg-cream-dark text-forest text-xs font-semibold uppercase tracking-wider rounded-full"
+                    >Sold Out</span
+                  >
+                </div>
+              </button>
+
+              <!-- 10kg Box -->
+              <button
+                type="button"
+                data-box="10kg"
+                class="box-option group relative bg-cream rounded-xl p-6 border-2 border-transparent transition-all duration-200 hover:border-warm hover:shadow-md text-left cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-transparent disabled:hover:shadow-none"
+              >
+                <div
+                  class="absolute -top-3 left-5 bg-warm text-white text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full"
+                >
+                  20% off
+                </div>
+                <div
+                  class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-1"
+                >
+                  <div>
+                    <div class="flex items-baseline gap-2 mb-1">
+                      <h3
+                        class="font-display text-xl font-semibold text-forest"
+                      >
+                        10kg Beef Box
+                      </h3>
+                      <span class="text-sm text-warm-dark font-medium"
+                        >$24/kg</span
+                      >
+                    </div>
+                    <p class="text-2xl font-bold text-forest">$240</p>
+                    <p class="text-sm text-gray-500 mt-1">
+                      Mixed cuts: steaks, roasts, mince & sausages
+                    </p>
+                  </div>
+                  <div class="flex flex-col items-end gap-2">
+                    <span
+                      class="box-stock text-xs font-medium text-warm-dark"
+                      data-product="beef-box-5kg"
+                      data-requires="2"></span>
+                    <div
+                      class="box-check hidden w-6 h-6 bg-warm rounded-full items-center justify-center"
+                    >
+                      <svg
+                        class="w-4 h-4 fill-white"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
+                        ></path>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  class="box-sold-out hidden absolute inset-0 bg-cream/80 rounded-xl flex items-center justify-center"
+                >
+                  <span
+                    class="px-4 py-2 bg-cream-dark text-forest text-xs font-semibold uppercase tracking-wider rounded-full"
+                    >Sold Out</span
+                  >
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 2: Optional Extras -->
+          <div
+            id="extras-section"
+            class="bg-white rounded-2xl shadow-xl border border-forest/5 p-6 md:p-8 opacity-50 pointer-events-none transition-opacity duration-300"
+          >
+            <div class="flex items-center gap-3 mb-2">
+              <span
+                class="inline-flex items-center justify-center w-8 h-8 bg-forest text-cream text-sm font-bold rounded-full"
+                >2</span
+              >
+              <h2
+                class="font-display text-2xl md:text-3xl font-semibold text-forest"
+              >
+                Optional Extras
+              </h2>
+            </div>
+            <p class="text-sm text-gray-500 mb-6 ml-11">
+              Add these to your box while stocks last.
+            </p>
+
+            <div class="space-y-4" id="extras-list">
+              <!-- 500g Beef Mince -->
+              <div
+                class="extra-item flex items-center justify-between gap-4 bg-cream rounded-xl p-5"
+                data-product="beef-mince-500g"
+                data-price="1200"
+              >
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-baseline gap-2 flex-wrap">
+                    <h3 class="font-semibold text-forest">500g Beef Mince</h3>
+                    <span class="text-sm font-bold text-forest">$12</span>
+                  </div>
+                  <p class="text-sm text-gray-500">
+                    Premium grass-fed beef mince
+                  </p>
+                  <span
+                    class="extra-stock text-xs font-medium text-sage mt-1 inline-block"
+                  ></span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    class="qty-btn qty-minus w-9 h-9 rounded-full bg-white border border-forest/20 text-forest flex items-center justify-center font-bold text-lg transition-colors hover:bg-forest hover:text-cream disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-forest cursor-pointer"
+                    disabled
+                  >
+                    &minus;
+                  </button>
+                  <span class="qty-display w-8 text-center font-bold text-forest"
+                    >0</span
+                  >
+                  <button
+                    type="button"
+                    class="qty-btn qty-plus w-9 h-9 rounded-full bg-white border border-forest/20 text-forest flex items-center justify-center font-bold text-lg transition-colors hover:bg-forest hover:text-cream disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-forest cursor-pointer"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              <!-- 2kg Beef Bones -->
+              <div
+                class="extra-item flex items-center justify-between gap-4 bg-cream rounded-xl p-5"
+                data-product="beef-bones-2kg"
+                data-price="1000"
+              >
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-baseline gap-2 flex-wrap">
+                    <h3 class="font-semibold text-forest">2kg Beef Bones</h3>
+                    <span class="text-sm font-bold text-forest">$10</span>
+                  </div>
+                  <p class="text-sm text-gray-500">
+                    Great for stock, broth, or pet bones
+                  </p>
+                  <span
+                    class="extra-stock text-xs font-medium text-sage mt-1 inline-block"
+                  ></span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    class="qty-btn qty-minus w-9 h-9 rounded-full bg-white border border-forest/20 text-forest flex items-center justify-center font-bold text-lg transition-colors hover:bg-forest hover:text-cream disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-forest cursor-pointer"
+                    disabled
+                  >
+                    &minus;
+                  </button>
+                  <span class="qty-display w-8 text-center font-bold text-forest"
+                    >0</span
+                  >
+                  <button
+                    type="button"
+                    class="qty-btn qty-plus w-9 h-9 rounded-full bg-white border border-forest/20 text-forest flex items-center justify-center font-bold text-lg transition-colors hover:bg-forest hover:text-cream disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-forest cursor-pointer"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Order Summary & Checkout -->
+          <div
+            id="summary-section"
+            class="bg-white rounded-2xl shadow-xl border border-forest/5 p-6 md:p-8 opacity-50 pointer-events-none transition-opacity duration-300"
+          >
+            <div class="flex items-center gap-3 mb-6">
+              <span
+                class="inline-flex items-center justify-center w-8 h-8 bg-forest text-cream text-sm font-bold rounded-full"
+                >3</span
+              >
+              <h2
+                class="font-display text-2xl md:text-3xl font-semibold text-forest"
+              >
+                Order Summary
+              </h2>
+            </div>
+
+            <div id="summary-items" class="space-y-3 mb-6">
+              <p class="text-gray-400 italic" id="summary-placeholder">Select a box to get started</p>
+            </div>
+
+            <div
+              class="border-t border-forest/10 pt-4 mb-6 flex items-center justify-between"
+            >
+              <span class="font-display text-xl font-semibold text-forest"
+                >Total</span
+              >
+              <span
+                id="summary-total"
+                class="font-display text-2xl font-bold text-forest">$0</span
+              >
+            </div>
+
+            <div class="space-y-3">
+              <button
+                type="button"
+                id="checkout-btn"
+                disabled
+                class="w-full bg-forest text-cream py-4 px-8 rounded-lg font-semibold text-lg transition-all duration-300 hover:bg-sage hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none cursor-pointer"
+              >
+                Proceed to Checkout
+              </button>
+              <p class="text-center text-xs text-gray-400">
+                You'll enter your delivery details and payment on the next page via Stripe.
+              </p>
+            </div>
+
+            <!-- Error Message -->
+            <div
+              id="checkout-error"
+              class="hidden mt-4 bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-700"
+            >
+            </div>
+          </div>
+
+          <!-- Trust Signals -->
+          <div class="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-gray-400 pt-4">
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"></path>
+              </svg>
+              Secure checkout via Stripe
+            </div>
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                <path d="M18 18.5c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5-1.5.67-1.5 1.5.67 1.5 1.5 1.5zM19.96 10H18V6H6v2h9.5L12 13.5H5V15h5.8l.3.5H18v-2h.54l3.04-4.5L19.96 10zM6 18.5c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5-1.5.67-1.5 1.5.67 1.5 1.5 1.5z"></path>
+              </svg>
+              Free personal delivery
+            </div>
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path>
+              </svg>
+              Pasture-raised & hormone-free
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Waitlist Fallback (shown when sold out) -->
+    <div id="waitlist-fallback" class="hidden">
+      <WaitlistForm />
+    </div>
+  </main>
+
+  <Footer />
+
+  <script>
+    interface StockData {
+      active: boolean;
+      stock: Record<string, number>;
+    }
+
+    interface ExtraSelection {
+      productId: string;
+      quantity: number;
+    }
+
+    // State
+    let stockData: StockData | null = null;
+    let selectedBox: "5kg" | "10kg" | null = null;
+    const extras: Map<string, number> = new Map();
+
+    // DOM refs
+    const loadingState = document.getElementById("loading-state")!;
+    const inactiveState = document.getElementById("inactive-state")!;
+    const orderForm = document.getElementById("order-form")!;
+    const extrasSection = document.getElementById("extras-section")!;
+    const summarySection = document.getElementById("summary-section")!;
+    const summaryItems = document.getElementById("summary-items")!;
+    const summaryPlaceholder = document.getElementById("summary-placeholder")!;
+    const summaryTotal = document.getElementById("summary-total")!;
+    const checkoutBtn = document.getElementById("checkout-btn") as HTMLButtonElement;
+    const checkoutError = document.getElementById("checkout-error")!;
+    const waitlistFallback = document.getElementById("waitlist-fallback")!;
+
+    // Prices in cents
+    const BOX_PRICES: Record<string, number> = { "5kg": 15000, "10kg": 24000 };
+    const EXTRA_PRICES: Record<string, number> = {
+      "beef-mince-500g": 1200,
+      "beef-bones-2kg": 1000,
+    };
+    const EXTRA_NAMES: Record<string, string> = {
+      "beef-mince-500g": "500g Beef Mince",
+      "beef-bones-2kg": "2kg Beef Bones",
+    };
+
+    async function fetchStock(): Promise<void> {
+      try {
+        const res = await fetch("/api/stock");
+        if (!res.ok) throw new Error("Failed to fetch stock");
+        stockData = await res.json();
+
+        loadingState.classList.add("hidden");
+
+        if (!stockData!.active) {
+          inactiveState.classList.remove("hidden");
+          waitlistFallback.classList.remove("hidden");
+          return;
+        }
+
+        const boxStock = stockData!.stock["beef-box-5kg"] ?? 0;
+        if (boxStock <= 0) {
+          inactiveState.classList.remove("hidden");
+          waitlistFallback.classList.remove("hidden");
+          return;
+        }
+
+        orderForm.classList.remove("hidden");
+        updateStockDisplay();
+      } catch {
+        loadingState.textContent = "Failed to load products. Please refresh the page.";
+      }
+    }
+
+    function updateStockDisplay(): void {
+      if (!stockData) return;
+
+      document.querySelectorAll<HTMLElement>(".box-option").forEach((btn) => {
+        const box = btn.dataset.box as string;
+        const stockEl = btn.querySelector<HTMLElement>(".box-stock")!;
+        const soldOutEl = btn.querySelector<HTMLElement>(".box-sold-out")!;
+        const productId = stockEl.dataset.product!;
+        const requires = parseInt(stockEl.dataset.requires || "1", 10);
+        const available = stockData!.stock[productId] ?? 0;
+        const canOrder = available >= requires;
+
+        if (canOrder) {
+          const availableUnits = Math.floor(available / requires);
+          stockEl.textContent = `${availableUnits} left`;
+          soldOutEl.classList.add("hidden");
+          (btn as HTMLButtonElement).disabled = false;
+        } else {
+          stockEl.textContent = "";
+          soldOutEl.classList.remove("hidden");
+          (btn as HTMLButtonElement).disabled = true;
+          if (selectedBox === box) {
+            selectedBox = null;
+            btn.classList.remove("border-sage", "border-warm", "shadow-md");
+            btn.querySelector(".box-check")?.classList.add("hidden");
+          }
+        }
+      });
+
+      document.querySelectorAll<HTMLElement>(".extra-item").forEach((item) => {
+        const productId = item.dataset.product!;
+        const available = stockData!.stock[productId] ?? 0;
+        const stockEl = item.querySelector<HTMLElement>(".extra-stock")!;
+        const plusBtn = item.querySelector<HTMLButtonElement>(".qty-plus")!;
+
+        if (available <= 0) {
+          stockEl.textContent = "Sold out";
+          stockEl.classList.remove("text-sage");
+          stockEl.classList.add("text-warm-dark");
+          plusBtn.disabled = true;
+        } else {
+          stockEl.textContent = `${available} left`;
+          stockEl.classList.add("text-sage");
+          stockEl.classList.remove("text-warm-dark");
+          const currentQty = extras.get(productId) || 0;
+          plusBtn.disabled = currentQty >= available;
+        }
+      });
+
+      const boxStock = stockData!.stock["beef-box-5kg"] ?? 0;
+      if (boxStock <= 0) {
+        orderForm.classList.add("hidden");
+        inactiveState.classList.remove("hidden");
+        waitlistFallback.classList.remove("hidden");
+      }
+    }
+
+    function updateSummary(): void {
+      // Clear existing line items (but not the placeholder)
+      const existingLines = summaryItems.querySelectorAll(".summary-line");
+      existingLines.forEach((el) => el.remove());
+
+      let total = 0;
+      let hasItems = false;
+
+      if (selectedBox) {
+        hasItems = true;
+        const price = BOX_PRICES[selectedBox];
+        total += price;
+        const line = document.createElement("div");
+        line.className = "summary-line flex justify-between items-center";
+        const label = document.createElement("span");
+        label.className = "text-forest";
+        label.textContent = `${selectedBox} Beef Box`;
+        const value = document.createElement("span");
+        value.className = "font-semibold text-forest";
+        value.textContent = `$${(price / 100).toFixed(0)}`;
+        line.appendChild(label);
+        line.appendChild(value);
+        summaryItems.appendChild(line);
+      }
+
+      extras.forEach((qty, productId) => {
+        if (qty > 0) {
+          hasItems = true;
+          const price = EXTRA_PRICES[productId] * qty;
+          total += price;
+          const line = document.createElement("div");
+          line.className = "summary-line flex justify-between items-center";
+          const label = document.createElement("span");
+          label.className = "text-forest";
+          label.textContent = `${EXTRA_NAMES[productId]} x${qty}`;
+          const value = document.createElement("span");
+          value.className = "font-semibold text-forest";
+          value.textContent = `$${(price / 100).toFixed(0)}`;
+          line.appendChild(label);
+          line.appendChild(value);
+          summaryItems.appendChild(line);
+        }
+      });
+
+      summaryPlaceholder.classList.toggle("hidden", hasItems);
+      summaryTotal.textContent = `$${(total / 100).toFixed(0)}`;
+      checkoutBtn.disabled = !selectedBox;
+    }
+
+    // Box selection
+    document.querySelectorAll<HTMLElement>(".box-option").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if ((btn as HTMLButtonElement).disabled) return;
+        const box = btn.dataset.box as "5kg" | "10kg";
+        selectedBox = selectedBox === box ? null : box;
+
+        document.querySelectorAll<HTMLElement>(".box-option").forEach((b) => {
+          const isSelected = b.dataset.box === selectedBox;
+          const borderColor = b.dataset.box === "10kg" ? "border-warm" : "border-sage";
+          b.classList.toggle(borderColor, isSelected);
+          b.classList.toggle("shadow-md", isSelected);
+          const check = b.querySelector<HTMLElement>(".box-check");
+          if (check) {
+            check.classList.toggle("hidden", !isSelected);
+            check.style.display = isSelected ? "flex" : "";
+          }
+        });
+
+        const hasBox = selectedBox !== null;
+        extrasSection.classList.toggle("opacity-50", !hasBox);
+        extrasSection.classList.toggle("pointer-events-none", !hasBox);
+        summarySection.classList.toggle("opacity-50", !hasBox);
+        summarySection.classList.toggle("pointer-events-none", !hasBox);
+
+        updateSummary();
+      });
+    });
+
+    // Extras quantity buttons
+    document.querySelectorAll<HTMLElement>(".extra-item").forEach((item) => {
+      const productId = item.dataset.product!;
+      const minusBtn = item.querySelector<HTMLButtonElement>(".qty-minus")!;
+      const plusBtn = item.querySelector<HTMLButtonElement>(".qty-plus")!;
+      const display = item.querySelector<HTMLElement>(".qty-display")!;
+
+      minusBtn.addEventListener("click", () => {
+        const current = extras.get(productId) || 0;
+        if (current > 0) {
+          const newQty = current - 1;
+          if (newQty === 0) extras.delete(productId); else extras.set(productId, newQty);
+          display.textContent = String(newQty);
+          minusBtn.disabled = newQty <= 0;
+          const available = stockData?.stock[productId] ?? 0;
+          plusBtn.disabled = newQty >= available;
+        }
+        updateSummary();
+      });
+
+      plusBtn.addEventListener("click", () => {
+        const current = extras.get(productId) || 0;
+        const available = stockData?.stock[productId] ?? 0;
+        if (current < available) {
+          const newQty = current + 1;
+          extras.set(productId, newQty);
+          display.textContent = String(newQty);
+          minusBtn.disabled = false;
+          plusBtn.disabled = newQty >= available;
+        }
+        updateSummary();
+      });
+    });
+
+    // Checkout
+    checkoutBtn.addEventListener("click", async () => {
+      if (!selectedBox) return;
+
+      checkoutBtn.disabled = true;
+      checkoutBtn.textContent = "Processing...";
+      checkoutError.classList.add("hidden");
+
+      const extrasPayload: ExtraSelection[] = [];
+      extras.forEach((qty, productId) => {
+        if (qty > 0) extrasPayload.push({ productId, quantity: qty });
+      });
+
+      try {
+        const res = await fetch("/api/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ box: selectedBox, extras: extrasPayload }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          if (res.status === 409 && data.stock) {
+            stockData!.stock = data.stock;
+            updateStockDisplay();
+            updateSummary();
+            checkoutError.textContent =
+              "Some items are no longer available. We've updated the stock counts \u2014 please review your order.";
+          } else {
+            checkoutError.textContent =
+              data.error || "Something went wrong. Please try again.";
+          }
+          checkoutError.classList.remove("hidden");
+          checkoutBtn.disabled = false;
+          checkoutBtn.textContent = "Proceed to Checkout";
+          return;
+        }
+
+        if (data.url) {
+          window.location.href = data.url;
+        }
+      } catch {
+        checkoutError.textContent = "Something went wrong. Please try again.";
+        checkoutError.classList.remove("hidden");
+        checkoutBtn.disabled = false;
+        checkoutBtn.textContent = "Proceed to Checkout";
+      }
+    });
+
+    fetchStock();
+  </script>
+</Layout>

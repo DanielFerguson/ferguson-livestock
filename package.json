@@ -17,9 +17,11 @@
     "@fontsource/cormorant-garamond": "^5.2.11",
     "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/vite": "^4.1.17",
+    "@upstash/redis": "^1.37.0",
     "astro": "^5.16.2",
     "satori": "^0.18.3",
     "sharp": "^0.34.5",
+    "stripe": "^21.0.1",
     "tailwindcss": "^4.1.17"
   }
 }

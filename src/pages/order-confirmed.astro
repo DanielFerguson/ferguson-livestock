@@ -1,0 +1,118 @@
+---
+import Layout from "../components/Layout.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import { getStripe } from "../lib/stripe";
+
+export const prerender = false;
+
+const pageTitle = "Order Confirmed | Ferguson Livestock";
+const pageDescription = "Thank you for your order! Your beef box is on its way.";
+
+// Verify the Stripe session is actually paid
+const sessionId = Astro.url.searchParams.get("session_id");
+let customerName = "friend";
+let verified = false;
+
+if (sessionId) {
+  try {
+    const stripe = getStripe();
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    if (session.payment_status === "paid") {
+      verified = true;
+      customerName = session.customer_details?.name?.split(" ")[0] || "friend";
+    }
+  } catch {
+    // Invalid session — will redirect below
+  }
+}
+
+if (!verified) {
+  return Astro.redirect("/order", 302);
+}
+---
+
+<Layout title={pageTitle} description={pageDescription}>
+  <Header />
+
+  <main
+    class="min-h-[80vh] flex items-center justify-center py-16 px-6 bg-cream-dark"
+  >
+    <div class="max-w-2xl w-full">
+      <!-- Success Icon -->
+      <div class="text-center mb-8">
+        <div
+          class="inline-flex items-center justify-center w-20 h-20 bg-mint/20 rounded-full mb-6"
+        >
+          <svg class="w-10 h-10 fill-sage" viewBox="0 0 24 24">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L18 8l-9 9z"
+            ></path>
+          </svg>
+        </div>
+        <h1
+          class="font-display text-3xl md:text-4xl font-semibold text-forest mb-2"
+        >
+          Order confirmed, {customerName}!
+        </h1>
+        <p class="text-gray-500">Your beef box is being prepared</p>
+      </div>
+
+      <!-- Confirmation Card -->
+      <div
+        class="bg-white rounded-2xl shadow-xl border border-forest/5 p-8 md:p-12 mb-8"
+      >
+        <div class="prose prose-lg max-w-none text-gray-600">
+          <p class="text-lg leading-relaxed mb-6">
+            Thank you for supporting our small family farm! Your order has been
+            received and we're getting everything ready for you.
+          </p>
+
+          <p class="leading-relaxed mb-6">
+            Here's what happens next: we'll pack your beef box fresh, vacuum-seal
+            everything, and personally deliver it to your door. We'll be in touch
+            via the phone number or email you provided to confirm your delivery
+            time.
+          </p>
+
+          <p class="leading-relaxed mb-6">
+            Your beef will arrive in our custom insulated packaging to keep
+            everything fresh. Pop it straight in the freezer or fridge when it
+            arrives.
+          </p>
+
+          <p class="leading-relaxed mb-8">
+            If you have any questions in the meantime, feel free to reach out.
+            We're always happy to chat!
+          </p>
+
+          <!-- Signature -->
+          <div class="border-t border-gray-100 pt-8">
+            <p class="text-gray-500 mb-2">With gratitude,</p>
+            <p class="font-handwriting text-4xl text-forest mb-1">
+              Daniel & Tahlia
+            </p>
+            <p class="text-sm text-gray-400">
+              Ferguson Livestock, Snake Valley
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a
+          href="/"
+          class="inline-flex items-center justify-center gap-2 bg-forest text-cream px-8 py-4 rounded-lg font-semibold text-base transition-all duration-300 hover:bg-sage hover:-translate-y-0.5 hover:shadow-lg"
+        >
+          <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"></path>
+          </svg>
+          Back to Homepage
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <Footer />
+</Layout>
