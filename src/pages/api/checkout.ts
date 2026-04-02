@@ -14,6 +14,7 @@ export const prerender = false;
 interface CheckoutRequest {
   box: "5kg" | "10kg";
   extras: { productId: string; quantity: number }[];
+  deliveryMethod: "delivery" | "pickup";
 }
 
 export const POST: APIRoute = async ({ request, url }) => {
@@ -24,6 +25,14 @@ export const POST: APIRoute = async ({ request, url }) => {
     if (data.box !== "5kg" && data.box !== "10kg") {
       return new Response(
         JSON.stringify({ error: "Invalid box selection" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate delivery method
+    if (data.deliveryMethod !== "delivery" && data.deliveryMethod !== "pickup") {
+      return new Response(
+        JSON.stringify({ error: "Invalid delivery method" }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
@@ -45,13 +54,19 @@ export const POST: APIRoute = async ({ request, url }) => {
       }
     }
 
+    // Deduplicate extras by productId (merge quantities)
+    const mergedExtras = new Map<string, number>();
+    for (const extra of data.extras ?? []) {
+      mergedExtras.set(
+        extra.productId,
+        (mergedExtras.get(extra.productId) ?? 0) + extra.quantity,
+      );
+    }
+
     // Build stock requirements
     const stockItems: CartItem[] = [resolveBoxStock(data.box)];
-    for (const extra of data.extras ?? []) {
-      stockItems.push({
-        productId: extra.productId,
-        quantity: extra.quantity,
-      });
+    for (const [productId, quantity] of mergedExtras) {
+      stockItems.push({ productId, quantity });
     }
 
     // Reserve stock (atomic)
@@ -72,11 +87,19 @@ export const POST: APIRoute = async ({ request, url }) => {
     // Box
     lineItems.push({ price: getBoxPriceId(data.box), quantity: 1 });
 
-    // Extras
-    for (const extra of data.extras ?? []) {
+    // Extras (using deduplicated map)
+    for (const [productId, quantity] of mergedExtras) {
       lineItems.push({
-        price: products[extra.productId].stripePriceId,
-        quantity: extra.quantity,
+        price: products[productId].stripePriceId,
+        quantity,
+      });
+    }
+
+    // Delivery fee (only for delivery, not pickup)
+    if (data.deliveryMethod === "delivery") {
+      lineItems.push({
+        price: products["delivery-fee"].stripePriceId,
+        quantity: 1,
       });
     }
 
@@ -87,15 +110,17 @@ export const POST: APIRoute = async ({ request, url }) => {
       session = await stripe.checkout.sessions.create({
         mode: "payment",
         line_items: lineItems,
-        shipping_address_collection: {
-          allowed_countries: ["AU"],
-        },
+        // Only collect shipping address for delivery, not pickup
+        ...(data.deliveryMethod === "delivery"
+          ? { shipping_address_collection: { allowed_countries: ["AU"] as const } }
+          : {}),
         phone_number_collection: { enabled: true },
         expires_at: Math.floor(Date.now() / 1000) + 30 * 60, // 30 minutes
         success_url: `${url.origin}/order-confirmed?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${url.origin}/api/cancel-checkout?session_id={CHECKOUT_SESSION_ID}`,
         metadata: {
           reserved_items: JSON.stringify(stockItems),
+          delivery_method: data.deliveryMethod,
         },
       });
     } catch (stripeError) {
@@ -109,7 +134,17 @@ export const POST: APIRoute = async ({ request, url }) => {
     }
 
     // Save reservation for webhook handling
-    await saveReservation(session.id, stockItems);
+    try {
+      await saveReservation(session.id, stockItems);
+    } catch (saveError) {
+      console.error("Failed to save reservation, rolling back:", saveError);
+      await releaseStock(stockItems);
+      try { await stripe.checkout.sessions.expire(session.id); } catch {}
+      return new Response(
+        JSON.stringify({ error: "Failed to create checkout session" }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+    }
 
     return new Response(
       JSON.stringify({ url: session.url }),

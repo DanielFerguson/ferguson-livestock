@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import type { CartItem } from "../../../config/products";
 import {
-  getReservation,
+  claimReservation,
   releaseStock,
   deleteReservation,
   markRefundProcessed,
@@ -40,18 +40,11 @@ export const POST: APIRoute = async ({ request }) => {
 
       case "checkout.session.expired": {
         const session = event.data.object;
-        // Session expired without payment — restore stock (idempotent)
-        const reservation = await getReservation(session.id);
-        // Fall back to session metadata if reservation was lost (e.g. crash between
-        // Stripe session creation and reservation save)
-        const items: CartItem[] | null =
-          reservation?.items ??
-          (session.metadata?.reserved_items
-            ? JSON.parse(session.metadata.reserved_items)
-            : null);
-        if (items) {
-          await releaseStock(items);
-          await deleteReservation(session.id);
+        // Atomically claim the reservation (get + delete).
+        // If null, it was already claimed by cancel-checkout — no double-release.
+        const reservation = await claimReservation(session.id);
+        if (reservation) {
+          await releaseStock(reservation.items);
           console.log(`Reservation expired, stock restored: ${session.id}`);
         }
         break;

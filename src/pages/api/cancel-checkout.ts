@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { getReservation, releaseStock, deleteReservation } from "../../lib/kv";
+import { claimReservation, releaseStock } from "../../lib/kv";
 import { getStripe } from "../../lib/stripe";
 
 export const prerender = false;
@@ -13,12 +13,6 @@ export const GET: APIRoute = async ({ url, redirect }) => {
   }
 
   try {
-    // Check if reservation still exists (idempotent — may already be cancelled)
-    const reservation = await getReservation(sessionId);
-    if (!reservation) {
-      return redirect("/order", 302);
-    }
-
     // Verify with Stripe that the session was NOT paid
     const stripe = getStripe();
     const session = await stripe.checkout.sessions.retrieve(sessionId);
@@ -28,9 +22,12 @@ export const GET: APIRoute = async ({ url, redirect }) => {
       return redirect(`/order-confirmed?session_id=${sessionId}`, 302);
     }
 
-    // Release reserved stock
-    await releaseStock(reservation.items);
-    await deleteReservation(sessionId);
+    // Atomically claim the reservation (get + delete in one operation).
+    // If null, it was already claimed by the expired webhook — no double-release.
+    const reservation = await claimReservation(sessionId);
+    if (reservation) {
+      await releaseStock(reservation.items);
+    }
 
     return redirect("/order", 302);
   } catch (error) {
