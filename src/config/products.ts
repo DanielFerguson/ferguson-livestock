@@ -1,4 +1,4 @@
-export type ProductType = "box" | "extra";
+export type ProductType = "box" | "extra" | "delivery";
 
 export interface Product {
   name: string;
@@ -27,26 +27,34 @@ export const products: Record<string, Product> = {
   "beef-box-5kg": {
     name: "5kg Beef Box",
     description: "Mixed cuts — steaks, roasts, mince, sausages. Vacuum-sealed.",
-    price: 15000,
-    stripePriceId: "price_5kg_TODO", // Set from Stripe Dashboard
-    initialStock: 15,
+    price: 16000,
+    stripePriceId: "price_1TGtXNJwsTUhe334TgfuNp1L",
+    initialStock: 5,
     type: "box",
   },
   "beef-mince-500g": {
     name: "500g Beef Mince",
     description: "Premium grass-fed beef mince.",
     price: 1200,
-    stripePriceId: "price_mince_TODO", // Set from Stripe Dashboard
-    initialStock: 10,
+    stripePriceId: "price_1THfA0JwsTUhe334cteeVgYY",
+    initialStock: 2,
     type: "extra",
   },
   "beef-bones-2kg": {
     name: "2kg Beef Bones",
     description: "Great for stock, broth, or pet bones.",
     price: 1000,
-    stripePriceId: "price_bones_TODO", // Set from Stripe Dashboard
-    initialStock: 8,
+    stripePriceId: "price_1THfAFJwsTUhe334IWOXsw4g",
+    initialStock: 3,
     type: "extra",
+  },
+  "delivery-fee": {
+    name: "Delivery",
+    description: "Flat fee delivery to your door in the Ballarat region.",
+    price: 1500,
+    stripePriceId: "price_1THfWaJwsTUhe334shBtSR18",
+    initialStock: 999999,
+    type: "delivery",
   },
 };
 
@@ -54,10 +62,10 @@ export const bundles: Record<string, Bundle> = {
   "beef-box-10kg": {
     name: "10kg Beef Box",
     description: "Two 5kg boxes at a discounted price. Best value.",
-    stripePriceId: "price_10kg_TODO", // Set from Stripe Dashboard
+    stripePriceId: "price_1TGtWLJwsTUhe334H1KnicPE",
     stockProduct: "beef-box-5kg",
     stockQuantity: 2,
-    displayPrice: 24000,
+    displayPrice: 27500,
   },
 };
 
@@ -78,7 +86,9 @@ export function getBoxPriceId(box: "5kg" | "10kg"): string {
   return products["beef-box-5kg"].stripePriceId;
 }
 
-/** Get all product IDs that are trackable in stock */
+/** Get all product IDs that are trackable in stock (excludes delivery) */
 export function getStockProductIds(): string[] {
-  return Object.keys(products);
+  return Object.entries(products)
+    .filter(([, p]) => p.type !== "delivery")
+    .map(([id]) => id);
 }
