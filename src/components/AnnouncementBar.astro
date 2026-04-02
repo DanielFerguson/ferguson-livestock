@@ -3,7 +3,22 @@
 ---
 
 <div
+	id="announcement-bar"
 	class="noise-overlay relative bg-linear-to-br from-forest to-forest-light text-cream py-3 px-6 text-center text-sm font-medium tracking-wide"
 >
-	<a href="/order" class="text-mint-light font-semibold hover:underline">Order today!</a>
+	<span id="announcement-inactive"><span class="text-mint-light font-semibold">Next drop coming soon</span> · Join the wait list</span>
+	<a id="announcement-active" href="/order" class="hidden text-mint-light font-semibold hover:underline">Order today!</a>
 </div>
+
+<script>
+	fetch("/api/stock")
+		.then((res) => res.json())
+		.then((data: { active: boolean; stock: Record<string, number> }) => {
+			const boxStock = data.stock["beef-box-5kg"] ?? 0;
+			if (data.active && boxStock > 0) {
+				document.getElementById("announcement-active")?.classList.remove("hidden");
+				document.getElementById("announcement-inactive")?.classList.add("hidden");
+			}
+		})
+		.catch(() => {});
+</script>
