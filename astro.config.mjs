@@ -9,7 +9,9 @@ export default defineConfig({
   site: 'https://fergusonlivestock.com.au',
   output: 'static',
   adapter: vercel(),
-  integrations: [sitemap()],
+  integrations: [sitemap({
+    filter: (page) => !page.includes('/order') && !page.includes('/order-confirmed'),
+  })],
   vite: {
     plugins: [tailwindcss()]
   },
