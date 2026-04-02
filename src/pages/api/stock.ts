@@ -11,6 +11,8 @@ export const GET: APIRoute = async () => {
       getLaunchAt(),
     ]);
 
+    console.log("Stock API response:", { active, launchAt, stockKeys: Object.keys(stock) });
+
     return new Response(JSON.stringify({ active, stock, launchAt }), {
       status: 200,
       headers: { "Content-Type": "application/json" },

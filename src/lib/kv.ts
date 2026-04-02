@@ -128,8 +128,10 @@ export async function setDropActive(active: boolean): Promise<void> {
 }
 
 export async function getLaunchAt(): Promise<number | null> {
-  const val = await redis.get<number>("drop:launchAt");
-  return val ?? null;
+  const val = await redis.get("drop:launchAt");
+  if (val === null || val === undefined) return null;
+  const num = Number(val);
+  return isNaN(num) ? null : num;
 }
 
 export async function setLaunchAt(epochSeconds: number): Promise<void> {
