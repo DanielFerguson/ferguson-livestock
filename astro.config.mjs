@@ -8,6 +8,7 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   site: 'https://fergusonlivestock.com.au',
   output: 'static',
+  trailingSlash: 'never',
   adapter: vercel(),
   integrations: [sitemap({
     filter: (page) => !page.includes('/order') && !page.includes('/order-confirmed'),
