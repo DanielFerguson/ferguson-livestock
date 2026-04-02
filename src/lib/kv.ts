@@ -25,40 +25,33 @@ export async function getStock(): Promise<Record<string, number>> {
   return stock;
 }
 
+// Lua script for atomic stock reservation.
+// Checks all stock levels then decrements all in a single Redis operation.
+// This is a server-side Redis script, not JavaScript eval — it runs inside
+// the Redis engine and is the standard way to achieve atomic multi-key operations.
+const RESERVE_SCRIPT = [
+  "for i = 1, #KEYS do",
+  "  local stock = tonumber(redis.call('GET', KEYS[i])) or 0",
+  "  if stock < tonumber(ARGV[i]) then return 0 end",
+  "end",
+  "for i = 1, #KEYS do",
+  "  redis.call('DECRBY', KEYS[i], ARGV[i])",
+  "end",
+  "return 1",
+].join("\n");
+
 /**
  * Atomically reserve stock for a list of items.
+ * Uses a Redis Lua script to check and decrement in one atomic operation.
  * Returns true if all items were reserved, false if any had insufficient stock.
  * On failure, no stock is decremented (all-or-nothing).
  */
 export async function reserveStock(items: CartItem[]): Promise<boolean> {
-  // First, check all stock levels
-  const stock = await getStock();
-  for (const item of items) {
-    if ((stock[item.productId] ?? 0) < item.quantity) {
-      return false;
-    }
-  }
-
-  // Decrement all atomically via pipeline
-  const pipeline = redis.pipeline();
-  for (const item of items) {
-    pipeline.decrby(`stock:${item.productId}`, item.quantity);
-  }
-  const results = await pipeline.exec<number[]>();
-
-  // Check if any went negative (race condition with concurrent request)
-  const anyNegative = results.some((val) => val < 0);
-  if (anyNegative) {
-    // Rollback: restore all decremented values
-    const rollback = redis.pipeline();
-    for (const item of items) {
-      rollback.incrby(`stock:${item.productId}`, item.quantity);
-    }
-    await rollback.exec();
-    return false;
-  }
-
-  return true;
+  const keys = items.map((i) => `stock:${i.productId}`);
+  const args = items.map((i) => i.quantity);
+  // @ts-expect-error — Upstash eval typing is loosely typed for Lua scripts
+  const result = await redis.eval(RESERVE_SCRIPT, keys, args);
+  return result === 1;
 }
 
 /** Release previously reserved stock */
@@ -103,15 +96,29 @@ export async function deleteReservation(sessionId: string): Promise<void> {
   await redis.del(`reservation:${sessionId}`);
 }
 
+/**
+ * Atomically get and delete a reservation.
+ * Returns the reservation if it existed, null if already deleted.
+ * Prevents double-release when cancel-checkout and expired webhook race.
+ */
+export async function claimReservation(
+  sessionId: string
+): Promise<Reservation | null> {
+  const key = `reservation:${sessionId}`;
+  // GETDEL atomically returns the value and deletes the key
+  const data = await redis.getdel<Reservation>(key);
+  return data ?? null;
+}
+
 // --- Drop State ---
 
 export async function isDropActive(): Promise<boolean> {
-  const active = await redis.get<string>("drop:active");
-  return active === "true";
+  const active = await redis.get("drop:active");
+  return active === true || active === "true";
 }
 
 export async function setDropActive(active: boolean): Promise<void> {
-  await redis.set("drop:active", active ? "true" : "false");
+  await redis.set("drop:active", active);
 }
 
 // --- Refund Idempotency ---
@@ -140,6 +147,7 @@ export async function seedStock(): Promise<{
   const skipped: string[] = [];
 
   for (const [id, product] of Object.entries(products)) {
+    if (product.type === "delivery") continue;
     const wasSet = await redis.set(
       `stock:${id}`,
       product.initialStock,
@@ -153,7 +161,7 @@ export async function seedStock(): Promise<{
   }
 
   // Also set drop:active if not already set
-  await redis.set("drop:active", "true", { nx: true });
+  await redis.set("drop:active", true, { nx: true });
 
   return { seeded, skipped };
 }
