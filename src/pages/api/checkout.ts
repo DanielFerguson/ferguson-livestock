@@ -110,9 +110,22 @@ export const POST: APIRoute = async ({ request, url }) => {
       session = await stripe.checkout.sessions.create({
         mode: "payment",
         line_items: lineItems,
-        // Only collect shipping address for delivery, not pickup
+        // Only collect shipping address and delivery preference for delivery, not pickup
         ...(data.deliveryMethod === "delivery"
-          ? { shipping_address_collection: { allowed_countries: ["AU"] as const } }
+          ? {
+              shipping_address_collection: { allowed_countries: ["AU"] as const },
+              custom_fields: [{
+                key: "delivery_day",
+                label: { type: "custom" as const, custom: "Preferred delivery (afternoon/evening)" },
+                type: "dropdown" as const,
+                dropdown: {
+                  options: [
+                    { label: "Saturday", value: "saturday" },
+                    { label: "Sunday", value: "sunday" },
+                  ],
+                },
+              }],
+            }
           : {}),
         phone_number_collection: { enabled: true },
         expires_at: Math.floor(Date.now() / 1000) + 30 * 60, // 30 minutes
