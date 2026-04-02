@@ -11,13 +11,31 @@
 </div>
 
 <script>
+	function formatLaunchDate(epoch: number): string {
+		return new Intl.DateTimeFormat("en-AU", {
+			weekday: "long",
+			day: "numeric",
+			month: "long",
+			hour: "numeric",
+			minute: undefined,
+			hour12: true,
+			timeZone: "Australia/Melbourne",
+		}).format(new Date(epoch * 1000));
+	}
+
 	fetch("/api/stock")
 		.then((res) => res.json())
-		.then((data: { active: boolean; stock: Record<string, number> }) => {
+		.then((data: { active: boolean; stock: Record<string, number>; launchAt: number | null }) => {
 			const boxStock = data.stock["beef-box-5kg"] ?? 0;
 			if (data.active && boxStock > 0) {
 				document.getElementById("announcement-active")?.classList.remove("hidden");
 				document.getElementById("announcement-inactive")?.classList.add("hidden");
+			} else if (data.launchAt && data.launchAt * 1000 > Date.now()) {
+				const el = document.getElementById("announcement-inactive");
+				if (el) {
+					const formatted = formatLaunchDate(data.launchAt);
+					el.textContent = `Orders open ${formatted}`;
+				}
 			}
 		})
 		.catch(() => {});

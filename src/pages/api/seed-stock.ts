@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { seedStock, setDropActive } from "../../lib/kv";
+import { seedStock, setDropActive, setLaunchAt } from "../../lib/kv";
 
 export const prerender = false;
 
@@ -15,14 +15,30 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   try {
+    // Parse optional launchAt from request body
+    let launchAt: number | null = null;
+    try {
+      const body = await request.json();
+      if (body.launchAt && typeof body.launchAt === "number") {
+        launchAt = body.launchAt;
+      }
+    } catch {
+      // No body or invalid JSON — that's fine, launchAt is optional
+    }
+
     const result = await seedStock();
     await setDropActive(true);
+
+    if (launchAt) {
+      await setLaunchAt(launchAt);
+    }
 
     return new Response(
       JSON.stringify({
         success: true,
         seeded: result.seeded,
         skipped: result.skipped,
+        ...(launchAt ? { launchAt } : {}),
       }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );

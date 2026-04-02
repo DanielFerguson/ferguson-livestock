@@ -114,11 +114,26 @@ export async function claimReservation(
 
 export async function isDropActive(): Promise<boolean> {
   const active = await redis.get("drop:active");
-  return active === true || active === "true";
+  if (active !== true && active !== "true") return false;
+
+  // If a launch time is set, only activate after that time
+  const launchAt = await getLaunchAt();
+  if (launchAt && Date.now() < launchAt * 1000) return false;
+
+  return true;
 }
 
 export async function setDropActive(active: boolean): Promise<void> {
   await redis.set("drop:active", active);
+}
+
+export async function getLaunchAt(): Promise<number | null> {
+  const val = await redis.get<number>("drop:launchAt");
+  return val ?? null;
+}
+
+export async function setLaunchAt(epochSeconds: number): Promise<void> {
+  await redis.set("drop:launchAt", epochSeconds);
 }
 
 // --- Refund Idempotency ---

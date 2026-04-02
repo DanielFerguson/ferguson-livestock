@@ -89,8 +89,8 @@ import heroImage from "../assets/images/cows-10.webp";
                     <!-- Sold Out / Waitlist (shown when drop is inactive) -->
                     <div id="hero-drop-inactive" class="hidden space-y-6">
                         <div class="bg-mint/20 border border-mint/30 rounded-xl px-5 py-4 text-center">
-                            <p class="text-cream font-medium">Sold out for this batch</p>
-                            <p class="text-mint-light text-sm mt-1">Next batch coming soon</p>
+                            <p id="hero-inactive-title" class="text-cream font-medium">Sold out for this batch</p>
+                            <p id="hero-inactive-subtitle" class="text-mint-light text-sm mt-1">Next batch coming soon</p>
                         </div>
 
                         <div class="grid gap-4">
@@ -174,10 +174,21 @@ import heroImage from "../assets/images/cows-10.webp";
         const heroActive = document.getElementById("hero-drop-active");
         const heroInactive = document.getElementById("hero-drop-inactive");
 
+        function formatLaunchDate(epoch: number): string {
+            return new Intl.DateTimeFormat("en-AU", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+                hour: "numeric",
+                hour12: true,
+                timeZone: "Australia/Melbourne",
+            }).format(new Date(epoch * 1000));
+        }
+
         if (heroActive && heroInactive) {
             fetch("/api/stock")
                 .then((res) => res.json())
-                .then((data: { active: boolean; stock: Record<string, number> }) => {
+                .then((data: { active: boolean; stock: Record<string, number>; launchAt: number | null }) => {
                     const boxStock = data.stock["beef-box-5kg"] ?? 0;
                     if (data.active && boxStock > 0) {
                         heroActive.classList.remove("hidden");
@@ -192,10 +203,17 @@ import heroImage from "../assets/images/cows-10.webp";
                         }
                     } else {
                         heroInactive.classList.remove("hidden");
+
+                        // Show launch date if scheduled
+                        if (data.launchAt && data.launchAt * 1000 > Date.now()) {
+                            const title = document.getElementById("hero-inactive-title");
+                            const subtitle = document.getElementById("hero-inactive-subtitle");
+                            if (title) title.textContent = "Next drop launching soon!";
+                            if (subtitle) subtitle.textContent = `Orders open ${formatLaunchDate(data.launchAt)}`;
+                        }
                     }
                 })
                 .catch(() => {
-                    // On error, show the sold-out/waitlist state as safe fallback
                     heroInactive.classList.remove("hidden");
                 });
         }

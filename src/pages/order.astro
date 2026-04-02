@@ -45,8 +45,8 @@ const pageDescription = "Order premium pasture-raised Murray Grey beef boxes dir
                                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path>
                             </svg>
                         </div>
-                        <h2 class="font-display text-2xl md:text-3xl font-semibold text-forest mb-3">All Sold Out!</h2>
-                        <p class="text-gray-500 mb-8 max-w-md mx-auto">This drop is completely sold out. Join the wait list below and we'll text you when the next batch is ready.</p>
+                        <h2 id="inactive-title" class="font-display text-2xl md:text-3xl font-semibold text-forest mb-3">All Sold Out!</h2>
+                        <p id="inactive-subtitle" class="text-gray-500 mb-8 max-w-md mx-auto">This drop is completely sold out. Join the wait list below and we'll text you when the next batch is ready.</p>
                     </div>
                 </div>
 
@@ -304,6 +304,7 @@ const pageDescription = "Order premium pasture-raised Murray Grey beef boxes dir
         interface StockData {
             active: boolean;
             stock: Record<string, number>;
+            launchAt: number | null;
         }
 
         interface ExtraSelection {
@@ -343,6 +344,30 @@ const pageDescription = "Order premium pasture-raised Murray Grey beef boxes dir
         };
         const DELIVERY_FEE = 1500;
 
+        function formatLaunchDate(epoch: number): string {
+            return new Intl.DateTimeFormat("en-AU", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+                hour: "numeric",
+                hour12: true,
+                timeZone: "Australia/Melbourne",
+            }).format(new Date(epoch * 1000));
+        }
+
+        function showInactiveState(): void {
+            inactiveState.classList.remove("hidden");
+            waitlistFallback.classList.remove("hidden");
+
+            // Show launch date if scheduled
+            if (stockData?.launchAt && stockData.launchAt * 1000 > Date.now()) {
+                const title = document.getElementById("inactive-title");
+                const subtitle = document.getElementById("inactive-subtitle");
+                if (title) title.textContent = "Launching Soon!";
+                if (subtitle) subtitle.textContent = `Orders open ${formatLaunchDate(stockData.launchAt)}. Join the wait list below to get notified.`;
+            }
+        }
+
         async function fetchStock(): Promise<void> {
             try {
                 const res = await fetch("/api/stock");
@@ -352,15 +377,13 @@ const pageDescription = "Order premium pasture-raised Murray Grey beef boxes dir
                 loadingState.classList.add("hidden");
 
                 if (!stockData!.active) {
-                    inactiveState.classList.remove("hidden");
-                    waitlistFallback.classList.remove("hidden");
+                    showInactiveState();
                     return;
                 }
 
                 const boxStock = stockData!.stock["beef-box-5kg"] ?? 0;
                 if (boxStock <= 0) {
-                    inactiveState.classList.remove("hidden");
-                    waitlistFallback.classList.remove("hidden");
+                    showInactiveState();
                     return;
                 }
 

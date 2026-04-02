@@ -1,13 +1,17 @@
 import type { APIRoute } from "astro";
-import { getStock, isDropActive } from "../../lib/kv";
+import { getStock, isDropActive, getLaunchAt } from "../../lib/kv";
 
 export const prerender = false;
 
 export const GET: APIRoute = async () => {
   try {
-    const [stock, active] = await Promise.all([getStock(), isDropActive()]);
+    const [stock, active, launchAt] = await Promise.all([
+      getStock(),
+      isDropActive(),
+      getLaunchAt(),
+    ]);
 
-    return new Response(JSON.stringify({ active, stock }), {
+    return new Response(JSON.stringify({ active, stock, launchAt }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
