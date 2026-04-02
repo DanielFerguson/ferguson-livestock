@@ -12,6 +12,7 @@ const pageDescription = "Thank you for your order! Your beef box is on its way."
 // Verify the Stripe session is actually paid
 const sessionId = Astro.url.searchParams.get("session_id");
 let customerName = "friend";
+let deliveryMethod: "delivery" | "pickup" = "delivery";
 let verified = false;
 
 if (sessionId) {
@@ -21,6 +22,7 @@ if (sessionId) {
     if (session.payment_status === "paid") {
       verified = true;
       customerName = session.customer_details?.name?.split(" ")[0] || "friend";
+      deliveryMethod = (session.metadata?.delivery_method as "delivery" | "pickup") || "delivery";
     }
   } catch {
     // Invalid session — will redirect below
@@ -68,18 +70,26 @@ if (!verified) {
             received and we're getting everything ready for you.
           </p>
 
-          <p class="leading-relaxed mb-6">
-            Here's what happens next: we'll pack your beef box fresh, vacuum-seal
-            everything, and personally deliver it to your door. We'll be in touch
-            via the phone number or email you provided to confirm your delivery
-            time.
-          </p>
-
-          <p class="leading-relaxed mb-6">
-            Your beef will arrive in our custom insulated packaging to keep
-            everything fresh. Pop it straight in the freezer or fridge when it
-            arrives.
-          </p>
+          {deliveryMethod === "delivery" ? (
+            <p class="leading-relaxed mb-6">
+              Here's what happens next: we'll pack your beef box fresh, vacuum-seal
+              everything, and personally deliver it to your door. We'll be in touch
+              via the phone number or email you provided to confirm your delivery
+              time.
+            </p>
+            <p class="leading-relaxed mb-6">
+              Your beef will arrive in our custom insulated packaging to keep
+              everything fresh. Pop it straight in the freezer or fridge when it
+              arrives.
+            </p>
+          ) : (
+            <p class="leading-relaxed mb-6">
+              Here's what happens next: we'll pack your beef box fresh and
+              vacuum-seal everything ready for you to collect from our farm in
+              Snake Valley. Pick up is available Saturday 4th April or Sunday 5th
+              April between 10am and 3pm. We'll be in touch to confirm.
+            </p>
+          )}
 
           <p class="leading-relaxed mb-8">
             If you have any questions in the meantime, feel free to reach out.
