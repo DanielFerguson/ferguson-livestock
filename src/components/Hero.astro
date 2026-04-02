@@ -4,95 +4,39 @@ import heroImage from "../assets/images/cows-10.webp";
 ---
 
 <main id="main-content">
-    <section
-        id="order"
-        class="noise-overlay relative min-h-[90vh] flex items-center py-16 lg:py-24 overflow-hidden"
-    >
+    <section id="order" class="noise-overlay relative min-h-[90vh] flex items-center py-16 lg:py-24 overflow-hidden">
         <!-- Background Image with Parallax -->
         <div id="hero-bg" class="absolute inset-0 -z-20 will-change-transform" style="top: -10%; height: 120%;">
-            <Image
-                src={heroImage}
-                alt=""
-                class="w-full h-full object-cover"
-                widths={[800, 1200, 1600, 2000]}
-                sizes="100vw"
-                loading="eager"
-            />
+            <Image src={heroImage} alt="" class="w-full h-full object-cover" widths={[800, 1200, 1600, 2000]} sizes="100vw" loading="eager" />
         </div>
         <!-- Gradient Overlay -->
-        <div
-            class="absolute inset-0 -z-10 bg-linear-to-br from-forest/95 via-forest-light/90 to-sage/85"
-        >
-        </div>
+        <div class="absolute inset-0 -z-10 bg-linear-to-br from-forest/95 via-forest-light/90 to-sage/85"></div>
         <div class="max-w-6xl mx-auto px-6 relative z-10">
             <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
                 <!-- Left Column - Value Prop -->
                 <div class="text-cream">
-                    <div
-                        class="animate-fade-in-up inline-flex items-center gap-2 bg-mint/15 border border-mint/30 px-4 py-2 rounded-full text-sm font-medium text-mint-light mb-6"
-                    >
-                        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"
-                            ><path
-                                d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                            ></path></svg
-                        >
+                    <div class="animate-fade-in-up inline-flex items-center gap-2 bg-mint/15 border border-mint/30 px-4 py-2 rounded-full text-sm font-medium text-mint-light mb-6">
+                        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
                         Pasture-Raised Murray Grey Beef
                     </div>
-                    <h1
-                        class="animate-fade-in-up animation-delay-100 font-display text-4xl md:text-5xl lg:text-6xl font-semibold leading-tight tracking-tight mb-6"
-                    >
-                        Paddock to Door&nbsp;<br class="hidden lg:block" />Beef
-                        Boxes,&nbsp;<br class="hidden md:block" /><em
-                            class="not-italic text-mint-light"
-                            >Delivered by Us</em
-                        >
+                    <h1 class="animate-fade-in-up animation-delay-100 font-display text-4xl md:text-5xl lg:text-6xl font-semibold leading-tight tracking-tight mb-6">
+                        Paddock to Door&nbsp;<br class="hidden lg:block" />Beef Boxes,&nbsp;<br class="hidden md:block" /><em class="not-italic text-mint-light">Delivered by Us</em>
                     </h1>
-                    <p
-                        class="animate-fade-in-up animation-delay-200 text-lg text-cream/85 mb-8 max-w-xl leading-relaxed"
-                    >
-                        Premium pasture-raised beef from our family farm in
-                        Snake Valley, personally delivered to your door. No
-                        middlemen. No supermarkets. Just quality beef you can
-                        trust.
+                    <p class="animate-fade-in-up animation-delay-200 text-lg text-cream/85 mb-8 max-w-xl leading-relaxed">
+                        Premium pasture-raised beef from our family farm in Snake Valley, personally delivered to your door. No middlemen. No supermarkets. Just quality beef you can trust.
                     </p>
-                    <div
-                        class="animate-fade-in-up animation-delay-300 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4"
-                    >
+                    <div class="animate-fade-in-up animation-delay-300 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                         <div class="flex items-center gap-2.5 text-cream">
-                            <svg
-                                class="w-5 h-5 fill-mint flex-shrink-0"
-                                viewBox="0 0 24 24"
-                                ><path
-                                    d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
-                                ></path></svg
-                            >Pasture-Raised & Hormone-Free
+                            <svg class="w-5 h-5 fill-mint flex-shrink-0" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg>Pasture-Raised
                         </div>
                         <div class="flex items-center gap-2.5 text-cream">
-                            <svg
-                                class="w-5 h-5 fill-mint flex-shrink-0"
-                                viewBox="0 0 24 24"
-                                ><path
-                                    d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
-                                ></path></svg
-                            >No Feedlots, Ever
+                            <svg class="w-5 h-5 fill-mint flex-shrink-0" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg>Hormone-Free
                         </div>
                         <div class="flex items-center gap-2.5 text-cream">
-                            <svg
-                                class="w-5 h-5 fill-mint flex-shrink-0"
-                                viewBox="0 0 24 24"
-                                ><path
-                                    d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
-                                ></path></svg
-                            >Free Personal Delivery
+                            <svg class="w-5 h-5 fill-mint flex-shrink-0" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg>Vacuum-Sealed
                         </div>
                         <div class="flex items-center gap-2.5 text-cream">
-                            <svg
-                                class="w-5 h-5 fill-mint flex-shrink-0"
-                                viewBox="0 0 24 24"
-                                ><path
-                                    d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"
-                                ></path></svg
-                            >Supporting Local Farmers
+                            <svg class="w-5 h-5 fill-mint flex-shrink-0" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg>Supporting Local Farmers
                         </div>
                     </div>
                 </div>
@@ -102,12 +46,10 @@ import heroImage from "../assets/images/cows-10.webp";
                     <!-- Order Now CTA (shown when drop is active) -->
                     <div id="hero-drop-active" class="hidden space-y-6">
                         <div class="bg-mint/20 border border-mint/30 rounded-xl px-5 py-4 text-center">
-                            <p class="text-cream font-medium">
-                                Beef Box Drop — Now Open
-                            </p>
-                            <p class="text-mint-light text-sm mt-1">
+                            <p class="text-cream font-medium">Beef Box Drop — Now Open</p>
+                            <!-- <p class="text-mint-light text-sm mt-1">
                                 Free delivery to Ballarat and surrounding areas
-                            </p>
+                            </p> -->
                         </div>
 
                         <div class="grid gap-4">
@@ -117,55 +59,38 @@ import heroImage from "../assets/images/cows-10.webp";
                                     <div>
                                         <div class="flex items-baseline gap-2 mb-1">
                                             <h3 class="font-display text-2xl font-semibold text-forest">5kg Beef Box</h3>
-                                            <span class="text-sm text-sage font-medium">$30/kg</span>
+                                            <span class="text-sm text-sage font-medium">$32/kg</span>
                                         </div>
-                                        <p class="text-3xl font-bold text-forest mb-2">$150</p>
-                                        <p class="text-sm text-gray-500">Mixed cuts: steaks, roasts, mince & sausages</p>
-                                    </div>
-                                    <div>
-                                        <span id="hero-5kg-stock" class="text-xs font-medium text-sage block text-right mb-1"></span>
+                                        <p class="text-3xl font-bold text-forest mb-2">$160</p>
+                                        <p class="text-sm text-gray-500">3/4kg Primary Cuts (Scotch, Porterhouse, Eye Fillet, T-Bone), 1.5kg Secondary Cuts (Rump, Osso, Schnitzel, Diced, Ribs, Oyster Blade), 1.5kg Roast, 1/2kg Sausages, 1kg Mince</p>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="relative bg-cream rounded-2xl p-6 shadow-xl shadow-black/20">
                                 <div class="absolute -inset-0.5 bg-linear-to-br from-warm to-warm-dark rounded-2xl -z-10 opacity-60"></div>
-                                <div class="absolute -top-3 left-6 bg-warm text-white text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full">
-                                    20% off
-                                </div>
+                                <div class="absolute -top-3 left-6 bg-warm text-white text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full">Best Value</div>
                                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-2">
                                     <div>
                                         <div class="flex items-baseline gap-2 mb-1">
                                             <h3 class="font-display text-2xl font-semibold text-forest">10kg Beef Box</h3>
-                                            <span class="text-sm text-warm-dark font-medium">$24/kg</span>
+                                            <span class="text-sm text-warm-dark font-medium">$27.50/kg</span>
                                         </div>
-                                        <p class="text-3xl font-bold text-forest mb-2">$240</p>
-                                        <p class="text-sm text-gray-500">Mixed cuts: steaks, roasts, mince & sausages</p>
-                                    </div>
-                                    <div>
-                                        <span id="hero-10kg-stock" class="text-xs font-medium text-warm-dark block text-right mb-1"></span>
+                                        <p class="text-3xl font-bold text-forest mb-2">$275</p>
+                                        <p class="text-sm text-gray-500">1.5kg Primary Cuts (Scotch, Porterhouse, Eye Fillet, T-Bone), 3kg Secondary Cuts (Rump, Osso, Schnitzel, Diced, Ribs & Oyster Blade), 3kg Roast, 1kg Sausages, 2kg Mince</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <a
-                            href="/order"
-                            class="block w-full bg-mint text-forest py-4 px-8 rounded-lg font-semibold text-lg text-center transition-all duration-300 hover:bg-mint-light hover:-translate-y-0.5 hover:shadow-lg"
-                        >
-                            Order Now
-                        </a>
+                        <a href="/order" class="block w-full bg-mint text-forest py-4 px-8 rounded-lg font-semibold text-lg text-center transition-all duration-300 hover:bg-mint-light hover:-translate-y-0.5 hover:shadow-lg"> Order Now </a>
                     </div>
 
                     <!-- Sold Out / Waitlist (shown when drop is inactive) -->
-                    <div id="hero-drop-inactive" class="space-y-6">
+                    <div id="hero-drop-inactive" class="hidden space-y-6">
                         <div class="bg-mint/20 border border-mint/30 rounded-xl px-5 py-4 text-center">
-                            <p class="text-cream font-medium">
-                                Sold out for this batch
-                            </p>
-                            <p class="text-mint-light text-sm mt-1">
-                                Next batch coming soon · Free delivery to Ballarat and surrounding areas
-                            </p>
+                            <p class="text-cream font-medium">Sold out for this batch</p>
+                            <p class="text-mint-light text-sm mt-1">Next batch coming soon</p>
                         </div>
 
                         <div class="grid gap-4">
@@ -175,34 +100,28 @@ import heroImage from "../assets/images/cows-10.webp";
                                     <div>
                                         <div class="flex items-baseline gap-2 mb-1">
                                             <h3 class="font-display text-2xl font-semibold text-forest">5kg Beef Box</h3>
-                                            <span class="text-sm text-sage font-medium">$30/kg</span>
+                                            <span class="text-sm text-sage font-medium">$32/kg</span>
                                         </div>
-                                        <p class="text-3xl font-bold text-forest mb-2">$150</p>
-                                        <p class="text-sm text-gray-500">Mixed cuts: steaks, roasts, mince & sausages</p>
+                                        <p class="text-3xl font-bold text-forest mb-2">$160</p>
+                                        <p class="text-sm text-gray-500">3/4kg Primary Cuts (Scotch, Porterhouse, Eye Fillet, T-Bone), 1.5kg Secondary Cuts (Rump, Osso, Schnitzel, Diced, Ribs, Oyster Blade), 1.5kg Roast, 1/2kg Sausages, 1kg Mince</p>
                                     </div>
-                                    <div class="inline-flex items-center justify-center px-4 py-2 rounded-full bg-cream-dark text-forest text-xs font-semibold uppercase tracking-wider">
-                                        Sold out
-                                    </div>
+                                    <div class="inline-flex items-center justify-center px-4 py-2 rounded-full bg-cream-dark text-forest text-xs font-semibold uppercase tracking-wider">Sold out</div>
                                 </div>
                             </div>
 
                             <div class="relative bg-cream rounded-2xl p-6 shadow-xl shadow-black/20">
                                 <div class="absolute -inset-0.5 bg-linear-to-br from-warm to-warm-dark rounded-2xl -z-10 opacity-60"></div>
-                                <div class="absolute -top-3 left-6 bg-warm text-white text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full">
-                                    20% off
-                                </div>
+                                <div class="absolute -top-3 left-6 bg-warm text-white text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full">Best Value</div>
                                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-2">
                                     <div>
                                         <div class="flex items-baseline gap-2 mb-1">
                                             <h3 class="font-display text-2xl font-semibold text-forest">10kg Beef Box</h3>
-                                            <span class="text-sm text-warm-dark font-medium">$24/kg</span>
+                                            <span class="text-sm text-warm-dark font-medium">$27.50/kg</span>
                                         </div>
-                                        <p class="text-3xl font-bold text-forest mb-2">$240</p>
-                                        <p class="text-sm text-gray-500">Mixed cuts: steaks, roasts, mince & sausages</p>
+                                        <p class="text-3xl font-bold text-forest mb-2">$275</p>
+                                        <p class="text-sm text-gray-500">1.5kg Primary Cuts (Scotch, Porterhouse, Eye Fillet, T-Bone), 3kg Secondary Cuts (Rump, Osso, Schnitzel, Diced, Ribs & Oyster Blade), 3kg Roast, 1kg Sausages, 2kg Mince</p>
                                     </div>
-                                    <div class="inline-flex items-center justify-center px-4 py-2 rounded-full bg-cream-dark text-forest text-xs font-semibold uppercase tracking-wider">
-                                        Sold out
-                                    </div>
+                                    <div class="inline-flex items-center justify-center px-4 py-2 rounded-full bg-cream-dark text-forest text-xs font-semibold uppercase tracking-wider">Sold out</div>
                                 </div>
                             </div>
                         </div>
@@ -223,23 +142,25 @@ import heroImage from "../assets/images/cows-10.webp";
     </section>
 
     <script>
-        const heroBg = document.getElementById('hero-bg');
+        const heroBg = document.getElementById("hero-bg");
         if (heroBg) {
-            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
             if (!prefersReducedMotion) {
-                window.addEventListener('scroll', () => {
-                    const scrollY = window.scrollY;
-                    heroBg.style.transform = `translateY(${scrollY * 0.4}px)`;
-                }, { passive: true });
+                window.addEventListener(
+                    "scroll",
+                    () => {
+                        const scrollY = window.scrollY;
+                        heroBg.style.transform = `translateY(${scrollY * 0.4}px)`;
+                    },
+                    { passive: true },
+                );
             }
         }
 
         document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
             anchor.addEventListener("click", function (e) {
                 e.preventDefault();
-                const href = (
-                    e.currentTarget as HTMLAnchorElement
-                ).getAttribute("href");
+                const href = (e.currentTarget as HTMLAnchorElement).getAttribute("href");
                 if (href) {
                     const target = document.querySelector(href);
                     if (target)
@@ -252,30 +173,32 @@ import heroImage from "../assets/images/cows-10.webp";
         });
 
         // Check drop status and toggle hero content
-        const heroActive = document.getElementById('hero-drop-active');
-        const heroInactive = document.getElementById('hero-drop-inactive');
+        const heroActive = document.getElementById("hero-drop-active");
+        const heroInactive = document.getElementById("hero-drop-inactive");
 
         if (heroActive && heroInactive) {
-            fetch('/api/stock')
+            fetch("/api/stock")
                 .then((res) => res.json())
                 .then((data: { active: boolean; stock: Record<string, number> }) => {
-                    const boxStock = data.stock['beef-box-5kg'] ?? 0;
+                    const boxStock = data.stock["beef-box-5kg"] ?? 0;
                     if (data.active && boxStock > 0) {
-                        heroActive.classList.remove('hidden');
-                        heroInactive.classList.add('hidden');
+                        heroActive.classList.remove("hidden");
 
                         // Update stock counts
-                        const stock5kg = document.getElementById('hero-5kg-stock');
-                        const stock10kg = document.getElementById('hero-10kg-stock');
+                        const stock5kg = document.getElementById("hero-5kg-stock");
+                        const stock10kg = document.getElementById("hero-10kg-stock");
                         if (stock5kg) stock5kg.textContent = `${boxStock} left`;
                         if (stock10kg) {
                             const available10kg = Math.floor(boxStock / 2);
-                            stock10kg.textContent = available10kg > 0 ? `${available10kg} left` : 'Sold out';
+                            stock10kg.textContent = available10kg > 0 ? `${available10kg} left` : "Sold out";
                         }
+                    } else {
+                        heroInactive.classList.remove("hidden");
                     }
                 })
                 .catch(() => {
-                    // On error, keep showing the inactive/sold-out state
+                    // On error, show the sold-out/waitlist state as safe fallback
+                    heroInactive.classList.remove("hidden");
                 });
         }
     </script>
