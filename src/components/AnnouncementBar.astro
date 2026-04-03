@@ -8,6 +8,7 @@
 >
 	<span id="announcement-inactive"><span class="text-mint-light font-semibold">Next drop coming soon</span> · Join the wait list</span>
 	<a id="announcement-active" href="/order" class="hidden text-mint-light font-semibold hover:underline">Order today!</a>
+	<a id="announcement-extras" href="/order" class="hidden">Beef boxes sold out — <span class="text-mint-light font-semibold">Additional cuts still available &rarr;</span></a>
 </div>
 
 <script>
@@ -23,12 +24,21 @@
 		}).format(new Date(epoch * 1000));
 	}
 
+	const excludeFromExtras = new Set(["beef-box-5kg", "delivery-fee"]);
+
 	fetch("/api/stock")
 		.then((res) => res.json())
 		.then((data: { active: boolean; stock: Record<string, number>; launchAt: number | null }) => {
 			const boxStock = data.stock["beef-box-5kg"] ?? 0;
+			const hasExtrasStock = Object.entries(data.stock).some(
+				([key, qty]) => !excludeFromExtras.has(key) && qty > 0,
+			);
+
 			if (data.active && boxStock > 0) {
 				document.getElementById("announcement-active")?.classList.remove("hidden");
+				document.getElementById("announcement-inactive")?.classList.add("hidden");
+			} else if (data.active && hasExtrasStock) {
+				document.getElementById("announcement-extras")?.classList.remove("hidden");
 				document.getElementById("announcement-inactive")?.classList.add("hidden");
 			} else if (data.launchAt && data.launchAt * 1000 > Date.now()) {
 				const el = document.getElementById("announcement-inactive");

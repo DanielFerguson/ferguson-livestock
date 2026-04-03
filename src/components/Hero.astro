@@ -86,6 +86,21 @@ import heroImage from "../assets/images/cows-10.webp";
                         <a href="/order" class="block w-full bg-mint text-forest py-4 px-8 rounded-lg font-semibold text-lg text-center transition-all duration-300 hover:bg-mint-light hover:-translate-y-0.5 hover:shadow-lg"> Order Now </a>
                     </div>
 
+                    <!-- Extras Only (shown when boxes sold out but extras available) -->
+                    <div id="hero-extras-only" class="hidden space-y-6">
+                        <div class="bg-warm/20 border border-warm/30 rounded-xl px-5 py-4 text-center">
+                            <p class="text-cream font-medium">Beef Boxes Sold Out</p>
+                            <p class="text-mint-light text-sm mt-1">Additional cuts still available</p>
+                        </div>
+
+                        <div class="bg-cream/10 border border-cream/20 rounded-2xl p-6 text-center space-y-3">
+                            <p class="text-cream text-lg font-medium">Individual premium cuts are still up for grabs</p>
+                            <p class="text-cream/75 text-sm">Sausages, rump steaks, porterhouse, mince, bones, diced chuck — while stocks last.</p>
+                        </div>
+
+                        <a href="/order" class="block w-full bg-mint text-forest py-4 px-8 rounded-lg font-semibold text-lg text-center transition-all duration-300 hover:bg-mint-light hover:-translate-y-0.5 hover:shadow-lg"> Browse Available Cuts </a>
+                    </div>
+
                     <!-- Sold Out / Waitlist (shown when drop is inactive) -->
                     <div id="hero-drop-inactive" class="hidden space-y-6">
                         <div class="bg-mint/20 border border-mint/30 rounded-xl px-5 py-4 text-center">
@@ -172,6 +187,7 @@ import heroImage from "../assets/images/cows-10.webp";
 
         // Check drop status and toggle hero content
         const heroActive = document.getElementById("hero-drop-active");
+        const heroExtrasOnly = document.getElementById("hero-extras-only");
         const heroInactive = document.getElementById("hero-drop-inactive");
 
         function formatLaunchDate(epoch: number): string {
@@ -185,11 +201,17 @@ import heroImage from "../assets/images/cows-10.webp";
             }).format(new Date(epoch * 1000));
         }
 
-        if (heroActive && heroInactive) {
+        const excludeFromExtras = new Set(["beef-box-5kg", "delivery-fee"]);
+
+        if (heroActive && heroExtrasOnly && heroInactive) {
             fetch("/api/stock")
                 .then((res) => res.json())
                 .then((data: { active: boolean; stock: Record<string, number>; launchAt: number | null }) => {
                     const boxStock = data.stock["beef-box-5kg"] ?? 0;
+                    const hasExtrasStock = Object.entries(data.stock).some(
+                        ([key, qty]) => !excludeFromExtras.has(key) && qty > 0,
+                    );
+
                     if (data.active && boxStock > 0) {
                         heroActive.classList.remove("hidden");
 
@@ -201,6 +223,8 @@ import heroImage from "../assets/images/cows-10.webp";
                             const available10kg = Math.floor(boxStock / 2);
                             stock10kg.textContent = available10kg > 0 ? `${available10kg} left` : "Sold out";
                         }
+                    } else if (data.active && hasExtrasStock) {
+                        heroExtrasOnly.classList.remove("hidden");
                     } else {
                         heroInactive.classList.remove("hidden");
 
