@@ -777,6 +777,7 @@ const pageDescription = "Order premium pasture-raised Murray Grey beef boxes dir
                     const available = stockData?.stock[productId] ?? 0;
                     plusBtn.disabled = newQty >= available;
                 }
+                updateSectionStates();
                 updateSummary();
             });
 
@@ -790,6 +791,7 @@ const pageDescription = "Order premium pasture-raised Murray Grey beef boxes dir
                     minusBtn.disabled = false;
                     plusBtn.disabled = newQty >= available;
                 }
+                updateSectionStates();
                 updateSummary();
             });
         });
