@@ -12,7 +12,7 @@ import { getStripe } from "../../lib/stripe";
 export const prerender = false;
 
 interface CheckoutRequest {
-  box: "5kg" | "10kg";
+  box?: "5kg" | "10kg" | null;
   extras: { productId: string; quantity: number }[];
   deliveryMethod: "delivery" | "pickup";
 }
@@ -21,8 +21,9 @@ export const POST: APIRoute = async ({ request, url }) => {
   try {
     const data: CheckoutRequest = await request.json();
 
-    // Validate box selection
-    if (data.box !== "5kg" && data.box !== "10kg") {
+    // Validate box selection (optional — null/undefined means extras-only order)
+    const hasBox = data.box === "5kg" || data.box === "10kg";
+    if (data.box != null && !hasBox) {
       return new Response(
         JSON.stringify({ error: "Invalid box selection" }),
         { status: 400, headers: { "Content-Type": "application/json" } }
@@ -54,6 +55,14 @@ export const POST: APIRoute = async ({ request, url }) => {
       }
     }
 
+    // If no box, require at least one extra
+    if (!hasBox && (!data.extras || data.extras.length === 0)) {
+      return new Response(
+        JSON.stringify({ error: "Please select at least one item" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     // Deduplicate extras by productId (merge quantities)
     const mergedExtras = new Map<string, number>();
     for (const extra of data.extras ?? []) {
@@ -64,7 +73,10 @@ export const POST: APIRoute = async ({ request, url }) => {
     }
 
     // Build stock requirements
-    const stockItems: CartItem[] = [resolveBoxStock(data.box)];
+    const stockItems: CartItem[] = [];
+    if (hasBox) {
+      stockItems.push(resolveBoxStock(data.box as "5kg" | "10kg"));
+    }
     for (const [productId, quantity] of mergedExtras) {
       stockItems.push({ productId, quantity });
     }
@@ -84,8 +96,10 @@ export const POST: APIRoute = async ({ request, url }) => {
     // Build Stripe line items
     const lineItems: { price: string; quantity: number }[] = [];
 
-    // Box
-    lineItems.push({ price: getBoxPriceId(data.box), quantity: 1 });
+    // Box (only if selected)
+    if (hasBox) {
+      lineItems.push({ price: getBoxPriceId(data.box as "5kg" | "10kg"), quantity: 1 });
+    }
 
     // Extras (using deduplicated map)
     for (const [productId, quantity] of mergedExtras) {
