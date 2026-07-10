@@ -1,50 +1,38 @@
 ---
 import { Image } from "astro:assets";
 import boxImage from "../assets/images/box.webp";
+import { bundles, formatAud, formatPerKg, products } from "../config/products";
+
+const fiveKg = products["beef-box-5kg"];
+const tenKg = bundles["beef-box-10kg"];
 ---
 
-<section class="noise-overlay relative py-24 bg-linear-to-br from-forest to-forest-light overflow-hidden">
-    <div class="max-w-6xl mx-auto px-6 relative z-10">
-        <div class="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-            <div class="text-cream lg:order-1">
-                <span class="inline-block text-xs font-semibold uppercase tracking-widest text-mint-light mb-4">What's in the Box</span>
-                <h2 class="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-cream mb-6 tracking-tight">Premium Cuts, Packed Fresh</h2>
-                <p class="text-lg text-cream/85 leading-relaxed mb-8">
-                    Each box contains a variety of premium cuts from a single beast—steaks, roasts, mince, and more. Vacuum-sealed and packed in custom insulated packaging to arrive at your door fresh and ready for the freezer.
-                </p>
-                <div class="flex gap-5 mb-8">
-                    <div class="flex-1 bg-white/10 border border-white/15 rounded-xl p-6 text-center transition-all duration-300 hover:bg-white/15 hover:border-mint">
-                        <div class="font-display text-4xl font-bold text-mint-light leading-none">5kg</div>
-                        <div class="text-sm text-cream/70 mt-1">Perfect for couples</div>
+<section class="bg-forest py-16 text-cream lg:py-24">
+    <div class="mx-auto grid max-w-6xl items-center gap-12 px-6 lg:grid-cols-2 lg:gap-20">
+        <div>
+            <p class="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-mint-light">What’s in the box</p>
+            <h2 class="mb-6 font-display text-4xl font-semibold leading-none sm:text-5xl lg:text-6xl">The cuts you look forward to—and the ones that keep weeknights moving.</h2>
+            <p class="mb-8 max-w-xl text-lg leading-relaxed text-cream/75">Each box balances primary steaks with roast, slow-cook cuts, sausages and mince. The exact cuts vary naturally, but the total weight and value stay clear.</p>
+
+            <div class="grid gap-px bg-cream/15 sm:grid-cols-2">
+                {[{ product: fiveKg, price: fiveKg.price, details: fiveKg.boxDetails! }, { product: tenKg, price: tenKg.displayPrice, details: tenKg.boxDetails }].map(({ product, price, details }) => (
+                    <div class="bg-forest-light p-6">
+                        <p class="font-display text-3xl font-semibold">{product.name}</p>
+                        <p class="mt-1 text-sm text-cream/65">{details.bestFor}</p>
+                        <p class="mt-5 text-2xl font-bold text-mint-light">{formatAud(price)} <span class="text-sm font-medium text-cream/60">· {formatPerKg(details.perKgPrice)}</span></p>
                     </div>
-                    <div class="flex-1 bg-white/10 border border-white/15 rounded-xl p-6 text-center transition-all duration-300 hover:bg-white/15 hover:border-mint">
-                        <div class="font-display text-4xl font-bold text-mint-light leading-none">10kg</div>
-                        <div class="text-sm text-cream/70 mt-1">Great for families</div>
-                    </div>
-                </div>
-                <ul class="space-y-0">
-                    <li class="flex items-center gap-3 py-3 border-b border-white/10 text-cream">
-                        <svg class="w-5 h-5 fill-mint flex-shrink-0" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg>Variety of premium cuts (steaks, roasts, mince)
-                    </li>
-                    <li class="flex items-center gap-3 py-3 border-b border-white/10 text-cream">
-                        <svg class="w-5 h-5 fill-mint flex-shrink-0" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg>Custom insulated packaging
-                    </li>
-                    <li class="flex items-center gap-3 py-3 border-b border-white/10 text-cream">
-                        <svg class="w-5 h-5 fill-mint flex-shrink-0" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg>Hand-signed thank you card
-                    </li>
-                    <li class="flex items-center gap-3 py-3 border-b border-white/10 text-cream">
-                        <svg class="w-5 h-5 fill-mint flex-shrink-0" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg>Occasional bonus goodies (sauces, recipes)
-                    </li>
-                    <li class="flex items-center gap-3 py-3 text-cream">
-                        <svg class="w-5 h-5 fill-mint flex-shrink-0" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg>
-                    </li>
-                </ul>
+                ))}
             </div>
-            <div class="lg:order-2">
-                <div class="bg-linear-to-br from-white/10 to-white/5 rounded-2xl aspect-[4/3] flex flex-col items-center justify-center border border-white/10">
-                    <Image src={boxImage} alt="Your beautifully packed beef box" class="w-full h-full object-cover rounded-2xl" widths={[400, 600, 800]} sizes="(max-width: 1024px) 100vw, 50vw" />
-                </div>
-            </div>
+
+            <a href="/beef-boxes" class="mt-8 inline-block bg-mint px-6 py-3.5 font-semibold text-forest no-underline hover:bg-mint-light">Compare the boxes</a>
         </div>
+
+        <Image
+            src={boxImage}
+            alt="Ferguson Livestock Murray Grey beef packed and ready for the freezer"
+            class="aspect-square w-full object-cover"
+            widths={[500, 720, 960]}
+            sizes="(max-width: 1024px) 100vw, 50vw"
+        />
     </div>
 </section>

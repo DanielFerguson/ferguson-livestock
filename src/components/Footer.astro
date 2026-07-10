@@ -1,78 +1,61 @@
 ---
+import { business } from "../config/business";
+import { brandContent } from "../config/content";
 
+const links = [
+    { href: "/beef-boxes", label: "Beef Boxes" },
+    { href: "/our-story", label: "Our Story" },
+    { href: "/delivery", label: "Delivery & Pickup" },
+    { href: "/faq", label: "FAQ" },
+    { href: "/contact", label: "Contact" },
+];
+
+const policies = [
+    { href: "/privacy", label: "Privacy" },
+    { href: "/delivery-and-refunds", label: "Delivery & Refunds" },
+];
 ---
 
-<footer class="bg-forest py-16 text-cream">
-    <div class="max-w-6xl mx-auto px-6">
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-12 lg:gap-16 mb-12">
+<footer class="bg-forest py-14 text-cream">
+    <div class="mx-auto max-w-6xl px-6">
+        <div class="mb-12 grid gap-10 md:grid-cols-2 lg:grid-cols-[1.4fr_0.8fr_0.8fr_1.1fr]">
             <div>
-                <div class="font-display text-2xl font-semibold mb-4">
-                    Ferguson Livestock
-                </div>
-                <p class="text-cream/70 text-sm leading-relaxed max-w-xs">
-                    A family-run cattle operation in Snake Valley, Victoria. We
-                    raise Murray Grey beef the traditional way—pasture-raised,
-                    hormone-free, and delivered with care.
-                </p>
+                <div class="mb-4 font-display text-3xl font-semibold">{business.name}</div>
+                <p class="max-w-sm text-sm leading-relaxed text-cream/75">{brandContent.promise}</p>
+                <p class="mt-4 text-sm text-cream/60">{business.location.locality}, {business.location.region} · {business.location.proximity}</p>
             </div>
+
             <div>
-                <h4 class="font-display text-lg font-semibold mb-5">
-                    Quick Links
-                </h4>
+                <h2 class="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-mint-light">Explore</h2>
                 <ul class="space-y-3">
-                    <li>
-                        <a
-                            href="#waitlist"
-                            class="text-cream/70 text-sm hover:text-mint-light transition-colors duration-300 no-underline"
-                            onclick="if(typeof gtag==='function'){gtag('event','cta_click',{cta_location:'footer',cta_text:'Join Wait List'});}"
-                            >Join the Wait List</a
-                        >
-                    </li>
-                    <li>
-                        <a
-                            href="https://www.facebook.com/FergusonLivestockMG"
-                            target="_blank"
-                            class="text-cream/70 text-sm hover:text-mint-light transition-colors duration-300 no-underline"
-                            onclick="if(typeof gtag==='function'){gtag('event','outbound_click',{link_url:'https://www.facebook.com/FergusonLivestockMG',link_text:'Facebook'});}"
-                            >Facebook</a
-                        >
-                    </li>
+                    {links.map((link) => (
+                        <li><a href={link.href} class="text-sm text-cream/75 no-underline transition-colors hover:text-mint-light">{link.label}</a></li>
+                    ))}
                 </ul>
             </div>
+
             <div>
-                <h4 class="font-display text-lg font-semibold mb-5">
-                    Get in Touch
-                </h4>
-                <div class="space-y-3">
-                    <p class="flex items-center gap-2.5 text-cream/70 text-sm">
-                        <svg class="w-4 h-4 fill-mint" viewBox="0 0 24 24"
-                            ><path
-                                d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"
-                            ></path></svg
-                        >Snake Valley, Victoria
-                    </p>
-                    <a
-                        href="mailto:ferguson.livestock.mg@outlook.com"
-                        class="no-underline"
-                    >
-                        <p
-                            class="flex items-center gap-2.5 text-cream/70 text-sm"
-                        >
-                            <svg class="w-4 h-4 fill-mint" viewBox="0 0 24 24"
-                                ><path
-                                    d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"
-                                ></path></svg
-                            >ferguson.livestock.mg@outlook.com
-                        </p>
-                    </a>
+                <h2 class="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-mint-light">Information</h2>
+                <ul class="space-y-3">
+                    {policies.map((link) => (
+                        <li><a href={link.href} class="text-sm text-cream/75 no-underline transition-colors hover:text-mint-light">{link.label}</a></li>
+                    ))}
+                </ul>
+            </div>
+
+            <div>
+                <h2 class="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-mint-light">Talk to the farmers</h2>
+                <div class="space-y-3 text-sm">
+                    <a href={`tel:${business.phone.international}`} class="block text-cream/75 no-underline transition-colors hover:text-mint-light">{business.phone.display}</a>
+                    <a href={`mailto:${business.email}`} class="block break-words text-cream/75 no-underline transition-colors hover:text-mint-light">{business.email}</a>
+                    <a href={business.social.facebook} target="_blank" rel="noopener noreferrer" class="block text-cream/75 no-underline transition-colors hover:text-mint-light">Facebook</a>
                 </div>
             </div>
         </div>
-        <div
-            class="pt-8 border-t border-cream/10 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-cream/50"
-        >
-            <p>&copy; 2025 Ferguson Livestock. All rights reserved.</p>
-            <p>Made with love in Snake Valley</p>
+
+        <div class="flex flex-col gap-3 border-t border-cream/10 pt-7 text-sm text-cream/50 sm:flex-row sm:items-center sm:justify-between">
+            <p>&copy; {new Date().getFullYear()} {business.name}. All rights reserved.</p>
+            <p>Raised in Snake Valley. Delivered by us.</p>
         </div>
     </div>
 </footer>

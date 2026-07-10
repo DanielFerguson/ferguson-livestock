@@ -1,84 +1,53 @@
 ---
+import { business } from "../config/business";
+import { bundles, formatAud, products } from "../config/products";
+
+interface Props {
+    headingLevel?: 1 | 2;
+}
+
+const { headingLevel = 2 } = Astro.props;
+const Heading = headingLevel === 1 ? "h1" : "h2";
+
+const fiveKgBox = products["beef-box-5kg"];
+const tenKgBox = bundles["beef-box-10kg"];
+const delivery = products[business.delivery.feeProductId];
+
 const faqs = [
     {
-        question: "Where can I buy grass-fed beef near Ballarat?",
-        answer: "Ferguson Livestock delivers premium grass-fed Murray Grey beef direct to families in Ballarat and surrounding areas including Snake Valley, Smythesdale, Buninyong, Sebastopol, and Wendouree. Join the wait list and we'll text you when ordering opens, then you can choose a 5kg or 10kg box.",
-    },
-    {
         question: "How does ordering work?",
-        answer: "Join the wait list and we'll text you when ordering opens. You'll pick your box size, pay online, and we'll confirm delivery details by text. Limited boxes, first in first served.",
+        answer: "When a drop opens, choose a 5kg or 10kg box, add any available individual cuts, select delivery or farm pickup, and complete payment securely through Stripe. If boxes are sold out, you can still order any individual cuts showing as available.",
     },
     {
-        question: "When is delivery?",
-        answer: "The next batch is expected early April. We'll confirm the exact delivery window by text after orders open.",
+        question: "How much do the beef boxes cost?",
+        answer: `${fiveKgBox.name} boxes are ${formatAud(fiveKgBox.price)} (${formatAud(fiveKgBox.boxDetails!.perKgPrice)}/kg), and ${tenKgBox.name} boxes are ${formatAud(tenKgBox.displayPrice)} (${formatAud(tenKgBox.boxDetails.perKgPrice)}/kg).`,
     },
     {
-        question: "Do you deliver to my area?",
-        answer: "We deliver to Ballarat and surrounding suburbs, including Snake Valley, Smythesdale, Buninyong, Sebastopol, Wendouree, and nearby areas. If you're unsure, email us at ferguson.livestock.mg@outlook.com and we'll confirm.",
+        question: "What cuts are included?",
+        answer: "Each box contains a balanced mix of primary steaks, secondary and slow-cook cuts, roast, sausages and mince. Because each animal is different, the exact cuts and individual pack weights vary while the total box weight remains the same.",
+    },
+    {
+        question: "Can I buy individual cuts?",
+        answer: "Yes. Mince, bones, sausages, rump, porterhouse and diced chuck may be offered individually when stock is available. The order page always shows the current range and quantity remaining.",
+    },
+    {
+        question: "Where do you deliver?",
+        answer: `We personally deliver across the ${business.delivery.areaName}. Delivery is ${formatAud(delivery.price)} per order. ${business.pickup.label} is also available ${business.location.proximity}.`,
     },
     {
         question: "How is the beef raised?",
-        answer: "Our Murray Grey cattle are pasture-raised right here in Snake Valley. They spend their lives grazing on open paddocks—no feedlots, no added hormones, ever. During dry periods, we may supplement with hay or grain to keep them healthy, but they're always on pasture.",
+        answer: "Our Murray Grey cattle are pasture-raised on our Snake Valley farm. We are documenting the finer details of our feeding and husbandry practices so customers can see exactly what each claim means rather than relying on broad marketing labels.",
     },
     {
-        question: "What cuts are included in a box?",
-        answer: "Each box contains a variety of cuts including steaks (scotch fillet, porterhouse, rump), roasts, mince, sausages, and slow-cook cuts like osso buco and chuck. The exact mix varies depending on the beast, but you'll get a good selection of premium and everyday cuts.",
+        question: "How is the beef processed and packed?",
+        answer: "The cattle are processed through a licensed local facility, and the cuts are professionally prepared and vacuum-sealed before collection or personal delivery. We will publish the confirmed processing and conditioning details as part of our full provenance guide.",
     },
     {
-        question: "How long does the beef last in the freezer?",
-        answer: "Vacuum-sealed beef will keep in your freezer for 12-18 months without losing quality. Once thawed, we recommend cooking it within 3-5 days. Most families find a box lasts them 2-3 months depending on how often they eat beef.",
-    },
-    {
-        question: "Can I choose specific cuts?",
-        answer: "Our boxes come as a set mix of cuts from each beast—we can't do custom selections as it wouldn't be fair to other customers. However, the variety means you'll get to try different cuts and cooking methods, and most families love the surprise of it.",
-    },
-    {
-        question: "How often do you process cattle?",
-        answer: "We typically process every few months, depending on when our cattle are ready. Join the wait list and we'll text you when the next batch opens.",
-    },
-    {
-        question: "Do you sell individual cuts?",
-        answer: "We only sell beef in boxes, not individual cuts. This ensures nothing goes to waste and keeps our operation simple. Each box gives you a great variety of cuts at a fair price.",
-    },
-    {
-        question: "What makes Murray Grey beef special?",
-        answer: "Murray Greys are an Australian heritage breed developed right here in Victoria. They're known for their calm temperament, natural marbling, and ability to thrive on pasture. Less stress means more tender beef, and their genetics produce beautifully flavoured meat without intensive finishing.",
-    },
-    {
-        question: "How does Murray Grey beef compare to Angus?",
-        answer: "Murray Grey cattle are an Australian heritage breed while Angus originated in Scotland. Murray Greys are known for their docile temperament (which reduces stress and improves meat quality), excellent marbling, and ability to finish well on pasture without grain feeding. Many say Murray Grey beef is more finely marbled with a smoother, more delicate flavour compared to Angus.",
-    },
-    {
-        question: "Is the beef aged?",
-        answer: "Yes, our beef is hung for a minimum of 7-10 days after processing. This dry-aging period allows the natural enzymes to tenderise the meat and develop deeper flavour. It's one of the things that sets quality beef apart from supermarket meat.",
-    },
-    {
-        question: "How much does a box cost?",
-        answer: "5kg boxes are $150 ($30/kg) and 10kg boxes are $240 ($24/kg). Delivery is always free.",
-    },
-    {
-        question: "How is the beef packaged?",
-        answer: "All cuts are professionally vacuum-sealed and packed in custom insulated boxes with ice packs. It'll stay perfectly chilled during delivery and is ready to go straight into your freezer.",
-    },
-    {
-        question: "What if I'm not home during delivery?",
-        answer: "No worries! Just let us know a safe spot to leave it (like an esky on the porch) and we'll make sure it's secure. With our insulated packaging, it'll stay cold for hours.",
-    },
-    {
-        question: "What if a drop is sold out?",
-        answer: "The current batch is sold out. We restock every few months, so join the wait list and we'll text you when the next batch opens (expected early April).",
-    },
-    {
-        question: "Is Ferguson Livestock beef organic?",
-        answer: "While we don't hold formal organic certification, our farming practices align with organic principles. Our cattle are pasture-raised on our family farm in Snake Valley with no added hormones, no routine antibiotics, and no feedlot finishing. We believe in transparent, ethical farming—you're welcome to visit the farm and see how we raise our cattle.",
-    },
-    {
-        question: "What's the best beef delivery service in regional Victoria?",
-        answer: "Ferguson Livestock offers direct-from-farm beef delivery to Ballarat and surrounding regional Victoria areas. Unlike supermarket beef or online butchers, you get complete traceability—you know exactly which farm, which paddock, and which family raised your beef. Our Murray Grey cattle are pasture-raised and dry-aged, and we deliver personally to your door.",
+        question: "What happens when a drop sells out?",
+        answer: "Join the wait list and we will text you when the next beef-box drop opens. If individual cuts remain after the boxes sell out, they stay available on the order page while stock lasts.",
     },
 ];
 
-// Generate FAQ Schema for rich snippets
 const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -93,94 +62,61 @@ const faqSchema = {
 };
 ---
 
-<!-- FAQ Schema for Rich Snippets -->
 <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
 
-<section class="py-24 bg-cream">
-    <div class="max-w-6xl mx-auto px-6">
-        <div class="text-center mb-16">
-            <span
-                class="inline-block text-xs font-semibold uppercase tracking-widest text-sage mb-4"
-                >Got Questions?</span
-            >
-            <h2
-                class="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-forest mb-4 tracking-tight"
-            >
-                Frequently Asked Questions
-            </h2>
-            <p class="text-lg text-gray-500 max-w-xl mx-auto">
-                Here's what others have asked before ordering
+<section class="bg-cream py-16 lg:py-24">
+    <div class="mx-auto max-w-6xl px-6">
+        <div class="mb-12 text-center lg:mb-16">
+            <span class="mb-4 inline-block text-xs font-semibold uppercase tracking-widest text-sage">Good to know</span>
+            <Heading class="mb-4 font-display text-3xl font-semibold tracking-tight text-forest md:text-4xl lg:text-5xl">
+                Frequently asked questions
+            </Heading>
+            <p class="mx-auto max-w-xl text-lg text-gray-600">
+                Straight answers about boxes, delivery and ordering.
             </p>
         </div>
-        <div class="max-w-3xl mx-auto space-y-4" role="list">
-            {
-                faqs.map((faq, index) => (
-                    <div
-                        class="faq-item bg-white rounded-xl border border-forest/5 overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-forest/5"
-                        role="listitem"
+
+        <div class="mx-auto max-w-3xl space-y-4" role="list">
+            {faqs.map((faq, index) => (
+                <div class="faq-item overflow-hidden border border-forest/10 bg-white" role="listitem">
+                    <button
+                        class="faq-question flex w-full cursor-pointer items-center justify-between gap-4 border-0 bg-transparent px-6 py-5 text-left text-lg font-semibold text-forest transition-colors hover:text-sage"
+                        aria-expanded="false"
+                        aria-controls={`faq-answer-${index}`}
+                        id={`faq-question-${index}`}
                     >
-                        <button
-                            class="faq-question w-full px-7 py-6 bg-transparent border-0 text-left cursor-pointer flex items-center justify-between gap-4 text-lg font-semibold text-forest transition-colors duration-300 hover:text-sage"
-                            aria-expanded="false"
-                            aria-controls={`faq-answer-${index}`}
-                            id={`faq-question-${index}`}
-                        >
-                            {faq.question}
-                            <svg
-                                class="faq-icon w-6 h-6 fill-sage shrink-0 transition-transform duration-300"
-                                viewBox="0 0 24 24"
-                                aria-hidden="true"
-                            >
-                                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-                            </svg>
-                        </button>
-                        <div
-                            class="faq-answer"
-                            id={`faq-answer-${index}`}
-                            role="region"
-                            aria-labelledby={`faq-question-${index}`}
-                        >
-                            <div class="px-7 pb-6 text-gray-500 leading-relaxed">
-                                {faq.answer}
-                            </div>
-                        </div>
+                        {faq.question}
+                        <svg class="faq-icon h-6 w-6 shrink-0 fill-sage transition-transform" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                        </svg>
+                    </button>
+                    <div
+                        class="faq-answer"
+                        id={`faq-answer-${index}`}
+                        role="region"
+                        aria-labelledby={`faq-question-${index}`}
+                        hidden
+                    >
+                        <div class="px-6 pb-6 leading-relaxed text-gray-600">{faq.answer}</div>
                     </div>
-                ))
-            }
+                </div>
+            ))}
         </div>
     </div>
 </section>
 
 <script>
-    // Declare gtag as global (loaded by Google Analytics in Layout)
-    declare const gtag: (...args: any[]) => void;
-
-    document.querySelectorAll(".faq-question").forEach((button, index) => {
+    document.querySelectorAll<HTMLButtonElement>(".faq-question").forEach((button) => {
         button.addEventListener("click", () => {
-            const item = button.parentElement;
-            if (!item) return;
-            const isActive = item.classList.contains("active");
+            const item = button.closest(".faq-item");
+            const answerId = button.getAttribute("aria-controls");
+            const answer = answerId ? document.getElementById(answerId) : null;
+            if (!item || !answer) return;
 
-            // Close all FAQs and update aria-expanded
-            document.querySelectorAll(".faq-item").forEach((faq) => {
-                faq.classList.remove("active");
-                const btn = faq.querySelector(".faq-question");
-                if (btn) btn.setAttribute("aria-expanded", "false");
-            });
-
-            // Open clicked FAQ if it wasn't already active
-            if (!isActive) {
-                item.classList.add("active");
-                button.setAttribute("aria-expanded", "true");
-
-                // Track FAQ expand event
-                if (typeof gtag === "function") {
-                    gtag("event", "faq_expand", {
-                        question_text: button.textContent?.trim(),
-                        question_index: index,
-                    });
-                }
-            }
+            const expanded = button.getAttribute("aria-expanded") === "true";
+            button.setAttribute("aria-expanded", String(!expanded));
+            item.classList.toggle("active", !expanded);
+            answer.hidden = expanded;
         });
     });
 </script>

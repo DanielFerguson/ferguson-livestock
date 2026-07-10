@@ -5,5 +5,6 @@ User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://fergusonlivestock.com.au/sitemap-index.xml
+Disallow: /api/
 
+Sitemap: https://www.fergusonlivestock.com.au/sitemap-index.xml

@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "check": "bun run build && bun scripts/check-site.mjs",
     "preview": "astro preview",
     "astro": "astro",
     "generate:og": "bun scripts/generate-og-image.mjs"

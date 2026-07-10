@@ -1,20 +1,15 @@
 ---
-import PostHog from "../components/posthog.astro";
-
+import StructuredData from "./StructuredData.astro";
+import { business } from "../config/business";
+import { brandContent } from "../config/content";
 import "../styles/global.css";
 
-// Import Fontsource fonts (self-hosted, no render-blocking external requests)
 import "@fontsource-variable/source-sans-3";
 import "@fontsource/cormorant-garamond/400.css";
-import "@fontsource/cormorant-garamond/500.css";
 import "@fontsource/cormorant-garamond/600.css";
 import "@fontsource/cormorant-garamond/700.css";
 import "@fontsource/caveat/400.css";
-import "@fontsource/caveat/500.css";
-import "@fontsource/caveat/600.css";
-import "@fontsource/caveat/700.css";
 
-// Import critical font files for preloading (hero section)
 import sourceSansWoff2 from "@fontsource-variable/source-sans-3/files/source-sans-3-latin-wght-normal.woff2?url";
 import cormorantWoff2 from "@fontsource/cormorant-garamond/files/cormorant-garamond-latin-600-normal.woff2?url";
 
@@ -22,683 +17,104 @@ interface Props {
     title: string;
     description?: string;
     image?: string;
+    imageAlt?: string;
     canonicalUrl?: string;
+    robots?: string;
+    structuredData?: Record<string, unknown> | Record<string, unknown>[];
 }
 
 const {
     title,
-    description = "Premium pasture-raised Murray Grey beef boxes delivered direct from our family farm in Snake Valley, Victoria. Hormone-free, ethically raised cattle.",
+    description = brandContent.shortDescription,
     image = "/og-image.jpg",
+    imageAlt = "Ferguson Livestock Murray Grey cattle in Snake Valley, Victoria",
     canonicalUrl,
+    robots = "index, follow",
+    structuredData,
 } = Astro.props;
 
-const siteUrl = "https://fergusonlivestock.com.au";
-const fullImageUrl = image.startsWith("http") ? image : `${siteUrl}${image}`;
-const canonical = canonicalUrl || Astro.url.href;
+const fullImageUrl = image.startsWith("http") ? image : `${business.siteUrl}${image}`;
+const canonical = canonicalUrl ?? new URL(Astro.url.pathname, business.siteUrl).toString();
 ---
 
-<html lang="en">
+<html lang="en-AU">
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-        <!-- Primary Meta Tags -->
         <title>{title}</title>
-        <meta name="title" content={title} />
         <meta name="description" content={description} />
         <link rel="canonical" href={canonical} />
+        <meta name="robots" content={robots} />
+        <meta name="author" content={business.name} />
 
-        <!-- Favicon & PWA -->
-        <link
-            rel="apple-touch-icon"
-            sizes="180x180"
-            href="/apple-touch-icon.png"
-        />
-        <link
-            rel="icon"
-            type="image/png"
-            sizes="32x32"
-            href="/favicon-32x32.png"
-        />
-        <link
-            rel="icon"
-            type="image/png"
-            sizes="16x16"
-            href="/favicon-16x16.png"
-        />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="manifest" href="/site.webmanifest" />
 
-        <!-- Mobile Browser Theme -->
-        <meta name="theme-color" content="#2d3b2d" />
+        <meta name="theme-color" content="#1a2e1a" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Ferguson Livestock" />
-        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-title" content={business.name} />
 
-        <!-- Open Graph / Facebook -->
         <meta property="og:type" content="website" />
         <meta property="og:url" content={canonical} />
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
         <meta property="og:image" content={fullImageUrl} />
+        <meta property="og:image:alt" content={imageAlt} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
-        <meta property="og:image:type" content="image/jpeg" />
-        <meta property="og:site_name" content="Ferguson Livestock" />
+        <meta property="og:site_name" content={business.name} />
         <meta property="og:locale" content="en_AU" />
 
-        <!-- Twitter -->
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:url" content={canonical} />
         <meta name="twitter:title" content={title} />
         <meta name="twitter:description" content={description} />
         <meta name="twitter:image" content={fullImageUrl} />
-        <meta name="twitter:image:width" content="1200" />
-        <meta name="twitter:image:height" content="630" />
+        <meta name="twitter:image:alt" content={imageAlt} />
 
-        <!-- Additional SEO -->
-        <meta name="robots" content="index, follow" />
-        <meta name="author" content="Ferguson Livestock" />
         <meta name="geo.region" content="AU-VIC" />
-        <meta name="geo.placename" content="Snake Valley" />
-        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+        <meta name="geo.placename" content={business.location.locality} />
 
-        <!-- Preload critical fonts for hero section (improves LCP) -->
-        <link
-            rel="preload"
-            as="font"
-            type="font/woff2"
-            href={sourceSansWoff2}
-            crossorigin="anonymous"
-        />
-        <link
-            rel="preload"
-            as="font"
-            type="font/woff2"
-            href={cormorantWoff2}
-            crossorigin="anonymous"
-        />
+        <link rel="preload" as="font" type="font/woff2" href={sourceSansWoff2} crossorigin="anonymous" />
+        <link rel="preload" as="font" type="font/woff2" href={cormorantWoff2} crossorigin="anonymous" />
 
-        <!-- Google Analytics -->
-        <script
-            is:inline
-            async
-            src="https://www.googletagmanager.com/gtag/js?id=G-EZVFVWV5YQ"
-        ></script>
+        <script is:inline async src="https://www.googletagmanager.com/gtag/js?id=G-EZVFVWV5YQ"></script>
         <script is:inline>
             window.dataLayer = window.dataLayer || [];
-            function gtag() {
-                dataLayer.push(arguments);
-            }
+            function gtag() { dataLayer.push(arguments); }
             gtag("js", new Date());
             gtag("config", "G-EZVFVWV5YQ");
         </script>
 
-        <!-- Hotjar Tracking Code for Ferguson Livestock -->
-        <script is:inline>
-            (function (h, o, t, j, a, r) {
-                h.hj =
-                    h.hj ||
-                    function () {
-                        (h.hj.q = h.hj.q || []).push(arguments);
-                    };
-                h._hjSettings = { hjid: 6594793, hjsv: 6 };
-                a = o.getElementsByTagName("head")[0];
-                r = o.createElement("script");
-                r.async = 1;
-                r.src = t + h._hjSettings.hjid + j + h._hjSettings.hjsv;
-                a.appendChild(r);
-            })(
-                window,
-                document,
-                "https://static.hotjar.com/c/hotjar-",
-                ".js?sv=",
-            );
-        </script>
-
-        <!-- Meta Pixel Code -->
         <script is:inline>
             !(function (f, b, e, v, n, t, s) {
                 if (f.fbq) return;
-                n = f.fbq = function () {
-                    n.callMethod
-                        ? n.callMethod.apply(n, arguments)
-                        : n.queue.push(arguments);
-                };
+                n = f.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments); };
                 if (!f._fbq) f._fbq = n;
                 n.push = n;
-                n.loaded = !0;
+                n.loaded = true;
                 n.version = "2.0";
                 n.queue = [];
                 t = b.createElement(e);
-                t.async = !0;
+                t.async = true;
                 t.src = v;
                 s = b.getElementsByTagName(e)[0];
                 s.parentNode.insertBefore(t, s);
-            })(
-                window,
-                document,
-                "script",
-                "https://connect.facebook.net/en_US/fbevents.js",
-            );
+            })(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
             fbq("init", "1517004342893353");
             fbq("track", "PageView");
         </script>
-        <noscript
-            ><img
-                height="1"
-                width="1"
-                style="display:none"
-                src="https://www.facebook.com/tr?id=1517004342893353&ev=PageView&noscript=1"
-            /></noscript
-        >
-        <!-- End Meta Pixel Code -->
 
-        <!-- JSON-LD Structured Data -->
-        <script
-            type="application/ld+json"
-            set:html={JSON.stringify({
-                "@context": "https://schema.org",
-                "@graph": [
-                    {
-                        "@type": "Organization",
-                        "@id": `${siteUrl}/#organization`,
-                        name: "Ferguson Livestock",
-                        url: siteUrl,
-                        logo: {
-                            "@type": "ImageObject",
-                            url: `${siteUrl}/android-chrome-512x512.png`,
-                            width: 512,
-                            height: 512,
-                        },
-                        image: `${siteUrl}/og-image.jpg`,
-                        sameAs: [
-                            "https://www.facebook.com/FergusonLivestockMG",
-                        ],
-                        contactPoint: {
-                            "@type": "ContactPoint",
-                            telephone: "+61427458706",
-                            contactType: "sales",
-                            areaServed: "AU",
-                            availableLanguage: "English",
-                        },
-                    },
-                    {
-                        "@type": ["LocalBusiness", "FoodEstablishment"],
-                        "@id": `${siteUrl}/#localbusiness`,
-                        name: "Ferguson Livestock",
-                        description:
-                            "Family-owned Murray Grey cattle farm offering premium pasture-raised beef boxes direct to consumers in Ballarat and surrounding areas.",
-                        url: siteUrl,
-                        telephone: "+61427458706",
-                        email: "ferguson.livestock.mg@outlook.com",
-                        image: `${siteUrl}/og-image.jpg`,
-                        sameAs: [
-                            "https://www.facebook.com/FergusonLivestockMG",
-                        ],
-                        address: {
-                            "@type": "PostalAddress",
-                            addressLocality: "Snake Valley",
-                            addressRegion: "VIC",
-                            postalCode: "3351",
-                            addressCountry: "AU",
-                        },
-                        geo: {
-                            "@type": "GeoCoordinates",
-                            latitude: -37.5833,
-                            longitude: 143.6833,
-                        },
-                        areaServed: [
-                            {
-                                "@type": "City",
-                                name: "Ballarat",
-                                sameAs: "https://en.wikipedia.org/wiki/Ballarat",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Snake Valley",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Smythesdale",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Buninyong",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Sebastopol",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Wendouree",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Creswick",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Beaufort",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Invermay",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Miners Rest",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Delacombe",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Alfredton",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Lake Wendouree",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Mount Clear",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Mount Pleasant",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Redan",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Lucas",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Winter Valley",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Cardigan Village",
-                            },
-                            // Additional areas around Ballarat and Victoria
-                            {
-                                "@type": "Place",
-                                name: "Scarsdale",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Napoleons",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Haddon",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Ross Creek",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Clunes",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Dunnstown",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Learmonth",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Gordon",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Blampied",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Bungaree",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Warrenheip",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Sulky",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Berringa",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Enfield",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Dereel",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Mount Egerton",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Mount Helen",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Smythes Creek",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Linton",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Talbot",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Daylesford",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Ballan",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Waubra",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Maryborough",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Ararat",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Dunnstown",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Bacchus Marsh",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Avoca",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Newlyn",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Trentham",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Myrniong",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Blackwood",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Gisborne",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Kyneton",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Ballarat East",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Ballarat Central",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Brown Hill",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Canadian",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Glen Park",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Barkly",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Ascot",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Mount Rowan",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Weatherboard",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Dunnstown",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Addington",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Mannibadar",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Mininera",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Skipton",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Carngham",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Lexton",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Clunes",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Rokewood",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Shelford",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Teesdale",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Inverleigh",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Bunbartha",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Castlemaine",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Woodend",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Hepburn Springs",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Dales Creek",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Hopetoun Park",
-                            },
-                            {
-                                "@type": "Place",
-                                name: "Balliang",
-                            },
-                        ],
-                        priceRange: "$$",
-                        currenciesAccepted: "AUD",
-                        paymentAccepted: "Credit Card, Bank Transfer",
-                        servesCuisine: "Beef",
-                        keywords:
-                            "grass-fed beef, pasture-raised beef, Murray Grey beef, beef delivery Ballarat, farm direct beef, beef boxes Victoria",
-                        hasOfferCatalog: {
-                            "@type": "OfferCatalog",
-                            name: "Beef Boxes",
-                            itemListElement: [
-                                {
-                                    "@type": "Offer",
-                                    itemOffered: {
-                                        "@type": "Product",
-                                        name: "5kg Beef Box",
-                                    },
-                                },
-                                {
-                                    "@type": "Offer",
-                                    itemOffered: {
-                                        "@type": "Product",
-                                        name: "10kg Beef Box",
-                                    },
-                                },
-                            ],
-                        },
-                    },
-                    {
-                        "@type": "Product",
-                        "@id": `${siteUrl}/#product`,
-                        name: "Ferguson Livestock Beef Box",
-                        description:
-                            "Premium pasture-raised Murray Grey beef box containing a variety of cuts including steaks, roasts, mince, and sausages. Vacuum-sealed and delivered fresh from our family farm.",
-                        image: `${siteUrl}/og-image.jpg`,
-                        brand: {
-                            "@type": "Brand",
-                            name: "Ferguson Livestock",
-                        },
-                        offers: {
-                            "@type": "AggregateOffer",
-                            availability: "https://schema.org/OutOfStock",
-                            priceCurrency: "AUD",
-                            lowPrice: "150",
-                            highPrice: "240",
-                            offerCount: "2",
-                            areaServed: {
-                                "@type": "State",
-                                name: "Victoria",
-                                sameAs: "https://en.wikipedia.org/wiki/Victoria_(state)",
-                            },
-                        },
-                        category: "Beef",
-                        material: "Pasture-raised Murray Grey beef",
-                        additionalProperty: [
-                            {
-                                "@type": "PropertyValue",
-                                name: "Breed",
-                                value: "Murray Grey",
-                            },
-                            {
-                                "@type": "PropertyValue",
-                                name: "Raised",
-                                value: "Pasture-raised",
-                            },
-                            {
-                                "@type": "PropertyValue",
-                                name: "Hormones",
-                                value: "No added hormones",
-                            },
-                            {
-                                "@type": "PropertyValue",
-                                name: "Aged",
-                                value: "Dry-aged 7-10 days",
-                            },
-                        ],
-                        aggregateRating: {
-                            "@type": "AggregateRating",
-                            ratingValue: "5",
-                            ratingCount: "10",
-                            bestRating: "5",
-                            worstRating: "1",
-                        },
-                    },
-                    {
-                        "@type": "WebSite",
-                        "@id": `${siteUrl}/#website`,
-                        url: siteUrl,
-                        name: "Ferguson Livestock",
-                        description:
-                            "Premium pasture-raised Murray Grey beef boxes delivered direct from our family farm in Snake Valley, Victoria.",
-                        publisher: {
-                            "@id": `${siteUrl}/#organization`,
-                        },
-                        inLanguage: "en-AU",
-                    },
-                    {
-                        "@type": "WebPage",
-                        "@id": `${siteUrl}/#webpage`,
-                        url: siteUrl,
-                        name: title,
-                        description: description,
-                        isPartOf: {
-                            "@id": `${siteUrl}/#website`,
-                        },
-                        about: {
-                            "@id": `${siteUrl}/#localbusiness`,
-                        },
-                        primaryImageOfPage: {
-                            "@type": "ImageObject",
-                            url: `${siteUrl}/og-image.jpg`,
-                        },
-                    },
-                ],
-            })}
-        />
-
-        <PostHog />
+        <StructuredData data={structuredData} />
     </head>
-    <body class="bg-cream text-gray-800 leading-relaxed overflow-x-hidden">
-        <!-- Skip to main content link for accessibility -->
+    <body class="overflow-x-hidden bg-cream leading-relaxed text-gray-800">
         <a
             href="#main-content"
-            class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-forest focus:text-cream focus:rounded-lg focus:outline-none focus:ring-2 focus:ring-mint"
+            class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-forest focus:px-4 focus:py-2 focus:text-cream focus:outline-none focus:ring-2 focus:ring-mint"
         >
             Skip to main content
         </a>

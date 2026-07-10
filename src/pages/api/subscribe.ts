@@ -6,6 +6,7 @@ interface SubscribeRequest {
     firstName: string;
     phone: string;
     postcode: string;
+    consent: boolean;
 }
 
 export const POST: APIRoute = async ({ request }) => {
@@ -13,7 +14,7 @@ export const POST: APIRoute = async ({ request }) => {
         const data: SubscribeRequest = await request.json();
 
         // Validate required fields
-        if (!data.firstName || !data.phone || !data.postcode) {
+        if (!data.firstName || !data.phone || !data.postcode || data.consent !== true) {
             return new Response(
                 JSON.stringify({
                     success: false,
@@ -66,6 +67,8 @@ export const POST: APIRoute = async ({ request }) => {
             );
         }
 
+        const consentRecordedAt = new Date().toISOString();
+
         // Step 1: Try client subscription endpoint
         const payload = {
             data: {
@@ -77,13 +80,14 @@ export const POST: APIRoute = async ({ request }) => {
                     properties: {
                         first_name: data.firstName,
                         postcode: data.postcode,
-                        signup_date: new Date().toISOString()
+                        signup_date: consentRecordedAt,
+                        sms_consent: true,
+                        sms_consent_recorded_at: consentRecordedAt,
+                        sms_consent_source: 'Ferguson Livestock Website wait list'
                     }
                 }
             }
         };
-
-        console.log('Step 1 - Client subscription payload:', JSON.stringify(payload, null, 2));
 
         const response = await fetch(`https://a.klaviyo.com/client/subscriptions/?company_id=${publicApiKey}`, {
             method: 'POST',
@@ -94,20 +98,20 @@ export const POST: APIRoute = async ({ request }) => {
             body: JSON.stringify(payload)
         });
 
-        const responseText = await response.text();
-        console.log('Step 1 - Client subscription response:', response.status, responseText);
+        if (!response.ok) {
+            return new Response(
+                JSON.stringify({ success: false, error: 'Unable to join the wait list right now' }),
+                { status: 502, headers: { 'Content-Type': 'application/json' } }
+            );
+        }
 
         // Step 2: Verify profile exists using private API key
         if (privateApiKey) {
-            console.log('Step 2 - Checking if profile exists...');
-
             // Wait a moment for Klaviyo to process
             await new Promise(resolve => setTimeout(resolve, 1000));
 
             // Search for profile by phone number
             const searchUrl = `https://a.klaviyo.com/api/profiles/?filter=equals(phone_number,"${encodeURIComponent(formattedPhone)}")`;
-            console.log('Step 2 - Search URL:', searchUrl);
-
             const searchResponse = await fetch(searchUrl, {
                 method: 'GET',
                 headers: {
@@ -118,14 +122,10 @@ export const POST: APIRoute = async ({ request }) => {
             });
 
             const searchText = await searchResponse.text();
-            console.log('Step 2 - Profile search response:', searchResponse.status, searchText);
-
             if (searchResponse.ok) {
                 try {
                     const searchData = JSON.parse(searchText);
                     if (searchData.data && searchData.data.length > 0) {
-                        console.log('Step 2 - Profile FOUND:', searchData.data[0].id);
-
                         // Profile exists - update it with first_name and add to list
                         const profileId = searchData.data[0].id;
 
@@ -138,13 +138,14 @@ export const POST: APIRoute = async ({ request }) => {
                                     first_name: data.firstName,
                                     properties: {
                                         postcode: data.postcode,
-                                        source: 'Ferguson Livestock Website'
+                                        source: 'Ferguson Livestock Website',
+                                        sms_consent: true,
+                                        sms_consent_recorded_at: consentRecordedAt,
+                                        sms_consent_source: 'Ferguson Livestock Website wait list'
                                     }
                                 }
                             }
                         };
-
-                        console.log('Step 3 - Updating profile:', JSON.stringify(updatePayload, null, 2));
 
                         const updateResponse = await fetch(`https://a.klaviyo.com/api/profiles/${profileId}/`, {
                             method: 'PATCH',
@@ -156,8 +157,6 @@ export const POST: APIRoute = async ({ request }) => {
                             body: JSON.stringify(updatePayload)
                         });
 
-                        console.log('Step 3 - Profile update response:', updateResponse.status);
-
                         // Add to list
                         const listPayload = {
                             data: [
@@ -167,8 +166,6 @@ export const POST: APIRoute = async ({ request }) => {
                                 }
                             ]
                         };
-
-                        console.log('Step 4 - Adding to list:', listId);
 
                         const listResponse = await fetch(`https://a.klaviyo.com/api/lists/${listId}/relationships/profiles/`, {
                             method: 'POST',
@@ -180,11 +177,7 @@ export const POST: APIRoute = async ({ request }) => {
                             body: JSON.stringify(listPayload)
                         });
 
-                        console.log('Step 4 - Add to list response:', listResponse.status);
-
                     } else {
-                        console.log('Step 2 - Profile NOT found, creating new one...');
-
                         // Profile doesn't exist - create it
                         const createPayload = {
                             data: {
@@ -195,13 +188,14 @@ export const POST: APIRoute = async ({ request }) => {
                                     properties: {
                                         postcode: data.postcode,
                                         source: 'Ferguson Livestock Website',
-                                        signup_date: new Date().toISOString()
+                                        signup_date: consentRecordedAt,
+                                        sms_consent: true,
+                                        sms_consent_recorded_at: consentRecordedAt,
+                                        sms_consent_source: 'Ferguson Livestock Website wait list'
                                     }
                                 }
                             }
                         };
-
-                        console.log('Step 3 - Creating profile:', JSON.stringify(createPayload, null, 2));
 
                         const createResponse = await fetch('https://a.klaviyo.com/api/profiles/', {
                             method: 'POST',
@@ -214,8 +208,6 @@ export const POST: APIRoute = async ({ request }) => {
                         });
 
                         const createText = await createResponse.text();
-                        console.log('Step 3 - Create profile response:', createResponse.status, createText);
-
                         if (createResponse.ok || createResponse.status === 201) {
                             const createData = JSON.parse(createText);
                             const newProfileId = createData.data.id;
@@ -230,8 +222,6 @@ export const POST: APIRoute = async ({ request }) => {
                                 ]
                             };
 
-                            console.log('Step 4 - Adding new profile to list:', listId);
-
                             const listResponse = await fetch(`https://a.klaviyo.com/api/lists/${listId}/relationships/profiles/`, {
                                 method: 'POST',
                                 headers: {
@@ -242,15 +232,12 @@ export const POST: APIRoute = async ({ request }) => {
                                 body: JSON.stringify(listPayload)
                             });
 
-                            console.log('Step 4 - Add to list response:', listResponse.status);
                         }
                     }
                 } catch (e) {
                     console.error('Error parsing search response:', e);
                 }
             }
-        } else {
-            console.log('No private API key - skipping verification');
         }
 
         return new Response(
@@ -269,7 +256,7 @@ export const POST: APIRoute = async ({ request }) => {
         return new Response(
             JSON.stringify({
                 success: false,
-                error: error instanceof Error ? error.message : 'An error occurred'
+                error: 'Unable to join the wait list right now'
             }),
             {
                 status: 500,

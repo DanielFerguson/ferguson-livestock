@@ -1,194 +1,135 @@
 ---
 import { Image } from "astro:assets";
 import heroImage from "../assets/images/cows-10.webp";
+import { brandContent } from "../config/content";
+import { bundles, formatAud, formatPerKg, products } from "../config/products";
+
+const fiveKgBox = products["beef-box-5kg"];
+const tenKgBox = bundles["beef-box-10kg"];
+const startingPrice = Math.min(fiveKgBox.price, tenKgBox.displayPrice);
 ---
 
 <main id="main-content">
-    <section id="order" class="noise-overlay relative min-h-[90vh] flex items-center py-16 lg:py-24 overflow-hidden">
-        <!-- Background Image with Parallax -->
-        <div id="hero-bg" class="absolute inset-0 -z-20 will-change-transform" style="top: -10%; height: 120%;">
-            <Image src={heroImage} alt="" class="w-full h-full object-cover" widths={[800, 1200, 1600, 2000]} sizes="100vw" loading="eager" />
+    <section
+        id="order"
+        class="noise-overlay relative flex items-center overflow-hidden py-16 md:py-20 lg:py-24"
+    >
+        <div
+            id="hero-bg"
+            class="absolute inset-0 -z-20 will-change-transform"
+            style="top: -10%; height: 120%;"
+        >
+            <Image
+                src={heroImage}
+                alt=""
+                class="h-full w-full object-cover"
+                widths={[800, 1200, 1600, 2000]}
+                sizes="100vw"
+                loading="eager"
+            />
         </div>
-        <!-- Gradient Overlay -->
         <div class="absolute inset-0 -z-10 bg-linear-to-br from-forest/95 via-forest-light/90 to-sage/85"></div>
-        <div class="max-w-6xl mx-auto px-6 relative z-10">
-            <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-                <!-- Left Column - Value Prop -->
+
+        <div class="relative z-10 mx-auto w-full max-w-6xl px-6">
+            <div class="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
                 <div class="text-cream">
-                    <div class="animate-fade-in-up inline-flex items-center gap-2 bg-mint/15 border border-mint/30 px-4 py-2 rounded-full text-sm font-medium text-mint-light mb-6">
-                        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
-                        Pasture-Raised Murray Grey Beef
+                    <div class="animate-fade-in-up mb-6 inline-flex items-center gap-2 border border-mint/30 bg-mint/15 px-4 py-2 text-sm font-medium text-mint-light">
+                        <svg class="h-4 w-4 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                        </svg>
+                        {brandContent.eyebrow}
                     </div>
-                    <h1 class="animate-fade-in-up animation-delay-100 font-display text-4xl md:text-5xl lg:text-6xl font-semibold leading-tight tracking-tight mb-6">
-                        Paddock to Door&nbsp;<br class="hidden lg:block" />Beef Boxes,&nbsp;<br class="hidden md:block" /><em class="not-italic text-mint-light">Delivered by Us</em>
+
+                    <h1 class="animate-fade-in-up animation-delay-100 mb-6 max-w-3xl font-display text-5xl font-semibold leading-[0.98] tracking-tight sm:text-6xl lg:text-7xl">
+                        Raised here.<br />
+                        <em class="not-italic text-mint-light">Delivered by us.</em>
                     </h1>
-                    <p class="animate-fade-in-up animation-delay-200 text-lg text-cream/85 mb-8 max-w-xl leading-relaxed">
-                        Premium pasture-raised beef from our family farm in Snake Valley, personally delivered to your door. No middlemen. No supermarkets. Just quality beef you can trust.
+
+                    <p class="animate-fade-in-up animation-delay-200 mb-8 max-w-2xl text-lg leading-relaxed text-cream/85 sm:text-xl">
+                        {brandContent.heroDescription}
                     </p>
-                    <div class="animate-fade-in-up animation-delay-300 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                        <div class="flex items-center gap-2.5 text-cream">
-                            <svg class="w-5 h-5 fill-mint flex-shrink-0" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg>Pasture-Raised
-                        </div>
-                        <div class="flex items-center gap-2.5 text-cream">
-                            <svg class="w-5 h-5 fill-mint flex-shrink-0" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg>Hormone-Free
-                        </div>
-                        <div class="flex items-center gap-2.5 text-cream">
-                            <svg class="w-5 h-5 fill-mint flex-shrink-0" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg>Vacuum-Sealed
-                        </div>
-                        <div class="flex items-center gap-2.5 text-cream">
-                            <svg class="w-5 h-5 fill-mint flex-shrink-0" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg>Supporting Local Farmers
-                        </div>
+
+                    <div class="animate-fade-in-up animation-delay-300 flex flex-wrap gap-x-6 gap-y-3 text-sm font-medium text-cream/90 sm:text-base">
+                        <span class="flex items-center gap-2">
+                            <svg class="h-5 w-5 fill-mint" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg>
+                            Pasture-raised
+                        </span>
+                        <span class="flex items-center gap-2">
+                            <svg class="h-5 w-5 fill-mint" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg>
+                            Murray Grey
+                        </span>
+                        <span class="flex items-center gap-2">
+                            <svg class="h-5 w-5 fill-mint" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg>
+                            Pickup or personal delivery
+                        </span>
                     </div>
                 </div>
 
-                <!-- Right Column - Dynamic content based on drop state -->
-                <div class="animate-fade-in-up animation-delay-400 space-y-6">
-                    <!-- Order Now CTA (shown when drop is active) -->
-                    <div id="hero-drop-active" class="hidden space-y-6">
-                        <div class="bg-mint/20 border border-mint/30 rounded-xl px-5 py-4 text-center">
-                            <p class="text-cream font-medium">Beef Box Drop — Now Open</p>
-                            <!-- <p class="text-mint-light text-sm mt-1">
-                                Free delivery to Ballarat and surrounding areas
-                            </p> -->
-                        </div>
+                <aside class="animate-fade-in-up animation-delay-400 border border-cream/20 bg-cream/95 p-6 shadow-2xl shadow-black/20 backdrop-blur sm:p-8" aria-labelledby="hero-offer-title">
+                    <p class="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-sage">Current availability</p>
+                    <h2 id="hero-offer-title" class="mb-2 font-display text-3xl font-semibold text-forest sm:text-4xl">
+                        Beef boxes from {formatAud(startingPrice)}
+                    </h2>
+                    <p id="hero-status-copy" class="mb-6 text-gray-600" aria-live="polite">
+                        Check the current drop, or join the next one if boxes have sold out.
+                    </p>
 
-                        <div class="grid gap-4">
-                            <div class="relative bg-cream rounded-2xl p-6 shadow-xl shadow-black/20">
-                                <div class="absolute -inset-0.5 bg-linear-to-br from-mint to-sage rounded-2xl -z-10 opacity-40"></div>
-                                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                    <div>
-                                        <div class="flex items-baseline gap-2 mb-1">
-                                            <h3 class="font-display text-2xl font-semibold text-forest">5kg Beef Box</h3>
-                                            <span class="text-sm text-sage font-medium">$32/kg</span>
-                                        </div>
-                                        <p class="text-3xl font-bold text-forest mb-2">$160</p>
-                                        <p class="text-sm text-gray-500">3/4kg Primary Cuts (Scotch, Porterhouse, Eye Fillet, T-Bone), 1.5kg Secondary Cuts (Rump, Osso, Schnitzel, Diced, Ribs, Oyster Blade), 1.5kg Roast, 1/2kg Sausages, 1kg Mince</p>
-                                    </div>
-                                </div>
+                    <div class="mb-6 divide-y divide-forest/10 border-y border-forest/10">
+                        <div class="flex items-center justify-between gap-4 py-4">
+                            <div>
+                                <p class="font-semibold text-forest">{fiveKgBox.name}</p>
+                                <p class="text-sm text-gray-500">{fiveKgBox.boxDetails!.bestFor}</p>
                             </div>
-
-                            <div class="relative bg-cream rounded-2xl p-6 shadow-xl shadow-black/20">
-                                <div class="absolute -inset-0.5 bg-linear-to-br from-warm to-warm-dark rounded-2xl -z-10 opacity-60"></div>
-                                <div class="absolute -top-3 left-6 bg-warm text-white text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full">Best Value</div>
-                                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-2">
-                                    <div>
-                                        <div class="flex items-baseline gap-2 mb-1">
-                                            <h3 class="font-display text-2xl font-semibold text-forest">10kg Beef Box</h3>
-                                            <span class="text-sm text-warm-dark font-medium">$27.50/kg</span>
-                                        </div>
-                                        <p class="text-3xl font-bold text-forest mb-2">$275</p>
-                                        <p class="text-sm text-gray-500">1.5kg Primary Cuts (Scotch, Porterhouse, Eye Fillet, T-Bone), 3kg Secondary Cuts (Rump, Osso, Schnitzel, Diced, Ribs & Oyster Blade), 3kg Roast, 1kg Sausages, 2kg Mince</p>
-                                    </div>
-                                </div>
+                            <div class="text-right">
+                                <p class="font-bold text-forest">{formatAud(fiveKgBox.price)}</p>
+                                <p class="text-xs text-sage">{formatPerKg(fiveKgBox.boxDetails!.perKgPrice)}</p>
                             </div>
                         </div>
-
-                        <a href="/order" class="block w-full bg-mint text-forest py-4 px-8 rounded-lg font-semibold text-lg text-center transition-all duration-300 hover:bg-mint-light hover:-translate-y-0.5 hover:shadow-lg"> Order Now </a>
+                        <div class="flex items-center justify-between gap-4 py-4">
+                            <div>
+                                <p class="font-semibold text-forest">{tenKgBox.name}</p>
+                                <p class="text-sm text-gray-500">{tenKgBox.boxDetails.bestFor}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-bold text-forest">{formatAud(tenKgBox.displayPrice)}</p>
+                                <p class="text-xs text-sage">{formatPerKg(tenKgBox.boxDetails.perKgPrice)}</p>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Extras Only (shown when boxes sold out but extras available) -->
-                    <div id="hero-extras-only" class="hidden space-y-6">
-                        <div class="bg-warm/20 border border-warm/30 rounded-xl px-5 py-4 text-center">
-                            <p class="text-cream font-medium">Beef Boxes Sold Out</p>
-                            <p class="text-mint-light text-sm mt-1">Additional cuts still available</p>
-                        </div>
-
-                        <div class="bg-cream/10 border border-cream/20 rounded-2xl p-6 text-center space-y-3">
-                            <p class="text-cream text-lg font-medium">Individual premium cuts are still up for grabs</p>
-                            <p class="text-cream/75 text-sm">Sausages, rump steaks, porterhouse, mince, bones, diced chuck — while stocks last.</p>
-                        </div>
-
-                        <a href="/order" class="block w-full bg-mint text-forest py-4 px-8 rounded-lg font-semibold text-lg text-center transition-all duration-300 hover:bg-mint-light hover:-translate-y-0.5 hover:shadow-lg"> Browse Available Cuts </a>
+                    <div class="grid gap-3 sm:grid-cols-2">
+                        <a
+                            id="hero-primary-cta"
+                            href="/order"
+                            class="bg-forest px-6 py-3.5 text-center font-semibold text-cream transition-colors hover:bg-sage"
+                        >View current availability</a>
+                        <a
+                            href="#about"
+                            class="border border-forest/20 px-6 py-3.5 text-center font-semibold text-forest transition-colors hover:border-sage hover:text-sage"
+                        >Meet Daniel &amp; Tahlia</a>
                     </div>
-
-                    <!-- Sold Out / Waitlist (shown when drop is inactive) -->
-                    <div id="hero-drop-inactive" class="hidden space-y-6">
-                        <div class="bg-mint/20 border border-mint/30 rounded-xl px-5 py-4 text-center">
-                            <p id="hero-inactive-title" class="text-cream font-medium">Sold out for this batch</p>
-                            <p id="hero-inactive-subtitle" class="text-mint-light text-sm mt-1">Next batch coming soon</p>
-                        </div>
-
-                        <div class="grid gap-4">
-                            <div class="relative bg-cream rounded-2xl p-6 shadow-xl shadow-black/20">
-                                <div class="absolute -inset-0.5 bg-linear-to-br from-mint to-sage rounded-2xl -z-10 opacity-40"></div>
-                                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                    <div>
-                                        <div class="flex items-baseline gap-2 mb-1">
-                                            <h3 class="font-display text-2xl font-semibold text-forest">5kg Beef Box</h3>
-                                            <span class="text-sm text-sage font-medium">$32/kg</span>
-                                        </div>
-                                        <p class="text-3xl font-bold text-forest mb-2">$160</p>
-                                        <p class="text-sm text-gray-500">3/4kg Primary Cuts (Scotch, Porterhouse, Eye Fillet, T-Bone), 1.5kg Secondary Cuts (Rump, Osso, Schnitzel, Diced, Ribs, Oyster Blade), 1.5kg Roast, 1/2kg Sausages, 1kg Mince</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="relative bg-cream rounded-2xl p-6 shadow-xl shadow-black/20">
-                                <div class="absolute -inset-0.5 bg-linear-to-br from-warm to-warm-dark rounded-2xl -z-10 opacity-60"></div>
-                                <div class="absolute -top-3 left-6 bg-warm text-white text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full">Best Value</div>
-                                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-2">
-                                    <div>
-                                        <div class="flex items-baseline gap-2 mb-1">
-                                            <h3 class="font-display text-2xl font-semibold text-forest">10kg Beef Box</h3>
-                                            <span class="text-sm text-warm-dark font-medium">$27.50/kg</span>
-                                        </div>
-                                        <p class="text-3xl font-bold text-forest mb-2">$275</p>
-                                        <p class="text-sm text-gray-500">1.5kg Primary Cuts (Scotch, Porterhouse, Eye Fillet, T-Bone), 3kg Secondary Cuts (Rump, Osso, Schnitzel, Diced, Ribs & Oyster Blade), 3kg Roast, 1kg Sausages, 2kg Mince</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center justify-center gap-2 text-cream/80 text-sm">
-                            <svg class="w-4 h-4 fill-mint-light" viewBox="0 0 24 24">
-                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path>
-                            </svg>
-                            Sold out for now - join the wait list to be first in line
-                        </div>
-                        <p class="text-center text-cream/70 text-sm">
-                            Want a reminder? <a href="#waitlist" class="underline underline-offset-2 hover:text-mint-light transition-colors">Join the wait list</a> for the next batch.
-                        </p>
-                    </div>
-                </div>
+                </aside>
             </div>
         </div>
     </section>
 
     <script>
         const heroBg = document.getElementById("hero-bg");
-        if (heroBg) {
-            const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-            if (!prefersReducedMotion) {
-                window.addEventListener(
-                    "scroll",
-                    () => {
-                        const scrollY = window.scrollY;
-                        heroBg.style.transform = `translateY(${scrollY * 0.4}px)`;
-                    },
-                    { passive: true },
-                );
-            }
+        const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        if (heroBg && !prefersReducedMotion) {
+            window.addEventListener(
+                "scroll",
+                () => {
+                    heroBg.style.transform = `translateY(${window.scrollY * 0.25}px)`;
+                },
+                { passive: true },
+            );
         }
 
-        document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
-            anchor.addEventListener("click", function (e) {
-                e.preventDefault();
-                const href = (e.currentTarget as HTMLAnchorElement).getAttribute("href");
-                if (href) {
-                    const target = document.querySelector(href);
-                    if (target)
-                        target.scrollIntoView({
-                            behavior: "smooth",
-                            block: "start",
-                        });
-                }
-            });
-        });
-
-        // Check drop status and toggle hero content
-        const heroActive = document.getElementById("hero-drop-active");
-        const heroExtrasOnly = document.getElementById("hero-extras-only");
-        const heroInactive = document.getElementById("hero-drop-inactive");
+        const statusCopy = document.getElementById("hero-status-copy");
+        const primaryCta = document.getElementById("hero-primary-cta") as HTMLAnchorElement | null;
+        const excludeFromExtras = new Set(["beef-box-5kg", "delivery-fee"]);
 
         function formatLaunchDate(epoch: number): string {
             return new Intl.DateTimeFormat("en-AU", {
@@ -201,45 +142,41 @@ import heroImage from "../assets/images/cows-10.webp";
             }).format(new Date(epoch * 1000));
         }
 
-        const excludeFromExtras = new Set(["beef-box-5kg", "delivery-fee"]);
+        fetch("/api/stock")
+            .then((response) => response.json())
+            .then((data: { active: boolean; stock: Record<string, number>; launchAt: number | null }) => {
+                if (!statusCopy || !primaryCta) return;
 
-        if (heroActive && heroExtrasOnly && heroInactive) {
-            fetch("/api/stock")
-                .then((res) => res.json())
-                .then((data: { active: boolean; stock: Record<string, number>; launchAt: number | null }) => {
-                    const boxStock = data.stock["beef-box-5kg"] ?? 0;
-                    const hasExtrasStock = Object.entries(data.stock).some(
-                        ([key, qty]) => !excludeFromExtras.has(key) && qty > 0,
-                    );
+                const boxStock = data.stock["beef-box-5kg"] ?? 0;
+                const hasExtrasStock = Object.entries(data.stock).some(
+                    ([key, quantity]) => !excludeFromExtras.has(key) && quantity > 0,
+                );
 
-                    if (data.active && boxStock > 0) {
-                        heroActive.classList.remove("hidden");
+                if (data.active && boxStock > 0) {
+                    statusCopy.textContent = "The current beef-box drop is open while stock lasts.";
+                    primaryCta.textContent = "Shop this drop";
+                    primaryCta.href = "/order";
+                    return;
+                }
 
-                        // Update stock counts
-                        const stock5kg = document.getElementById("hero-5kg-stock");
-                        const stock10kg = document.getElementById("hero-10kg-stock");
-                        if (stock5kg) stock5kg.textContent = `${boxStock} left`;
-                        if (stock10kg) {
-                            const available10kg = Math.floor(boxStock / 2);
-                            stock10kg.textContent = available10kg > 0 ? `${available10kg} left` : "Sold out";
-                        }
-                    } else if (data.active && hasExtrasStock) {
-                        heroExtrasOnly.classList.remove("hidden");
-                    } else {
-                        heroInactive.classList.remove("hidden");
+                if (data.active && hasExtrasStock) {
+                    statusCopy.textContent = "Beef boxes are sold out, but selected individual cuts are still available.";
+                    primaryCta.textContent = "Shop available cuts";
+                    primaryCta.href = "/order";
+                    return;
+                }
 
-                        // Show launch date if scheduled
-                        if (data.launchAt && data.launchAt * 1000 > Date.now()) {
-                            const title = document.getElementById("hero-inactive-title");
-                            const subtitle = document.getElementById("hero-inactive-subtitle");
-                            if (title) title.textContent = "Next drop launching soon!";
-                            if (subtitle) subtitle.textContent = `Orders open ${formatLaunchDate(data.launchAt)}`;
-                        }
-                    }
-                })
-                .catch(() => {
-                    heroInactive.classList.remove("hidden");
-                });
-        }
+                statusCopy.textContent = data.launchAt && data.launchAt * 1000 > Date.now()
+                    ? `The next drop opens ${formatLaunchDate(data.launchAt)}.`
+                    : "The next beef-box drop is being prepared now.";
+                primaryCta.textContent = "Join the next drop";
+                primaryCta.href = "#waitlist";
+            })
+            .catch(() => {
+                if (!statusCopy || !primaryCta) return;
+                statusCopy.textContent = "Join the wait list and we’ll text you when the next drop opens.";
+                primaryCta.textContent = "Join the next drop";
+                primaryCta.href = "#waitlist";
+            });
     </script>
 </main>

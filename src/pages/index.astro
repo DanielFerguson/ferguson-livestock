@@ -3,75 +3,38 @@ import Layout from "../components/Layout.astro";
 import AnnouncementBar from "../components/AnnouncementBar.astro";
 import Header from "../components/Header.astro";
 import Hero from "../components/Hero.astro";
-import AccoladesMarquee from "../components/AccoladesMarquee.astro";
-import Comparison from "../components/Comparison.astro";
+import BrandProof from "../components/BrandProof.astro";
 import MeetTheFergusons from "../components/MeetTheFergusons.astro";
 import WhyMurrayGrey from "../components/WhyMurrayGrey.astro";
-import HealthBenefits from "../components/HealthBenefits.astro";
-import PaddockToPlate from "../components/PaddockToPlate.astro";
-import OurPractices from "../components/OurPractices.astro";
-import SupportLocal from "../components/SupportLocal.astro";
 import HowItWorks from "../components/HowItWorks.astro";
-import WhyChooseUs from "../components/WhyChooseUs.astro";
 import WhatsInTheBox from "../components/WhatsInTheBox.astro";
-import Testimonials from "../components/Testimonials.astro";
-import Guarantee from "../components/Guarantee.astro";
 import FAQ from "../components/FAQ.astro";
 import WaitlistForm from "../components/WaitlistForm.astro";
-import FinalCTA from "../components/FinalCTA.astro";
 import Footer from "../components/Footer.astro";
+import { brandContent } from "../config/content";
+import { buildHomeStructuredData } from "../lib/seo";
 
 const pageTitle =
-	"Ferguson Livestock | Premium Pasture-Raised Beef Boxes Direct from Our Farm";
-const pageDescription =
-	"Premium pasture-raised Murray Grey beef boxes delivered direct from our family farm in Snake Valley, Victoria. Hormone-free, ethically raised cattle. Join the wait list for the next batch in early April.";
+	"Murray Grey Beef Boxes Ballarat | Ferguson Livestock";
+const pageDescription = brandContent.shortDescription;
+const structuredData = buildHomeStructuredData(pageTitle, pageDescription);
 ---
 
-<Layout title={pageTitle} description={pageDescription} image="/og-image.jpg">
+<Layout
+	title={pageTitle}
+	description={pageDescription}
+	image="/og-image.jpg"
+	structuredData={structuredData}
+>
 	<AnnouncementBar />
-	<AccoladesMarquee />
 	<Header />
 	<div id="hero"><Hero /></div>
-	<div id="comparison"><Comparison /></div>
+	<BrandProof />
 	<div id="about"><MeetTheFergusons /></div>
-	<div id="testimonials"><Testimonials /></div>
-	<div id="why-us"><WhyChooseUs /></div>
-	<div id="murray-grey"><WhyMurrayGrey /></div>
-	<div id="how-it-works"><HowItWorks /></div>
 	<div id="whats-in-the-box"><WhatsInTheBox /></div>
-	<div id="paddock-to-plate"><PaddockToPlate /></div>
-	<div id="health-benefits"><HealthBenefits /></div>
-	<div id="our-practices"><OurPractices /></div>
-	<div id="support-local"><SupportLocal /></div>
-	<div id="guarantee"><Guarantee /></div>
+	<div id="how-it-works"><HowItWorks /></div>
+	<div id="murray-grey"><WhyMurrayGrey /></div>
 	<div id="faq"><FAQ /></div>
 	<WaitlistForm />
-	<div id="contact"><FinalCTA /></div>
 	<Footer />
 </Layout>
-
-<script>
-	declare const posthog:
-		| { capture: (event: string, properties?: Record<string, any>) => void }
-		| undefined;
-
-	let scrolledToBottom = false;
-
-	const footer = document.querySelector("footer");
-	if (footer && typeof IntersectionObserver !== "undefined") {
-		const observer = new IntersectionObserver(
-			(entries) => {
-				if (entries[0].isIntersecting && !scrolledToBottom) {
-					scrolledToBottom = true;
-					if (typeof posthog !== "undefined") {
-						posthog.capture("page_scrolled_to_bottom");
-					}
-					observer.disconnect();
-				}
-			},
-			{ threshold: 0.1 },
-		);
-
-		observer.observe(footer);
-	}
-</script>

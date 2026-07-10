@@ -1,0 +1,19 @@
+---
+import Layout from "../components/Layout.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import FAQ from "../components/FAQ.astro";
+import { business } from "../config/business";
+import { buildWebPageSchema } from "../lib/seo";
+
+const title = "Beef Box Questions and Answers | Ferguson Livestock";
+const description = "Straight answers about Ferguson Livestock beef-box contents, prices, individual cuts, delivery, pickup, farming and sold-out drops.";
+const url = `${business.siteUrl}/faq`;
+const structuredData = buildWebPageSchema({ url, title, description });
+---
+
+<Layout title={title} description={description} structuredData={structuredData}>
+    <Header />
+    <main id="main-content"><FAQ headingLevel={1} /></main>
+    <Footer />
+</Layout>

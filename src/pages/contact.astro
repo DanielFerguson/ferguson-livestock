@@ -1,0 +1,33 @@
+---
+import Layout from "../components/Layout.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import { business } from "../config/business";
+import { buildWebPageSchema } from "../lib/seo";
+
+const title = "Contact Daniel and Tahlia | Ferguson Livestock";
+const description = "Talk directly with Daniel and Tahlia Ferguson about Murray Grey beef boxes, Ballarat-region delivery or farm pickup in Snake Valley.";
+const url = `${business.siteUrl}/contact`;
+const structuredData = buildWebPageSchema({ url, title, description, type: "ContactPage" });
+---
+
+<Layout title={title} description={description} structuredData={structuredData}>
+    <Header />
+    <main id="main-content" class="bg-cream py-16 lg:py-24">
+        <div class="mx-auto grid max-w-5xl gap-12 px-6 lg:grid-cols-2">
+            <div>
+                <p class="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-sage">Talk to the farmers</p>
+                <h1 class="mb-6 font-display text-5xl font-semibold leading-none text-forest sm:text-6xl">Questions? You’ll reach Daniel or Tahlia.</h1>
+                <p class="text-xl leading-relaxed text-gray-700">Ask about the next drop, box contents, delivery, pickup or the Murray Grey cattle behind Ferguson Livestock.</p>
+            </div>
+            <div class="border border-forest/10 bg-white p-8 sm:p-10">
+                <dl class="space-y-7">
+                    <div><dt class="text-xs font-semibold uppercase tracking-[0.18em] text-sage">Phone or text</dt><dd class="mt-2"><a class="font-display text-3xl text-forest no-underline hover:text-sage" href={`tel:${business.phone.international}`}>{business.phone.display}</a></dd></div>
+                    <div><dt class="text-xs font-semibold uppercase tracking-[0.18em] text-sage">Email</dt><dd class="mt-2"><a class="break-words text-lg text-forest no-underline hover:text-sage" href={`mailto:${business.email}`}>{business.email}</a></dd></div>
+                    <div><dt class="text-xs font-semibold uppercase tracking-[0.18em] text-sage">Farm</dt><dd class="mt-2 text-lg text-gray-700">{business.location.locality}, {business.location.region}<br />Visits and pickup by arrangement.</dd></div>
+                </dl>
+            </div>
+        </div>
+    </main>
+    <Footer />
+</Layout>

@@ -3,17 +3,43 @@ import Layout from "../components/Layout.astro";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import WaitlistForm from "../components/WaitlistForm.astro";
+import { business } from "../config/business";
+import { bundles, formatAud, formatPerKg, products } from "../config/products";
 
 export const prerender = false;
 
 const pageTitle = "Order Your Beef Box | Ferguson Livestock";
 const pageDescription = "Order premium pasture-raised Murray Grey beef boxes direct from our family farm. Choose your box size and add optional extras.";
+
+const fiveKgBox = products["beef-box-5kg"];
+const tenKgBox = bundles["beef-box-10kg"];
+const delivery = products[business.delivery.feeProductId];
+const extraProducts = Object.fromEntries(
+    Object.entries(products).filter(([, product]) => product.type === "extra"),
+);
+const boxPrices = {
+    "5kg": fiveKgBox.price,
+    "10kg": tenKgBox.displayPrice,
+};
+const extraPrices = Object.fromEntries(
+    Object.entries(extraProducts).map(([id, product]) => [id, product.price]),
+);
+const extraNames = Object.fromEntries(
+    Object.entries(extraProducts).map(([id, product]) => [id, product.name]),
+);
 ---
 
-<Layout title={pageTitle} description={pageDescription}>
+<Layout title={pageTitle} description={pageDescription} robots="noindex, follow">
     <Header />
 
-    <main class="bg-cream-dark min-h-screen">
+    <main
+        id="main-content"
+        class="bg-cream-dark min-h-screen"
+        data-box-prices={JSON.stringify(boxPrices)}
+        data-extra-prices={JSON.stringify(extraPrices)}
+        data-extra-names={JSON.stringify(extraNames)}
+        data-delivery-fee={delivery.price}
+    >
         <!-- Hero Banner -->
         <section class="bg-forest py-16 lg:py-20">
             <div class="max-w-4xl mx-auto px-6 text-center">
@@ -21,10 +47,10 @@ const pageDescription = "Order premium pasture-raised Murray Grey beef boxes dir
                     <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
                     </svg>
-                    Beef Box Drop — Now Open
+                    Checking Current Availability
                 </div>
-                <h1 class="font-display text-4xl md:text-5xl font-semibold text-cream tracking-tight mb-4">Order Your Beef Box</h1>
-                <p class="text-lg text-cream/80 max-w-2xl mx-auto">Premium pasture-raised Murray Grey beef, vacuum-sealed and personally delivered to your door.</p>
+                <h1 class="font-display text-4xl md:text-5xl font-semibold text-cream tracking-tight mb-4">Shop the Current Beef Drop</h1>
+                <p class="text-lg text-cream/80 max-w-2xl mx-auto">Murray Grey beef from our Snake Valley farm, professionally packed and available for personal delivery or farm pickup.</p>
             </div>
         </section>
 
@@ -51,7 +77,9 @@ const pageDescription = "Order premium pasture-raised Murray Grey beef boxes dir
                 </div>
 
                 <!-- Order Form (active state) -->
-                <div id="order-form" class="hidden space-y-8">
+                <div id="order-form" class="hidden">
+                    <div class="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
+                        <div class="space-y-6">
                     <!-- Step 1: Choose Your Box -->
                     <div id="box-section" class="bg-white rounded-2xl shadow-xl border border-forest/5 p-6 md:p-8">
                         <div class="flex items-center gap-3 mb-6">
@@ -68,14 +96,14 @@ const pageDescription = "Order premium pasture-raised Murray Grey beef boxes dir
                             >
                                 <div class="flex items-baseline justify-between gap-2 mb-1">
                                     <div class="flex items-baseline gap-2">
-                                        <h3 class="font-display text-xl font-semibold text-forest">5kg Beef Box</h3>
-                                        <span class="text-sm text-sage font-medium">$32/kg</span>
+                                        <h3 class="font-display text-xl font-semibold text-forest">{fiveKgBox.name}</h3>
+                                        <span class="text-sm text-sage font-medium">{formatPerKg(fiveKgBox.boxDetails!.perKgPrice)}</span>
                                     </div>
                                     <span class="box-stock text-sm font-semibold text-sage" data-product="beef-box-5kg"></span>
                                 </div>
-                                <p class="text-2xl font-bold text-forest">$160</p>
+                                <p class="text-2xl font-bold text-forest">{formatAud(fiveKgBox.price)}</p>
                                 <p class="text-sm text-gray-500 mt-2">
-                                    3/4kg Primary Cuts (Scotch, Porterhouse, Eye Fillet, T-Bone), 1.5kg Secondary Cuts (Rump, Osso, Schnitzel, Diced, Ribs, Oyster Blade), 1.5kg Roast, 1/2kg Sausages, 1kg Mince
+                                    {fiveKgBox.description}
                                 </p>
                                 <div class="box-check absolute top-3 right-3 w-6 h-6 bg-sage rounded-full flex items-center justify-center opacity-0 transition-opacity duration-200">
                                     <svg class="w-4 h-4 fill-white" viewBox="0 0 24 24">
@@ -96,14 +124,14 @@ const pageDescription = "Order premium pasture-raised Murray Grey beef boxes dir
                                 <div class="absolute -top-3 left-5 bg-warm text-white text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full">Best Value</div>
                                 <div class="flex items-baseline justify-between gap-2 mb-1 mt-1">
                                     <div class="flex items-baseline gap-2">
-                                        <h3 class="font-display text-xl font-semibold text-forest">10kg Beef Box</h3>
-                                        <span class="text-sm text-warm-dark font-medium">$27.50/kg</span>
+                                        <h3 class="font-display text-xl font-semibold text-forest">{tenKgBox.name}</h3>
+                                        <span class="text-sm text-warm-dark font-medium">{formatPerKg(tenKgBox.boxDetails.perKgPrice)}</span>
                                     </div>
                                     <span class="box-stock text-sm font-semibold text-warm-dark" data-product="beef-box-5kg" data-requires="2"></span>
                                 </div>
-                                <p class="text-2xl font-bold text-forest">$275</p>
+                                <p class="text-2xl font-bold text-forest">{formatAud(tenKgBox.displayPrice)}</p>
                                 <p class="text-sm text-gray-500 mt-2">
-                                    1.5kg Primary Cuts (Scotch, Porterhouse, Eye Fillet, T-Bone), 3kg Secondary Cuts (Rump, Osso, Schnitzel, Diced, Ribs & Oyster Blade), 3kg Roast, 1kg Sausages, 2kg Mince
+                                    {tenKgBox.description}
                                 </p>
                                 <div class="box-check absolute top-3 right-3 w-6 h-6 bg-warm rounded-full flex items-center justify-center opacity-0 transition-opacity duration-200">
                                     <svg class="w-4 h-4 fill-white" viewBox="0 0 24 24">
@@ -131,13 +159,13 @@ const pageDescription = "Order premium pasture-raised Murray Grey beef boxes dir
 
                         <div class="space-y-4" id="extras-list">
                             <!-- 500g Beef Mince -->
-                            <div class="extra-item flex items-center justify-between gap-4 bg-cream rounded-xl p-5" data-product="beef-mince-500g" data-price="1200">
+                            <div class="extra-item flex flex-col items-stretch justify-between gap-4 bg-cream rounded-xl p-5 sm:flex-row sm:items-center" data-product="beef-mince-500g" data-price={products["beef-mince-500g"].price}>
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-baseline gap-2 flex-wrap">
-                                        <h3 class="font-semibold text-forest">500g Beef Mince</h3>
-                                        <span class="text-sm font-bold text-forest">$12</span>
+                                        <h3 class="font-semibold text-forest">{products["beef-mince-500g"].name}</h3>
+                                        <span class="text-sm font-bold text-forest">{formatAud(products["beef-mince-500g"].price)}</span>
                                     </div>
-                                    <p class="text-sm text-gray-500">Premium grass-fed beef mince</p>
+                                    <p class="text-sm text-gray-500">{products["beef-mince-500g"].description}</p>
                                     <span class="extra-stock text-xs font-medium text-sage mt-1 inline-block"></span>
                                 </div>
                                 <div class="flex items-center gap-2">
@@ -159,13 +187,13 @@ const pageDescription = "Order premium pasture-raised Murray Grey beef boxes dir
                             </div>
 
                             <!-- 2kg Beef Bones -->
-                            <div class="extra-item flex items-center justify-between gap-4 bg-cream rounded-xl p-5" data-product="beef-bones-2kg" data-price="1000">
+                            <div class="extra-item flex flex-col items-stretch justify-between gap-4 bg-cream rounded-xl p-5 sm:flex-row sm:items-center" data-product="beef-bones-2kg" data-price={products["beef-bones-2kg"].price}>
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-baseline gap-2 flex-wrap">
-                                        <h3 class="font-semibold text-forest">2kg Beef Bones</h3>
-                                        <span class="text-sm font-bold text-forest">$10</span>
+                                        <h3 class="font-semibold text-forest">{products["beef-bones-2kg"].name}</h3>
+                                        <span class="text-sm font-bold text-forest">{formatAud(products["beef-bones-2kg"].price)}</span>
                                     </div>
-                                    <p class="text-sm text-gray-500">Great for stock, broth, or pet bones</p>
+                                    <p class="text-sm text-gray-500">{products["beef-bones-2kg"].description}</p>
                                     <span class="extra-stock text-xs font-medium text-sage mt-1 inline-block"></span>
                                 </div>
                                 <div class="flex items-center gap-2">
@@ -187,13 +215,13 @@ const pageDescription = "Order premium pasture-raised Murray Grey beef boxes dir
                             </div>
 
                             <!-- Sausage Packs (6) -->
-                            <div class="extra-item flex items-center justify-between gap-4 bg-cream rounded-xl p-5" data-product="sausage-packs-6" data-price="1200">
+                            <div class="extra-item flex flex-col items-stretch justify-between gap-4 bg-cream rounded-xl p-5 sm:flex-row sm:items-center" data-product="sausage-packs-6" data-price={products["sausage-packs-6"].price}>
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-baseline gap-2 flex-wrap">
-                                        <h3 class="font-semibold text-forest">Sausage Pack (6)</h3>
-                                        <span class="text-sm font-bold text-forest">$12</span>
+                                        <h3 class="font-semibold text-forest">{products["sausage-packs-6"].name}</h3>
+                                        <span class="text-sm font-bold text-forest">{formatAud(products["sausage-packs-6"].price)}</span>
                                     </div>
-                                    <p class="text-sm text-gray-500">Six premium beef sausages</p>
+                                    <p class="text-sm text-gray-500">{products["sausage-packs-6"].description}</p>
                                     <span class="extra-stock text-xs font-medium text-sage mt-1 inline-block"></span>
                                 </div>
                                 <div class="flex items-center gap-2">
@@ -215,13 +243,13 @@ const pageDescription = "Order premium pasture-raised Murray Grey beef boxes dir
                             </div>
 
                             <!-- Rump Steak (2) -->
-                            <div class="extra-item flex items-center justify-between gap-4 bg-cream rounded-xl p-5" data-product="rump-steak-2" data-price="2000">
+                            <div class="extra-item flex flex-col items-stretch justify-between gap-4 bg-cream rounded-xl p-5 sm:flex-row sm:items-center" data-product="rump-steak-2" data-price={products["rump-steak-2"].price}>
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-baseline gap-2 flex-wrap">
-                                        <h3 class="font-semibold text-forest">Rump Steak Pack (2)</h3>
-                                        <span class="text-sm font-bold text-forest">$20</span>
+                                        <h3 class="font-semibold text-forest">{products["rump-steak-2"].name}</h3>
+                                        <span class="text-sm font-bold text-forest">{formatAud(products["rump-steak-2"].price)}</span>
                                     </div>
-                                    <p class="text-sm text-gray-500">Two grass-fed rump steaks</p>
+                                    <p class="text-sm text-gray-500">{products["rump-steak-2"].description}</p>
                                     <span class="extra-stock text-xs font-medium text-sage mt-1 inline-block"></span>
                                 </div>
                                 <div class="flex items-center gap-2">
@@ -243,13 +271,13 @@ const pageDescription = "Order premium pasture-raised Murray Grey beef boxes dir
                             </div>
 
                             <!-- Porterhouse -->
-                            <div class="extra-item flex items-center justify-between gap-4 bg-cream rounded-xl p-5" data-product="porterhouse" data-price="1800">
+                            <div class="extra-item flex flex-col items-stretch justify-between gap-4 bg-cream rounded-xl p-5 sm:flex-row sm:items-center" data-product="porterhouse" data-price={products.porterhouse.price}>
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-baseline gap-2 flex-wrap">
-                                        <h3 class="font-semibold text-forest">Porterhouse Steak</h3>
-                                        <span class="text-sm font-bold text-forest">$18</span>
+                                        <h3 class="font-semibold text-forest">{products.porterhouse.name}</h3>
+                                        <span class="text-sm font-bold text-forest">{formatAud(products.porterhouse.price)}</span>
                                     </div>
-                                    <p class="text-sm text-gray-500">Premium porterhouse steak</p>
+                                    <p class="text-sm text-gray-500">{products.porterhouse.description}</p>
                                     <span class="extra-stock text-xs font-medium text-sage mt-1 inline-block"></span>
                                 </div>
                                 <div class="flex items-center gap-2">
@@ -271,13 +299,13 @@ const pageDescription = "Order premium pasture-raised Murray Grey beef boxes dir
                             </div>
 
                             <!-- Diced Chuck -->
-                            <div class="extra-item flex items-center justify-between gap-4 bg-cream rounded-xl p-5" data-product="diced-chuck" data-price="1300">
+                            <div class="extra-item flex flex-col items-stretch justify-between gap-4 bg-cream rounded-xl p-5 sm:flex-row sm:items-center" data-product="diced-chuck" data-price={products["diced-chuck"].price}>
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-baseline gap-2 flex-wrap">
-                                        <h3 class="font-semibold text-forest">500g Diced Chuck</h3>
-                                        <span class="text-sm font-bold text-forest">$13</span>
+                                        <h3 class="font-semibold text-forest">{products["diced-chuck"].name}</h3>
+                                        <span class="text-sm font-bold text-forest">{formatAud(products["diced-chuck"].price)}</span>
                                     </div>
-                                    <p class="text-sm text-gray-500">Diced chuck steak, great for slow cooking</p>
+                                    <p class="text-sm text-gray-500">{products["diced-chuck"].description}</p>
                                     <span class="extra-stock text-xs font-medium text-sage mt-1 inline-block"></span>
                                 </div>
                                 <div class="flex items-center gap-2">
@@ -323,10 +351,10 @@ const pageDescription = "Order premium pasture-raised Murray Grey beef boxes dir
                                     </svg>
                                 </div>
                                 <div class="flex items-baseline gap-2">
-                                    <h3 class="font-semibold text-forest">Delivery</h3>
-                                    <span class="text-sm font-bold text-forest">$15</span>
+                                    <h3 class="font-semibold text-forest">{delivery.name}</h3>
+                                    <span class="text-sm font-bold text-forest">{formatAud(delivery.price)}</span>
                                 </div>
-                                <p class="text-sm text-gray-500 mt-1">Flat fee delivery to your door in the Ballarat region</p>
+                                <p class="text-sm text-gray-500 mt-1">{delivery.description}</p>
                             </button>
 
                             <button
@@ -340,20 +368,22 @@ const pageDescription = "Order premium pasture-raised Murray Grey beef boxes dir
                                     </svg>
                                 </div>
                                 <div class="flex items-baseline gap-2">
-                                    <h3 class="font-semibold text-forest">Farm Pickup</h3>
+                                    <h3 class="font-semibold text-forest">{business.pickup.label}</h3>
                                     <span class="text-sm font-bold text-sage">Free</span>
                                 </div>
-                                <p class="text-sm text-gray-500 mt-1">Collect from <a href="https://maps.google.com/?q=Ferguson+Livestock+Snake+Valley+VIC" target="_blank" rel="noopener noreferrer" class="underline text-forest hover:text-sage transition-colors">Ferguson Livestock farm, Snake Valley</a></p>
-                                <p class="text-sm text-gray-500">Saturday 4th April or Sunday 5th April, 10am&ndash;3pm</p>
+                                <p class="text-sm text-gray-500 mt-1">{business.pickup.description}</p>
                             </button>
                         </div>
                     </div>
 
+                        </div>
+
+                        <aside class="space-y-5 lg:sticky lg:top-28">
                     <!-- Order Summary & Checkout -->
-                    <div id="summary-section" class="bg-white rounded-2xl shadow-xl border border-forest/5 p-6 md:p-8 opacity-50 pointer-events-none transition-opacity duration-300">
+                    <div id="summary-section" class="bg-white rounded-sm border border-forest/10 p-6 opacity-50 pointer-events-none transition-opacity duration-300 lg:p-7">
                         <div class="flex items-center gap-3 mb-6">
                             <span class="inline-flex items-center justify-center w-8 h-8 bg-forest text-cream text-sm font-bold rounded-full">4</span>
-                            <h2 class="font-display text-2xl md:text-3xl font-semibold text-forest">Order Summary</h2>
+                            <h2 class="font-display text-2xl font-semibold text-forest">Your order</h2>
                         </div>
 
                         <div id="summary-items" class="space-y-3 mb-6">
@@ -374,7 +404,7 @@ const pageDescription = "Order premium pasture-raised Murray Grey beef boxes dir
                             >
                                 Proceed to Checkout
                             </button>
-                            <p class="text-center text-xs text-gray-400">You'll enter your delivery details and payment on the next page via Stripe.</p>
+                            <p class="text-center text-xs text-gray-500">Delivery details and secure payment are completed on the next page.</p>
                         </div>
 
                         <!-- Error Message -->
@@ -382,7 +412,7 @@ const pageDescription = "Order premium pasture-raised Murray Grey beef boxes dir
                     </div>
 
                     <!-- Trust Signals -->
-                    <div class="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-gray-400 pt-4">
+                    <div class="grid gap-3 border border-forest/10 bg-cream/70 p-5 text-sm text-gray-500">
                         <div class="flex items-center gap-2">
                             <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
                                 <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"></path>
@@ -401,8 +431,10 @@ const pageDescription = "Order premium pasture-raised Murray Grey beef boxes dir
                             <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
                                 <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path>
                             </svg>
-                            Pasture-raised & hormone-free
+                            Pasture-raised Murray Grey beef
                         </div>
+                    </div>
+                        </aside>
                     </div>
                 </div>
             </div>
@@ -450,26 +482,13 @@ const pageDescription = "Order premium pasture-raised Murray Grey beef boxes dir
         const waitlistFallback = document.getElementById("waitlist-fallback")!;
         const boxSection = document.getElementById("box-section")!;
         const heroBadge = document.getElementById("hero-badge")!;
+        const orderPage = document.getElementById("main-content") as HTMLElement;
 
-        // Prices in cents
-        const BOX_PRICES: Record<string, number> = { "5kg": 16000, "10kg": 27500 };
-        const EXTRA_PRICES: Record<string, number> = {
-            "beef-mince-500g": 1200,
-            "beef-bones-2kg": 1000,
-            "sausage-packs-6": 1200,
-            "rump-steak-2": 2000,
-            "porterhouse": 1800,
-            "diced-chuck": 1300,
-        };
-        const EXTRA_NAMES: Record<string, string> = {
-            "beef-mince-500g": "500g Beef Mince",
-            "beef-bones-2kg": "2kg Beef Bones",
-            "sausage-packs-6": "Sausage Pack (6)",
-            "rump-steak-2": "Rump Steak Pack (2)",
-            "porterhouse": "Porterhouse Steak",
-            "diced-chuck": "500g Diced Chuck",
-        };
-        const DELIVERY_FEE = 1500;
+        // Commercial values are rendered from the shared catalogue configuration.
+        const BOX_PRICES = JSON.parse(orderPage.dataset.boxPrices ?? "{}") as Record<string, number>;
+        const EXTRA_PRICES = JSON.parse(orderPage.dataset.extraPrices ?? "{}") as Record<string, number>;
+        const EXTRA_NAMES = JSON.parse(orderPage.dataset.extraNames ?? "{}") as Record<string, string>;
+        const DELIVERY_FEE = Number(orderPage.dataset.deliveryFee ?? 0);
 
         const EXTRA_PRODUCT_IDS = Object.keys(EXTRA_PRICES);
 

@@ -1,0 +1,27 @@
+---
+import Layout from "../components/Layout.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+---
+
+<Layout
+  title="Page Not Found | Ferguson Livestock"
+  description="The page you were looking for could not be found."
+  robots="noindex, follow"
+>
+  <Header />
+  <main id="main-content" class="bg-cream px-6 py-24 text-center lg:py-36">
+    <p class="mb-4 text-xs font-bold uppercase tracking-[0.24em] text-sage">404 · Wrong paddock</p>
+    <h1 class="mx-auto max-w-2xl font-display text-5xl font-semibold text-forest md:text-7xl">
+      This page has wandered off.
+    </h1>
+    <p class="mx-auto mt-6 max-w-xl text-lg leading-8 text-gray-600">
+      Head back home, browse the current beef drop, or get in touch with Daniel and Tahlia if you need a hand.
+    </p>
+    <div class="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
+      <a href="/" class="bg-forest px-7 py-3.5 font-semibold text-cream transition-colors hover:bg-sage">Back home</a>
+      <a href="/order" class="border border-forest/20 px-7 py-3.5 font-semibold text-forest transition-colors hover:border-forest">Shop the current drop</a>
+    </div>
+  </main>
+  <Footer />
+</Layout>

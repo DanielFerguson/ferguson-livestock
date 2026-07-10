@@ -1,0 +1,40 @@
+---
+import Layout from "../components/Layout.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import { business } from "../config/business";
+import { formatAud, products } from "../config/products";
+import { buildWebPageSchema } from "../lib/seo";
+
+const delivery = products[business.delivery.feeProductId];
+const title = "Delivery and Refunds | Ferguson Livestock";
+const description = "Ferguson Livestock delivery, farm-pickup, temperature, seal, replacement and refund information for beef orders.";
+const url = `${business.siteUrl}/delivery-and-refunds`;
+const structuredData = buildWebPageSchema({ url, title, description });
+---
+
+<Layout title={title} description={description} structuredData={structuredData}>
+    <Header />
+    <main id="main-content" class="bg-cream py-16 lg:py-24">
+        <article class="legal-content mx-auto max-w-3xl px-6 text-gray-700">
+            <h1>Delivery and refunds</h1>
+            <p>We want every Ferguson Livestock order to arrive in the condition we intended. Because our products are perishable, please read the delivery and issue-reporting details below.</p>
+
+            <h2>Personal delivery</h2>
+            <p>Delivery across the {business.delivery.areaName} is {formatAud(delivery.price)} per order. We confirm the delivery window using the contact details supplied at checkout. If nobody will be home, arrange a safe chilled location with us before delivery.</p>
+
+            <h2>Farm pickup</h2>
+            <p>{business.pickup.label} is available by arrangement in {business.location.locality}. We provide the collection window and directions after ordering. Please do not arrive without a confirmed time; the farm is a working property.</p>
+
+            <h2>Check your order promptly</h2>
+            <p>Refrigerate or freeze the beef as soon as possible. Contact us promptly if packaging is damaged, a vacuum seal has failed, the product is not appropriately chilled, or the order is materially different from what you purchased. Photographs help us assess packaging or delivery issues quickly.</p>
+
+            <h2>Replacements and refunds</h2>
+            <p>When a product or delivery issue is confirmed, we will work with you on an appropriate replacement, credit or refund. We assess change-of-mind requests individually because chilled and frozen food cannot always be safely returned or resold. Nothing on this page limits rights that apply under Australian consumer law.</p>
+
+            <h2>Contact</h2>
+            <p>Call or text <a href={`tel:${business.phone.international}`}>{business.phone.display}</a>, or email <a href={`mailto:${business.email}`}>{business.email}</a>.</p>
+        </article>
+    </main>
+    <Footer />
+</Layout>

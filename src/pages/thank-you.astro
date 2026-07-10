@@ -10,10 +10,11 @@ const pageDescription =
 // Get the name from URL params (will be handled client-side for static build)
 ---
 
-<Layout title={pageTitle} description={pageDescription}>
+<Layout title={pageTitle} description={pageDescription} robots="noindex, follow">
     <Header />
 
     <main
+        id="main-content"
         class="min-h-[80vh] flex items-center justify-center py-16 px-6 bg-cream-dark"
     >
         <div class="max-w-2xl w-full">

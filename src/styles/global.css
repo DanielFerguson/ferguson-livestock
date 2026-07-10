@@ -66,15 +66,57 @@ body {
 }
 
 .faq-answer {
-	max-height: 0;
 	overflow: hidden;
-	transition: max-height 0.4s ease;
 }
 
 .faq-item.active .faq-answer {
-	max-height: 300px;
+	max-height: none;
 }
 
 .faq-item.active .faq-icon {
 	transform: rotate(45deg);
+}
+
+.legal-content h1 {
+	margin-bottom: 2rem;
+	font-family: var(--font-display);
+	font-size: clamp(3rem, 7vw, 4.5rem);
+	font-weight: 600;
+	line-height: 0.95;
+	color: var(--color-forest);
+}
+
+.legal-content h2 {
+	margin-top: 2.5rem;
+	margin-bottom: 0.75rem;
+	font-family: var(--font-display);
+	font-size: 2rem;
+	font-weight: 600;
+	color: var(--color-forest);
+}
+
+.legal-content p {
+	margin-bottom: 1rem;
+	line-height: 1.75;
+}
+
+.legal-content a {
+	color: var(--color-sage);
+	text-decoration: underline;
+	text-underline-offset: 0.2em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
+
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
 }

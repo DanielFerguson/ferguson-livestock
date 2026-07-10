@@ -1,0 +1,46 @@
+---
+import Layout from "../components/Layout.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import { business } from "../config/business";
+import { formatAud, products } from "../config/products";
+import { buildWebPageSchema } from "../lib/seo";
+
+const delivery = products[business.delivery.feeProductId];
+const title = "Beef Delivery and Farm Pickup Ballarat | Ferguson Livestock";
+const description = `Personal Ferguson Livestock delivery across the ${business.delivery.areaName}, plus free farm pickup by arrangement in Snake Valley.`;
+const url = `${business.siteUrl}/delivery`;
+const structuredData = buildWebPageSchema({ url, title, description });
+---
+
+<Layout title={title} description={description} structuredData={structuredData}>
+    <Header />
+    <main id="main-content">
+        <section class="bg-forest py-16 text-cream lg:py-24">
+            <div class="mx-auto max-w-4xl px-6 text-center">
+                <p class="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-mint-light">From Snake Valley to your door</p>
+                <h1 class="mb-6 font-display text-5xl font-semibold leading-none sm:text-6xl">Delivery with a farmer at the other end.</h1>
+                <p class="mx-auto max-w-2xl text-xl leading-relaxed text-cream/80">We personally deliver orders across the Ballarat region, or you can collect from the farm by arrangement.</p>
+            </div>
+        </section>
+
+        <section class="bg-cream py-16 lg:py-24">
+            <div class="mx-auto grid max-w-5xl gap-8 px-6 md:grid-cols-2">
+                <article class="border border-forest/10 bg-white p-8">
+                    <p class="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-sage">Personal delivery</p>
+                    <h2 class="font-display text-4xl font-semibold text-forest">{formatAud(delivery.price)} flat fee</h2>
+                    <p class="mt-4 leading-relaxed text-gray-700">We deliver across the {business.delivery.areaName} and confirm timing directly. If you are close to Ballarat but unsure whether your postcode is covered, contact us before ordering.</p>
+                </article>
+                <article class="border border-forest/10 bg-white p-8">
+                    <p class="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-sage">Farm pickup</p>
+                    <h2 class="font-display text-4xl font-semibold text-forest">Free by arrangement</h2>
+                    <p class="mt-4 leading-relaxed text-gray-700">Collect from Ferguson Livestock in {business.location.locality}. We confirm the pickup window and directions directly after your order so the farm remains a working property rather than an unattended shopfront.</p>
+                </article>
+            </div>
+            <div class="mx-auto mt-10 max-w-5xl px-6 text-center">
+                <a href="/order" class="inline-block bg-forest px-7 py-4 font-semibold text-cream no-underline hover:bg-sage">View current availability</a>
+            </div>
+        </section>
+    </main>
+    <Footer />
+</Layout>

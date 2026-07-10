@@ -6,12 +6,15 @@ import tailwindcss from '@tailwindcss/vite';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://fergusonlivestock.com.au',
+  site: 'https://www.fergusonlivestock.com.au',
   output: 'static',
   trailingSlash: 'never',
   adapter: vercel(),
   integrations: [sitemap({
-    filter: (page) => !page.includes('/order') && !page.includes('/order-confirmed'),
+    filter: (page) => {
+      const pathname = new URL(page).pathname.replace(/\/$/, '') || '/';
+      return !['/order', '/order-confirmed', '/thank-you'].includes(pathname);
+    },
   })],
   vite: {
     plugins: [tailwindcss()]

@@ -7,6 +7,15 @@ export interface Product {
   stripePriceId: string;
   initialStock: number;
   type: ProductType;
+  boxDetails?: BoxDetails;
+}
+
+export interface BoxDetails {
+  weightKg: number;
+  perKgPrice: number; // cents
+  contents: string[];
+  bestFor: string;
+  freezerGuidance: string;
 }
 
 export interface Bundle {
@@ -16,6 +25,7 @@ export interface Bundle {
   stockProduct: string; // key in `products`
   stockQuantity: number; // how many units it consumes
   displayPrice: number; // cents — for UI display
+  boxDetails: BoxDetails;
 }
 
 export interface CartItem {
@@ -26,15 +36,28 @@ export interface CartItem {
 export const products: Record<string, Product> = {
   "beef-box-5kg": {
     name: "5kg Beef Box",
-    description: "Mixed cuts — steaks, roasts, mince, sausages. Vacuum-sealed.",
+    description: "A balanced mix of steaks, slow-cook cuts, roast, sausages and mince.",
     price: 16000,
     stripePriceId: "price_1TGtXNJwsTUhe334TgfuNp1L",
     initialStock: 5,
     type: "box",
+    boxDetails: {
+      weightKg: 5,
+      perKgPrice: 3200,
+      contents: [
+        "Approximately 750g primary cuts — scotch, porterhouse, eye fillet or T-bone",
+        "Approximately 1.5kg secondary cuts — rump, osso buco, schnitzel, diced beef, ribs or oyster blade",
+        "Approximately 1.5kg roast",
+        "Approximately 500g sausages",
+        "Approximately 1kg mince",
+      ],
+      bestFor: "Couples and smaller households",
+      freezerGuidance: "Allow roughly one standard freezer drawer.",
+    },
   },
   "beef-mince-500g": {
     name: "500g Beef Mince",
-    description: "Premium grass-fed beef mince.",
+    description: "Versatile Murray Grey beef mince.",
     price: 1200,
     stripePriceId: "price_1THfA0JwsTUhe334cteeVgYY",
     initialStock: 2,
@@ -58,7 +81,7 @@ export const products: Record<string, Product> = {
   },
   "rump-steak-2": {
     name: "Rump Steak Pack (2)",
-    description: "Two grass-fed rump steaks.",
+    description: "Two Murray Grey rump steaks.",
     price: 2000,
     stripePriceId: "price_1THvIbJwsTUhe334rBEfKgUy",
     initialStock: 10,
@@ -93,13 +116,38 @@ export const products: Record<string, Product> = {
 export const bundles: Record<string, Bundle> = {
   "beef-box-10kg": {
     name: "10kg Beef Box",
-    description: "Two 5kg boxes at a discounted price. Best value.",
+    description: "A larger balanced mix of steaks, slow-cook cuts, roasts, sausages and mince.",
     stripePriceId: "price_1TGtWLJwsTUhe334H1KnicPE",
     stockProduct: "beef-box-5kg",
     stockQuantity: 2,
     displayPrice: 27500,
+    boxDetails: {
+      weightKg: 10,
+      perKgPrice: 2750,
+      contents: [
+        "Approximately 1.5kg primary cuts — scotch, porterhouse, eye fillet or T-bone",
+        "Approximately 3kg secondary cuts — rump, osso buco, schnitzel, diced beef, ribs or oyster blade",
+        "Approximately 3kg roast",
+        "Approximately 1kg sausages",
+        "Approximately 2kg mince",
+      ],
+      bestFor: "Families and regular beef eaters",
+      freezerGuidance: "Allow roughly two standard freezer drawers.",
+    },
   },
 };
+
+export function formatAud(cents: number): string {
+  return new Intl.NumberFormat("en-AU", {
+    style: "currency",
+    currency: "AUD",
+    maximumFractionDigits: cents % 100 === 0 ? 0 : 2,
+  }).format(cents / 100);
+}
+
+export function formatPerKg(cents: number): string {
+  return `${formatAud(cents)}/kg`;
+}
 
 /** Resolve a box selection ("5kg" | "10kg") to stock requirements */
 export function resolveBoxStock(box: "5kg" | "10kg"): CartItem {

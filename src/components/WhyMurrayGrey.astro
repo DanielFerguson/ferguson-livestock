@@ -3,178 +3,25 @@ import { Image } from "astro:assets";
 import murrayGreyImage from "../assets/images/4.webp";
 ---
 
-<section class="py-24 bg-cream">
-    <div class="max-w-6xl mx-auto px-6">
-        <div class="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-            <div>
-                <span
-                    class="inline-block text-xs font-semibold uppercase tracking-widest text-sage mb-4"
-                    >The Breed</span
-                >
-                <h2
-                    class="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-forest mb-6 tracking-tight"
-                >
-                    Why Murray Grey Beef?
-                </h2>
-                <p class="text-lg text-gray-600 leading-relaxed mb-8">
-                    Not all beef is created equal. We chose Murray Greys for a
-                    reason—they're the perfect breed for producing exceptional
-                    pasture-raised beef, and they're proudly Australian.
-                </p>
-                <div class="space-y-6">
-                    <div class="flex items-start gap-4">
-                        <div
-                            class="w-12 h-12 bg-forest rounded-full flex items-center justify-center flex-shrink-0"
-                        >
-                            <svg
-                                class="w-6 h-6 fill-mint-light"
-                                viewBox="0 0 24 24"
-                                ><path
-                                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L18 8l-9 9z"
-                                ></path></svg
-                            >
-                        </div>
-                        <div>
-                            <h3 class="font-semibold text-forest text-lg mb-1">
-                                Victorian Heritage Since 1905
-                            </h3>
-                            <p class="text-gray-500 leading-relaxed">
-                                Developed right here in Victoria at Dooral,
-                                Murray Greys are a true Australian success
-                                story—bred to thrive on our pastures.
-                            </p>
-                        </div>
-                    </div>
-                    <div class="flex items-start gap-4">
-                        <div
-                            class="w-12 h-12 bg-forest rounded-full flex items-center justify-center flex-shrink-0"
-                        >
-                            <svg
-                                class="w-6 h-6 fill-mint-light"
-                                viewBox="0 0 24 24"
-                                ><path
-                                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L18 8l-9 9z"
-                                ></path></svg
-                            >
-                        </div>
-                        <div>
-                            <h3 class="font-semibold text-forest text-lg mb-1">
-                                Natural Marbling on Grass
-                            </h3>
-                            <p class="text-gray-500 leading-relaxed">
-                                Unlike many breeds that need grain to marble
-                                well, Murray Greys develop beautiful
-                                intramuscular fat on pasture alone—tender,
-                                flavourful beef without the feedlot.
-                            </p>
-                        </div>
-                    </div>
-                    <div class="flex items-start gap-4">
-                        <div
-                            class="w-12 h-12 bg-forest rounded-full flex items-center justify-center flex-shrink-0"
-                        >
-                            <svg
-                                class="w-6 h-6 fill-mint-light"
-                                viewBox="0 0 24 24"
-                                ><path
-                                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L18 8l-9 9z"
-                                ></path></svg
-                            >
-                        </div>
-                        <div>
-                            <h3 class="font-semibold text-forest text-lg mb-1">
-                                Calm Temperament, Better Beef
-                            </h3>
-                            <p class="text-gray-500 leading-relaxed">
-                                Murray Greys are renowned for their docile
-                                nature. Less stress throughout their lives means
-                                lower cortisol and more tender, better-tasting
-                                meat.
-                            </p>
-                        </div>
-                    </div>
-                    <div class="flex items-start gap-4">
-                        <div
-                            class="w-12 h-12 bg-forest rounded-full flex items-center justify-center flex-shrink-0"
-                        >
-                            <svg
-                                class="w-6 h-6 fill-mint-light"
-                                viewBox="0 0 24 24"
-                                ><path
-                                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L18 8l-9 9z"
-                                ></path></svg
-                            >
-                        </div>
-                        <div>
-                            <h3 class="font-semibold text-forest text-lg mb-1">
-                                Ideal Frame for Quality Cuts
-                            </h3>
-                            <p class="text-gray-500 leading-relaxed">
-                                Medium-framed with excellent fat coverage,
-                                Murray Greys produce beef that's neither too
-                                lean nor over-finished—just right for the
-                                perfect eating experience.
-                            </p>
-                        </div>
-                    </div>
-                </div>
+<section class="bg-cream-dark py-16 lg:py-24">
+    <div class="mx-auto grid max-w-6xl items-center gap-12 px-6 lg:grid-cols-2 lg:gap-20">
+        <Image
+            src={murrayGreyImage}
+            alt="One of the Ferguson Livestock Murray Grey cattle"
+            class="aspect-square w-full object-cover"
+            widths={[500, 720, 960]}
+            sizes="(max-width: 1024px) 100vw, 50vw"
+        />
+
+        <div>
+            <p class="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-sage">Why Murray Grey</p>
+            <h2 class="mb-6 font-display text-4xl font-semibold leading-none text-forest sm:text-5xl lg:text-6xl">The breed at the centre of our farm.</h2>
+            <div class="space-y-5 text-lg leading-relaxed text-gray-700">
+                <p>Murray Greys are part of Victoria’s cattle story, and they are the breed we have chosen to build Ferguson Livestock around.</p>
+                <p>We value cattle that are calm to work with, suited to our farm and capable of producing a balanced eating experience. Showing the herd keeps us focused on the details—structure, temperament, preparation and consistency.</p>
+                <p>Our cattle achievements are proof of the breeding work behind Ferguson Livestock. We keep those claims separate from the beef itself: good marketing should be as traceable as the product.</p>
             </div>
-            <div class="relative">
-                <div
-                    class="rounded-2xl overflow-hidden shadow-2xl shadow-forest/20"
-                >
-                    <Image
-                        src={murrayGreyImage}
-                        alt="Close-up of one of our Murray Grey cattle"
-                        class="w-full h-auto object-cover"
-                        widths={[400, 600, 800]}
-                        sizes="(max-width: 1024px) 100vw, 50vw"
-                    />
-                </div>
-                <!-- Stats overlay -->
-                <div
-                    class="absolute -bottom-6 left-6 right-6 bg-white rounded-xl p-4 shadow-lg border border-forest/5"
-                >
-                    <div class="flex items-center justify-around">
-                        <div class="text-center">
-                            <div
-                                class="font-display text-2xl font-bold text-forest"
-                            >
-                                1905
-                            </div>
-                            <div class="text-xs text-gray-500 uppercase">
-                                Established
-                            </div>
-                        </div>
-                        <div class="w-px h-10 bg-forest/10"></div>
-                        <div class="text-center">
-                            <div
-                                class="font-display text-2xl font-bold text-forest"
-                            >
-                                30+
-                            </div>
-                            <div class="text-xs text-gray-500 uppercase">
-                                Countries
-                            </div>
-                        </div>
-                        <div class="w-px h-10 bg-forest/10"></div>
-                        <div class="text-center">
-                            <div
-                                class="font-display text-2xl font-bold text-forest"
-                            >
-                                VIC
-                            </div>
-                            <div class="text-xs text-gray-500 uppercase">
-                                Origin
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div
-                    class="absolute -top-6 -right-6 w-32 h-32 bg-mint/20 rounded-full -z-10"
-                >
-                </div>
-            </div>
+            <a href="/our-story" class="mt-8 inline-block border-b-2 border-sage pb-1 font-semibold text-forest no-underline hover:text-sage">Why we chose the breed →</a>
         </div>
     </div>
 </section>

@@ -1,0 +1,15 @@
+<section class="border-y border-forest/10 bg-cream-dark">
+    <div class="mx-auto grid max-w-6xl grid-cols-2 px-6 md:grid-cols-4">
+        {[
+            ["Your farmers", "Daniel & Tahlia"],
+            ["Raised nearby", "Snake Valley, VIC"],
+            ["Our cattle", "Murray Grey"],
+            ["Your order", "Delivered by us"],
+        ].map(([label, value]) => (
+            <div class="border-forest/10 px-3 py-6 text-center even:border-l md:border-l md:first:border-l-0">
+                <p class="text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-sage">{label}</p>
+                <p class="mt-1 font-display text-xl font-semibold text-forest sm:text-2xl">{value}</p>
+            </div>
+        ))}
+    </div>
+</section>

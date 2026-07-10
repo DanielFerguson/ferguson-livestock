@@ -88,6 +88,18 @@
                             To confirm you are in our delivery area
                         </p>
                     </div>
+                    <div class="mb-5 flex items-start gap-3">
+                        <input
+                            type="checkbox"
+                            id="waitlistConsent"
+                            name="consent"
+                            required
+                            class="mt-1 h-5 w-5 shrink-0 accent-forest"
+                        />
+                        <label for="waitlistConsent" class="text-sm leading-relaxed text-gray-600">
+                            I agree to receive Ferguson Livestock SMS messages about beef drops. I can opt out at any time. See the <a href="/privacy" class="font-semibold text-sage underline">privacy page</a>.
+                        </label>
+                    </div>
                     <button
                         type="submit"
                         class="w-full mt-2 py-4 px-8 bg-linear-to-br from-forest to-sage text-cream rounded-lg text-base font-semibold uppercase tracking-wider transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-forest/30 cursor-pointer border-0"
@@ -111,12 +123,6 @@
 
 <script>
     declare const gtag: (...args: any[]) => void;
-    declare const posthog:
-        | {
-              capture: (event: string, properties?: Record<string, any>) => void;
-              identify: (id: string, properties?: Record<string, any>) => void;
-          }
-        | undefined;
     declare const fbq: (...args: any[]) => void;
 
     let formStarted = false;
@@ -125,12 +131,6 @@
             formStarted = true;
             if (typeof gtag === "function") {
                 gtag("event", "form_start", {
-                    form_id: "waitlist-form",
-                    form_location: "waitlist",
-                });
-            }
-            if (typeof posthog !== "undefined") {
-                posthog.capture("form_started", {
                     form_id: "waitlist-form",
                     form_location: "waitlist",
                 });
@@ -174,6 +174,9 @@
             const postcode = (
                 document.getElementById("waitlistPostcode") as HTMLInputElement
             )?.value;
+            const consent = (
+                document.getElementById("waitlistConsent") as HTMLInputElement
+            )?.checked;
 
             if (submitButton) {
                 submitButton.disabled = true;
@@ -186,7 +189,7 @@
                     headers: {
                         "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({ firstName, phone, postcode }),
+                    body: JSON.stringify({ firstName, phone, postcode, consent }),
                 });
 
                 const result = await response.json();
@@ -196,19 +199,6 @@
                         gtag("event", "generate_lead", {
                             postcode: postcode,
                             form_location: "waitlist",
-                        });
-                    }
-                    if (typeof posthog !== "undefined") {
-                        posthog.identify(phone, {
-                            firstName: firstName,
-                            phone: phone,
-                            postcode: postcode,
-                            waitlist_signed_up_at: new Date().toISOString(),
-                        });
-                        posthog.capture("form_submitted", {
-                            form_id: "waitlist-form",
-                            form_location: "waitlist",
-                            postcode: postcode,
                         });
                     }
                     window.location.href = `/thank-you?name=${encodeURIComponent(firstName)}`;
