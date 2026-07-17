@@ -40,6 +40,11 @@ const forbidden = [
   /ratingCount\s*:\s*["']10["']/g,
   /lowPrice\s*:\s*["']150["']/g,
   /highPrice\s*:\s*["']240["']/g,
+  /googletagmanager\.com/gi,
+  /connect\.facebook\.net/gi,
+  /facebook\.com\/tr/gi,
+  /\bgtag\s*\(/g,
+  /\bfbq\s*\(/g,
 ];
 
 for (const file of await walk(sourceDir.pathname, [".astro", ".ts", ".js"])) {
@@ -150,7 +155,7 @@ if (sitemapFiles.length === 0) {
   }
 }
 
-for (const file of await walk(clientDir.pathname, [".html", ".xml"])) {
+for (const file of await walk(clientDir.pathname, [".html", ".xml", ".js"])) {
   const contents = await readFile(file, "utf8");
   for (const pattern of forbidden) {
     if (pattern.test(contents)) {

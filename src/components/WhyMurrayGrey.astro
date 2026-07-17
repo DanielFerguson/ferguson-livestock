@@ -1,16 +1,20 @@
 ---
-import { Image } from "astro:assets";
+import { Picture } from "astro:assets";
 import murrayGreyImage from "../assets/images/4.webp";
 ---
 
 <section class="bg-cream-dark py-16 lg:py-24">
     <div class="mx-auto grid max-w-6xl items-center gap-12 px-6 lg:grid-cols-2 lg:gap-20">
-        <Image
+        <Picture
             src={murrayGreyImage}
             alt="One of the Ferguson Livestock Murray Grey cattle"
             class="aspect-square w-full object-cover"
             widths={[500, 720, 960]}
             sizes="(max-width: 1024px) 100vw, 50vw"
+            formats={["avif"]}
+            fallbackFormat="webp"
+            loading="lazy"
+            decoding="async"
         />
 
         <div>

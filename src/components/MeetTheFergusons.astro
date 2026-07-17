@@ -1,5 +1,5 @@
 ---
-import { Image } from "astro:assets";
+import { Picture } from "astro:assets";
 import foundersImage from "../assets/images/family-1.webp";
 import cattleImage from "../assets/images/1.webp";
 ---
@@ -7,19 +7,27 @@ import cattleImage from "../assets/images/1.webp";
 <section class="bg-cream py-16 lg:py-24">
     <div class="mx-auto grid max-w-6xl items-center gap-12 px-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-20">
         <div class="grid grid-cols-[1.2fr_0.8fr] items-end gap-4">
-            <Image
+            <Picture
                 src={foundersImage}
                 alt="Daniel and Tahlia Ferguson with their Murray Grey cattle"
                 class="aspect-[4/5] w-full object-cover"
                 widths={[420, 650, 850]}
                 sizes="(max-width: 1024px) 65vw, 33vw"
+                formats={["avif"]}
+                fallbackFormat="webp"
+                loading="lazy"
+                decoding="async"
             />
-            <Image
+            <Picture
                 src={cattleImage}
                 alt="Daniel Ferguson with one of the Ferguson Livestock Murray Grey cattle"
                 class="mb-8 aspect-[3/4] w-full object-cover"
                 widths={[280, 420, 600]}
                 sizes="(max-width: 1024px) 35vw, 22vw"
+                formats={["avif"]}
+                fallbackFormat="webp"
+                loading="lazy"
+                decoding="async"
             />
         </div>
 

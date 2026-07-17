@@ -1,5 +1,5 @@
 ---
-import { Image } from "astro:assets";
+import { Picture } from "astro:assets";
 import boxImage from "../assets/images/box.webp";
 import { bundles, formatAud, formatPerKg, products } from "../config/products";
 
@@ -27,12 +27,16 @@ const tenKg = bundles["beef-box-10kg"];
             <a href="/beef-boxes" class="mt-8 inline-block bg-mint px-6 py-3.5 font-semibold text-forest no-underline hover:bg-mint-light">Compare the boxes</a>
         </div>
 
-        <Image
+        <Picture
             src={boxImage}
             alt="Ferguson Livestock Murray Grey beef packed and ready for the freezer"
             class="aspect-square w-full object-cover"
             widths={[500, 720, 960]}
             sizes="(max-width: 1024px) 100vw, 50vw"
+            formats={["avif"]}
+            fallbackFormat="webp"
+            loading="lazy"
+            decoding="async"
         />
     </div>
 </section>

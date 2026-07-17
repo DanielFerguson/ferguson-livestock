@@ -154,35 +154,6 @@ const pageDescription =
             }
         }
 
-        // Google Ads Conversion Tracking
-        // Replace 'AW-XXXXXXXXX/XXXXXXXXXXXXXXXXXXXX' with your actual conversion ID
-        declare const gtag: (...args: any[]) => void;
-        declare const fbq: (...args: any[]) => void;
-
-        if (typeof gtag === "function") {
-            // GA4 custom event for lead tracking
-            gtag("event", "sign_up", {
-                method: "waitlist_form",
-                page_location: window.location.href,
-            });
-
-            // Google Ads conversion (uncomment and add your conversion ID when ready)
-            // gtag('event', 'conversion', {
-            //     'send_to': 'AW-XXXXXXXXX/XXXXXXXXXXXXXXXXXXXX',
-            //     'value': 1.0,
-            //     'currency': 'AUD'
-            // });
-        }
-
-        gtag("event", "ads_conversion_Submit_lead_form_1");
-
-        if (typeof fbq === "function") {
-            fbq("track", "Lead", {
-                content_name: "Waitlist Signup",
-                content_category: "Lead Form"
-            });
-        }
-
         // Share button functionality
         const shareButton = document.getElementById("share-button");
         const shareOptions = document.getElementById("share-options");

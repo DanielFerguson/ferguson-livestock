@@ -1,5 +1,5 @@
 ---
-import { Image } from "astro:assets";
+import { Picture } from "astro:assets";
 import heroImage from "../assets/images/cows-10.webp";
 import { brandContent } from "../config/content";
 import { bundles, formatAud, formatPerKg, products } from "../config/products";
@@ -19,13 +19,15 @@ const startingPrice = Math.min(fiveKgBox.price, tenKgBox.displayPrice);
             class="absolute inset-0 -z-20 will-change-transform"
             style="top: -10%; height: 120%;"
         >
-            <Image
+            <Picture
                 src={heroImage}
                 alt=""
                 class="h-full w-full object-cover"
                 widths={[800, 1200, 1600, 2000]}
                 sizes="100vw"
-                loading="eager"
+                formats={["avif"]}
+                fallbackFormat="webp"
+                priority
             />
         </div>
         <div class="absolute inset-0 -z-10 bg-linear-to-br from-forest/95 via-forest-light/90 to-sage/85"></div>

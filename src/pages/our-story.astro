@@ -1,5 +1,5 @@
 ---
-import { Image } from "astro:assets";
+import { Picture } from "astro:assets";
 import Layout from "../components/Layout.astro";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
@@ -24,13 +24,13 @@ const structuredData = buildWebPageSchema({ url, title, description, type: "Abou
                     <h1 class="mb-6 font-display text-5xl font-semibold leading-none text-forest sm:text-6xl">Two young farmers building something of their own.</h1>
                     <p class="text-xl leading-relaxed text-gray-700">We’re Daniel and Tahlia Ferguson. We raise Murray Grey cattle in Snake Valley and are building a farm-direct beef business around good cattle, honest value and knowing the people we serve.</p>
                 </div>
-                <Image src={foundersImage} alt="Daniel and Tahlia Ferguson with their Murray Grey cattle" class="aspect-[4/3] w-full object-cover" widths={[500, 800, 1100]} sizes="(max-width: 1024px) 100vw, 50vw" />
+                <Picture src={foundersImage} alt="Daniel and Tahlia Ferguson with their Murray Grey cattle" class="aspect-[4/3] w-full object-cover" widths={[500, 800, 1100]} sizes="(max-width: 1024px) 100vw, 50vw" formats={["avif"]} fallbackFormat="webp" priority />
             </div>
         </section>
 
         <section class="bg-cream-dark py-16 lg:py-24">
             <div class="mx-auto grid max-w-6xl gap-12 px-6 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
-                <Image src={showImage} alt="Daniel with one of Ferguson Livestock’s Murray Grey cattle" class="aspect-[4/5] w-full object-cover" widths={[420, 650, 850]} sizes="(max-width: 1024px) 100vw, 40vw" />
+                <Picture src={showImage} alt="Daniel with one of Ferguson Livestock’s Murray Grey cattle" class="aspect-[4/5] w-full object-cover" widths={[420, 650, 850]} sizes="(max-width: 1024px) 100vw, 40vw" formats={["avif"]} fallbackFormat="webp" loading="lazy" decoding="async" />
                 <div class="space-y-6 text-lg leading-relaxed text-gray-700">
                     <h2 class="font-display text-4xl font-semibold text-forest sm:text-5xl">Why Murray Greys?</h2>
                     <p>Murray Greys connect the things we care about: calm, capable cattle; a breed with Victorian roots; and the opportunity to build a herd we can be proud to put our name behind.</p>

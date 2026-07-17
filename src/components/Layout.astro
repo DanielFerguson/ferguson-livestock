@@ -4,14 +4,11 @@ import { business } from "../config/business";
 import { brandContent } from "../config/content";
 import "../styles/global.css";
 
-import "@fontsource-variable/source-sans-3";
-import "@fontsource/cormorant-garamond/400.css";
-import "@fontsource/cormorant-garamond/600.css";
-import "@fontsource/cormorant-garamond/700.css";
-import "@fontsource/caveat/400.css";
-
 import sourceSansWoff2 from "@fontsource-variable/source-sans-3/files/source-sans-3-latin-wght-normal.woff2?url";
+import cormorant400Woff2 from "@fontsource/cormorant-garamond/files/cormorant-garamond-latin-400-normal.woff2?url";
 import cormorantWoff2 from "@fontsource/cormorant-garamond/files/cormorant-garamond-latin-600-normal.woff2?url";
+import cormorant700Woff2 from "@fontsource/cormorant-garamond/files/cormorant-garamond-latin-700-normal.woff2?url";
+import caveatWoff2 from "@fontsource/caveat/files/caveat-latin-400-normal.woff2?url";
 
 interface Props {
     title: string;
@@ -23,15 +20,7 @@ interface Props {
     structuredData?: Record<string, unknown> | Record<string, unknown>[];
 }
 
-const {
-    title,
-    description = brandContent.shortDescription,
-    image = "/og-image.jpg",
-    imageAlt = "Ferguson Livestock Murray Grey cattle in Snake Valley, Victoria",
-    canonicalUrl,
-    robots = "index, follow",
-    structuredData,
-} = Astro.props;
+const { title, description = brandContent.shortDescription, image = "/og-image.jpg", imageAlt = "Ferguson Livestock Murray Grey cattle in Snake Valley, Victoria", canonicalUrl, robots = "index, follow", structuredData } = Astro.props;
 
 const fullImageUrl = image.startsWith("http") ? image : `${business.siteUrl}${image}`;
 const canonical = canonicalUrl ?? new URL(Astro.url.pathname, business.siteUrl).toString();
@@ -82,40 +71,18 @@ const canonical = canonicalUrl ?? new URL(Astro.url.pathname, business.siteUrl).
         <link rel="preload" as="font" type="font/woff2" href={sourceSansWoff2} crossorigin="anonymous" />
         <link rel="preload" as="font" type="font/woff2" href={cormorantWoff2} crossorigin="anonymous" />
 
-        <script is:inline async src="https://www.googletagmanager.com/gtag/js?id=G-EZVFVWV5YQ"></script>
-        <script is:inline>
-            window.dataLayer = window.dataLayer || [];
-            function gtag() { dataLayer.push(arguments); }
-            gtag("js", new Date());
-            gtag("config", "G-EZVFVWV5YQ");
-        </script>
-
-        <script is:inline>
-            !(function (f, b, e, v, n, t, s) {
-                if (f.fbq) return;
-                n = f.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments); };
-                if (!f._fbq) f._fbq = n;
-                n.push = n;
-                n.loaded = true;
-                n.version = "2.0";
-                n.queue = [];
-                t = b.createElement(e);
-                t.async = true;
-                t.src = v;
-                s = b.getElementsByTagName(e)[0];
-                s.parentNode.insertBefore(t, s);
-            })(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
-            fbq("init", "1517004342893353");
-            fbq("track", "PageView");
-        </script>
+        <style is:inline set:html={`
+            @font-face{font-family:"Source Sans 3";font-style:normal;font-display:swap;font-weight:200 900;src:url("${sourceSansWoff2}") format("woff2")}
+            @font-face{font-family:"Cormorant Garamond";font-style:normal;font-display:swap;font-weight:400;src:url("${cormorant400Woff2}") format("woff2")}
+            @font-face{font-family:"Cormorant Garamond";font-style:normal;font-display:swap;font-weight:600;src:url("${cormorantWoff2}") format("woff2")}
+            @font-face{font-family:"Cormorant Garamond";font-style:normal;font-display:swap;font-weight:700;src:url("${cormorant700Woff2}") format("woff2")}
+            @font-face{font-family:"Caveat";font-style:normal;font-display:swap;font-weight:400;src:url("${caveatWoff2}") format("woff2")}
+        `} />
 
         <StructuredData data={structuredData} />
     </head>
     <body class="overflow-x-hidden bg-cream leading-relaxed text-gray-800">
-        <a
-            href="#main-content"
-            class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-forest focus:px-4 focus:py-2 focus:text-cream focus:outline-none focus:ring-2 focus:ring-mint"
-        >
+        <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-forest focus:px-4 focus:py-2 focus:text-cream focus:outline-none focus:ring-2 focus:ring-mint">
             Skip to main content
         </a>
         <slot />

@@ -122,41 +122,6 @@
 </section>
 
 <script>
-    declare const gtag: (...args: any[]) => void;
-    declare const fbq: (...args: any[]) => void;
-
-    let formStarted = false;
-    document.getElementById("waitlistFirstName")?.addEventListener("focus", () => {
-        if (!formStarted) {
-            formStarted = true;
-            if (typeof gtag === "function") {
-                gtag("event", "form_start", {
-                    form_id: "waitlist-form",
-                    form_location: "waitlist",
-                });
-            }
-        }
-    });
-
-    const formSection = document.getElementById("waitlist");
-    if (formSection && typeof fbq === "function") {
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        fbq("track", "ViewContent", {
-                            content_name: "Waitlist Form",
-                            content_category: "Lead Form",
-                        });
-                        observer.disconnect();
-                    }
-                });
-            },
-            { threshold: 0.5 },
-        );
-        observer.observe(formSection);
-    }
-
     document
         .getElementById("waitlist-form")
         ?.addEventListener("submit", async function (e) {
@@ -195,12 +160,6 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    if (typeof gtag === "function") {
-                        gtag("event", "generate_lead", {
-                            postcode: postcode,
-                            form_location: "waitlist",
-                        });
-                    }
                     window.location.href = `/thank-you?name=${encodeURIComponent(firstName)}`;
                 } else {
                     alert(result.error || "Something went wrong. Please try again.");
