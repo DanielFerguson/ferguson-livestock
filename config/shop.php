@@ -62,6 +62,20 @@ return [
         'promise' => 'Good cattle, honest beef and personal service from the farmers who raised it.',
     ],
 
+    'navigation' => [
+        'primary' => [
+            ['label' => 'Beef boxes', 'route' => 'beef-boxes'],
+            ['label' => 'Our story', 'route' => 'our-story'],
+            ['label' => 'Delivery', 'route' => 'delivery'],
+            ['label' => 'FAQ', 'route' => 'faq'],
+            ['label' => 'Contact', 'route' => 'contact'],
+        ],
+        'information' => [
+            ['label' => 'Privacy', 'route' => 'privacy'],
+            ['label' => 'Refunds', 'route' => 'delivery', 'fragment' => 'refunds'],
+        ],
+    ],
+
     'og_image' => [
         'path' => '/og-image.jpg',
         'alt' => 'Ferguson Livestock Murray Grey cattle in Snake Valley, Victoria',

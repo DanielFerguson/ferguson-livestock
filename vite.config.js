@@ -8,7 +8,8 @@ export default defineConfig({
         laravel({
             // No JavaScript entry yet: pages ship zero JS until the live stock script arrives.
             input: ['resources/css/app.css'],
-            assets: ['resources/images/**'],
+            // Responsive variants built by scripts/build-images.mjs, referenced with Vite::asset().
+            assets: ['resources/images/generated/**'],
             refresh: true,
             // Aliases are mapped onto Tailwind's font tokens in resources/css/app.css.
             fonts: [

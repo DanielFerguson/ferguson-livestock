@@ -32,6 +32,41 @@ const colors = {
 // Pinned so regenerating the image is reproducible.
 const FONTSOURCE_VERSION = '5.3.0';
 
+// Icons are drawn as SVG: the latin font subsets don't include ★ or ✓.
+const STAR_PATH = 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z';
+const CHECK_PATH = 'M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z';
+
+function icon(path, size) {
+    return {
+        type: 'svg',
+        props: {
+            width: size,
+            height: size,
+            viewBox: '0 0 24 24',
+            children: { type: 'path', props: { d: path, fill: colors.mint } },
+        },
+    };
+}
+
+function feature(label) {
+    return {
+        type: 'div',
+        props: {
+            style: { display: 'flex', alignItems: 'center', gap: '10px' },
+            children: [
+                icon(CHECK_PATH, 28),
+                {
+                    type: 'span',
+                    props: {
+                        style: { color: colors.cream, fontFamily: 'Source Sans 3', fontSize: '24px', fontWeight: 400 },
+                        children: label,
+                    },
+                },
+            ],
+        },
+    };
+}
+
 async function generateOGImage() {
     console.log('🖼️  Generating OG image...');
 
@@ -123,7 +158,7 @@ async function generateOGImage() {
                                 left: 0,
                                 right: 0,
                                 bottom: 0,
-                                background: 'linear-gradient(135deg, rgba(45, 59, 45, 0.85) 0%, rgba(90, 114, 71, 0.75) 50%, rgba(45, 59, 45, 0.85) 100%)',
+                                background: 'linear-gradient(135deg, rgba(26, 46, 26, 0.85) 0%, rgba(74, 103, 65, 0.75) 50%, rgba(26, 46, 26, 0.85) 100%)',
                             },
                         },
                     },
@@ -149,13 +184,14 @@ async function generateOGImage() {
                                             display: 'flex',
                                             alignItems: 'center',
                                             gap: '10px',
-                                            backgroundColor: 'rgba(127, 212, 181, 0.2)',
-                                            border: '2px solid rgba(127, 212, 181, 0.4)',
+                                            backgroundColor: 'rgba(125, 184, 158, 0.2)',
+                                            border: '2px solid rgba(125, 184, 158, 0.4)',
                                             padding: '12px 24px',
                                             borderRadius: '50px',
                                             marginBottom: '28px',
                                         },
                                         children: [
+                                            icon(STAR_PATH, 22),
                                             {
                                                 type: 'span',
                                                 props: {
@@ -166,7 +202,7 @@ async function generateOGImage() {
                                                         fontWeight: 600,
                                                         letterSpacing: '0.05em',
                                                     },
-                                                    children: '★ PASTURE-RAISED MURRAY GREY BEEF',
+                                                    children: 'PASTURE-RAISED MURRAY GREY BEEF',
                                                 },
                                             },
                                         ],
@@ -196,7 +232,7 @@ async function generateOGImage() {
                                             fontFamily: 'Source Sans 3',
                                             fontSize: '36px',
                                             fontWeight: 400,
-                                            color: 'rgba(250, 249, 246, 0.9)',
+                                            color: 'rgba(245, 242, 235, 0.9)',
                                             lineHeight: 1.35,
                                             maxWidth: '800px',
                                             marginBottom: '40px',
@@ -208,148 +244,8 @@ async function generateOGImage() {
                                 {
                                     type: 'div',
                                     props: {
-                                        style: {
-                                            display: 'flex',
-                                            gap: '40px',
-                                        },
-                                        children: [
-                                            {
-                                                type: 'div',
-                                                props: {
-                                                    style: {
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '10px',
-                                                    },
-                                                    children: [
-                                                        {
-                                                            type: 'span',
-                                                            props: {
-                                                                style: {
-                                                                    color: colors.mint,
-                                                                    fontSize: '28px',
-                                                                },
-                                                                children: '✓',
-                                                            },
-                                                        },
-                                                        {
-                                                            type: 'span',
-                                                            props: {
-                                                                style: {
-                                                                    color: colors.cream,
-                                                                    fontFamily: 'Source Sans 3',
-                                                                    fontSize: '24px',
-                                                                    fontWeight: 400,
-                                                                },
-                                                                children: 'Pasture-Raised',
-                                                            },
-                                                        },
-                                                    ],
-                                                },
-                                            },
-                                            {
-                                                type: 'div',
-                                                props: {
-                                                    style: {
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '10px',
-                                                    },
-                                                    children: [
-                                                        {
-                                                            type: 'span',
-                                                            props: {
-                                                                style: {
-                                                                    color: colors.mint,
-                                                                    fontSize: '28px',
-                                                                },
-                                                                children: '✓',
-                                                            },
-                                                        },
-                                                        {
-                                                            type: 'span',
-                                                            props: {
-                                                                style: {
-                                                                    color: colors.cream,
-                                                                    fontFamily: 'Source Sans 3',
-                                                                    fontSize: '24px',
-                                                                    fontWeight: 400,
-                                                                },
-                                                                children: 'No Hormones',
-                                                            },
-                                                        },
-                                                    ],
-                                                },
-                                            },
-                                            {
-                                                type: 'div',
-                                                props: {
-                                                    style: {
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '10px',
-                                                    },
-                                                    children: [
-                                                        {
-                                                            type: 'span',
-                                                            props: {
-                                                                style: {
-                                                                    color: colors.mint,
-                                                                    fontSize: '28px',
-                                                                },
-                                                                children: '✓',
-                                                            },
-                                                        },
-                                                        {
-                                                            type: 'span',
-                                                            props: {
-                                                                style: {
-                                                                    color: colors.cream,
-                                                                    fontFamily: 'Source Sans 3',
-                                                                    fontSize: '24px',
-                                                                    fontWeight: 400,
-                                                                },
-                                                                children: 'Family Farm',
-                                                            },
-                                                        },
-                                                    ],
-                                                },
-                                            },
-                                            {
-                                                type: 'div',
-                                                props: {
-                                                    style: {
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '10px',
-                                                    },
-                                                    children: [
-                                                        {
-                                                            type: 'span',
-                                                            props: {
-                                                                style: {
-                                                                    color: colors.mint,
-                                                                    fontSize: '28px',
-                                                                },
-                                                                children: '✓',
-                                                            },
-                                                        },
-                                                        {
-                                                            type: 'span',
-                                                            props: {
-                                                                style: {
-                                                                    color: colors.cream,
-                                                                    fontFamily: 'Source Sans 3',
-                                                                    fontSize: '24px',
-                                                                    fontWeight: 400,
-                                                                },
-                                                                children: 'Free Delivery',
-                                                            },
-                                                        },
-                                                    ],
-                                                },
-                                            },
-                                        ],
+                                        style: { display: 'flex', gap: '40px' },
+                                        children: ['Pasture-raised', 'Murray Grey', 'Family farm', 'Local delivery'].map(feature),
                                     },
                                 },
                             ],
@@ -372,7 +268,7 @@ async function generateOGImage() {
                                     type: 'span',
                                     props: {
                                         style: {
-                                            color: 'rgba(250, 249, 246, 0.8)',
+                                            color: 'rgba(245, 242, 235, 0.8)',
                                             fontFamily: 'Source Sans 3',
                                             fontSize: '24px',
                                             fontWeight: 400,

@@ -76,14 +76,25 @@
     @foreach ($schemas as $schema)
         <script type="application/ld+json">{!! json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_THROW_ON_ERROR) !!}</script>
     @endforeach
+
+    {{-- Prefetches a page when a visitor hovers or presses on its link. Not JavaScript; browsers without support ignore it. --}}
+    <script type="speculationrules">
+        {"prefetch": [{"where": {"and": [{"href_matches": "/*"}, {"not": {"href_matches": ["/order", "/order-confirmed", "/thank-you", "/waitlist", "/checkout/*", "/api/*", "/admin", "/admin/*"]}}]}, "eagerness": "moderate"}]}
+    </script>
 </head>
 <body class="overflow-x-hidden bg-cream font-sans leading-relaxed text-gray-800">
     <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-100 focus:rounded-lg focus:bg-forest focus:px-4 focus:py-2 focus:text-cream">
         Skip to main content
     </a>
 
+    {{ $banner ?? '' }}
+
+    <x-header />
+
     <main id="main-content">
         {{ $slot }}
     </main>
+
+    <x-footer />
 </body>
 </html>

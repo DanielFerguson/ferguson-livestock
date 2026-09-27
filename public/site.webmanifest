@@ -4,10 +4,13 @@
   "description": "Murray Grey beef boxes from Daniel and Tahlia Ferguson in Snake Valley, Victoria.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f4f0e6",
-  "theme_color": "#18311f",
+  "background_color": "#f5f2eb",
+  "theme_color": "#1a2e1a",
   "lang": "en-AU",
-  "categories": ["food", "shopping"],
+  "categories": [
+    "food",
+    "shopping"
+  ],
   "icons": [
     {
       "src": "/android-chrome-192x192.png",

@@ -70,7 +70,7 @@ it('renders structured data as JSON that cannot break out of its script tag', fu
     ]));
 
     $html = $this->get('/with-schema')->getContent() ?: '';
-    $json = Str::between($html, '<script type="application/ld+json">', '</script>');
+    $json = Str::betweenFirst($html, '<script type="application/ld+json">', '</script>');
 
     expect($json)->not->toContain('</script>')
         ->and(json_decode($json, true))->toMatchArray(['name' => $name]);
