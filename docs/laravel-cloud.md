@@ -2,6 +2,10 @@
 
 How the Laravel app is hosted. The `production` environment is only created at the switch-over (see the migration plan); until then `main` stays live on Vercel.
 
+## Vercel during the migration
+
+`vercel.json` on this branch only sets `git.deploymentEnabled: false`, so Vercel doesn't try to build the Laravel app as the old Astro project. `main` keeps deploying from Vercel until the switch-over merge. After that merge Vercel stops deploying, which is intended. Delete `vercel.json` once the Vercel project is decommissioned.
+
 ## Application
 
 - Create one Laravel Cloud application from `DanielFerguson/ferguson-livestock`, in **Asia Pacific (Sydney)**. Keep every resource in the same region.
