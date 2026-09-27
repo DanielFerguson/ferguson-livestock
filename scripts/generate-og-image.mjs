@@ -2,7 +2,8 @@
  * OG Image Generator for Ferguson Livestock
  * Uses Satori to convert JSX to SVG, then converts to JPEG
  * 
- * Run with: bun scripts/generate-og-image.mjs
+ * Run with: npm run og-image [-- <output path>]
+ * Writes public/og-image.jpg unless an output path is given (handy for previewing).
  */
 
 import satori from 'satori';
@@ -19,20 +20,23 @@ const rootDir = join(__dirname, '..');
 const WIDTH = 1200;
 const HEIGHT = 630;
 
-// Brand colors matching the site
+// Brand colours from the @theme tokens in resources/css/app.css
 const colors = {
-    forest: '#2d3b2d',
-    sage: '#5a7247',
-    mint: '#7fd4b5',
-    cream: '#faf9f6',
-    warm: '#8b6914',
+    forest: '#1a2e1a',
+    sage: '#4a6741',
+    mint: '#7db89e',
+    cream: '#f5f2eb',
+    warm: '#d4a574',
 };
+
+// Pinned so regenerating the image is reproducible.
+const FONTSOURCE_VERSION = '5.3.0';
 
 async function generateOGImage() {
     console.log('🖼️  Generating OG image...');
 
     // Load the background image and convert to base64
-    const backgroundImagePath = join(rootDir, 'src/assets/images/cows-1.webp');
+    const backgroundImagePath = join(rootDir, 'resources/images/cows-1.webp');
     const backgroundBuffer = await readFile(backgroundImagePath);
 
     // Convert webp to png for better compatibility with Satori
@@ -410,7 +414,7 @@ async function generateOGImage() {
         .toBuffer();
 
     // Save to public folder
-    const outputPath = join(rootDir, 'public/og-image.jpg');
+    const outputPath = process.argv[2] ?? join(rootDir, 'public/og-image.jpg');
     await writeFile(outputPath, jpegBuffer);
 
     console.log(`✅ OG image saved to: ${outputPath}`);
@@ -432,17 +436,17 @@ async function downloadFonts() {
     const fonts = [
         {
             // Source Sans 3 Regular from fontsource CDN
-            url: 'https://cdn.jsdelivr.net/fontsource/fonts/source-sans-3@latest/latin-400-normal.ttf',
+            url: `https://cdn.jsdelivr.net/fontsource/fonts/source-sans-3@${FONTSOURCE_VERSION}/latin-400-normal.ttf`,
             filename: 'SourceSans3-Regular.ttf',
         },
         {
             // Source Sans 3 Bold from fontsource CDN
-            url: 'https://cdn.jsdelivr.net/fontsource/fonts/source-sans-3@latest/latin-700-normal.ttf',
+            url: `https://cdn.jsdelivr.net/fontsource/fonts/source-sans-3@${FONTSOURCE_VERSION}/latin-700-normal.ttf`,
             filename: 'SourceSans3-Bold.ttf',
         },
         {
             // Cormorant Garamond from fontsource CDN
-            url: 'https://cdn.jsdelivr.net/fontsource/fonts/cormorant-garamond@latest/latin-600-normal.ttf',
+            url: `https://cdn.jsdelivr.net/fontsource/fonts/cormorant-garamond@${FONTSOURCE_VERSION}/latin-600-normal.ttf`,
             filename: 'CormorantGaramond-SemiBold.ttf',
         },
     ];
