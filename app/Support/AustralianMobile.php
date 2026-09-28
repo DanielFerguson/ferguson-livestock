@@ -35,6 +35,16 @@ final class AustralianMobile
     }
 
     /**
+     * A phone number as people read it: Australian mobiles as 0412 345 678, anything else as given.
+     */
+    public static function readable(string $number): string
+    {
+        $mobile = self::toE164($number);
+
+        return $mobile === null ? $number : self::format($mobile);
+    }
+
+    /**
      * The digits to look for in stored numbers when someone searches for a mobile as they'd write it, with or
      * without the leading 0 or +61. Null when the search has no digits.
      */

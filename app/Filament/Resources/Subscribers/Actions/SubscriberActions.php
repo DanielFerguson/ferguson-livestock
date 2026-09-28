@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Subscribers\Actions;
 
 use App\Models\Subscriber;
+use App\Support\SpreadsheetCell;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
@@ -65,7 +66,7 @@ final class SubscriberActions
         $timezone = config()->string('shop.timezone');
 
         return [
-            self::withoutFormula($subscriber->first_name),
+            SpreadsheetCell::safe($subscriber->first_name),
             $subscriber->phone,
             $subscriber->postcode,
             $subscriber->isSubscribed() ? 'yes' : 'no',
@@ -75,13 +76,5 @@ final class SubscriberActions
             $subscriber->consent_ip,
             $subscriber->unsubscribed_at?->setTimezone($timezone)->format('Y-m-d H:i:s T'),
         ];
-    }
-
-    /**
-     * Spreadsheet apps run cells that start with =, +, - or @ as formulas, so names people typed are quoted.
-     */
-    private static function withoutFormula(?string $value): ?string
-    {
-        return $value !== null && preg_match('/^[=+\-@\t\r]/', $value) === 1 ? "'".$value : $value;
     }
 }

@@ -37,3 +37,11 @@ it('turns a search for a mobile number into the digits stored', function (string
     ['61412', '412'],
     ['Jane', null],
 ]);
+
+it('writes any phone number readably, leaving ones that aren’t Australian mobiles as they are', function (string $number, string $readable) {
+    expect(AustralianMobile::readable($number))->toBe($readable);
+})->with([
+    ['+61412345678', '0412 345 678'],
+    ['+61353420000', '+61353420000'],
+    ['+447700900123', '+447700900123'],
+]);

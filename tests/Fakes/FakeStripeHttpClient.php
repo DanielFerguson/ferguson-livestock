@@ -9,7 +9,7 @@ use Stripe\HttpClient\ClientInterface;
  */
 final class FakeStripeHttpClient implements ClientInterface
 {
-    /** @var list<array{method: string, url: string, headers: array<int, string>}> */
+    /** @var list<array{method: string, url: string, headers: array<int, string>, params: array<string, mixed>}> */
     public array $requests = [];
 
     /**
@@ -24,7 +24,7 @@ final class FakeStripeHttpClient implements ClientInterface
      */
     public function request($method, $absUrl, $headers, $params, $hasFile, $apiMode = 'v1', $maxNetworkRetries = null): array
     {
-        $this->requests[] = ['method' => strtoupper($method), 'url' => $absUrl, 'headers' => $headers];
+        $this->requests[] = ['method' => strtoupper($method), 'url' => $absUrl, 'headers' => $headers, 'params' => $params];
         $key = strtoupper($method).' '.parse_url($absUrl, PHP_URL_PATH);
 
         [$status, $body] = $this->responses[$key] ?? [404, ['error' => ['type' => 'invalid_request_error', 'code' => 'resource_missing', 'message' => 'No such price']]];

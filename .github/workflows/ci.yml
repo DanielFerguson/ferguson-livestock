@@ -99,6 +99,10 @@ jobs:
       - name: Pest
         run: vendor/bin/pest --parallel --testsuite=Unit,Feature
 
+      # Twenty processes race for the last five boxes. Runs on its own: it needs committed data.
+      - name: Pest (concurrency)
+        run: vendor/bin/pest --testsuite=Concurrency
+
   browser:
     name: Browser tests
     runs-on: ubuntu-latest

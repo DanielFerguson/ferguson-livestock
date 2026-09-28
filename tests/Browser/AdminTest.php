@@ -1,9 +1,13 @@
 <?php
 
+use App\Filament\Resources\Orders\OrderResource;
 use App\Filament\Resources\SmsBroadcasts\SmsBroadcastResource;
 use App\Filament\Resources\SmsReplies\SmsReplyResource;
+use App\Filament\Resources\StripeEvents\StripeEventResource;
 use App\Filament\Resources\Subscribers\SubscriberResource;
 use App\Models\Drop;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\SmsBroadcast;
 use App\Models\SmsMessage;
@@ -26,6 +30,18 @@ it('renders the admin pages in a real browser without errors', function () {
         '/admin/drops/'.Drop::sole()->id.'/edit',
         '/admin/products',
         '/admin/products/'.Product::where('slug', 'beef-box-10kg')->sole()->id.'/edit',
+    ])->assertNoJavaScriptErrors();
+});
+
+it('renders the order pages in a real browser without errors', function () {
+    $order = Order::factory()->create();
+    OrderItem::factory()->for($order)->create();
+
+    visit([
+        OrderResource::getUrl(),
+        OrderResource::getUrl('view', ['record' => $order]),
+        OrderResource::getUrl('delivery-run', ['drop' => $order->drop]),
+        StripeEventResource::getUrl(),
     ])->assertNoJavaScriptErrors();
 });
 

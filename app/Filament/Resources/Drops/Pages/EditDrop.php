@@ -27,12 +27,13 @@ class EditDrop extends EditRecord
             DropActions::closeNow(),
             DeleteAction::make()
                 ->visible(fn (Drop $record): bool => in_array($record->status(), [DropStatus::Draft, DropStatus::Scheduled], true)
-                    && $record->items->every(fn (DropItem $item): bool => $item->committed() === 0)),
+                    && $record->items->every(fn (DropItem $item): bool => $item->committed() === 0)
+                    && ! $record->orders()->exists()),
         ];
     }
 
     /**
-     * Refuse to remove a product customers are holding or have bought.
+     * Refuse to remove a product customers are holding, have bought, or ever ordered: orders keep their lines.
      */
     protected function beforeSave(): void
     {
@@ -45,12 +46,14 @@ class EditDrop extends EditRecord
 
         $removed = $this->record->items()->with('product')->get()->reject(fn (DropItem $item): bool => $kept->contains($item->id));
 
-        $blocked = $removed->first(fn (DropItem $item): bool => $item->committed() > 0);
+        $blocked = $removed->first(fn (DropItem $item): bool => $item->committed() > 0 || $item->orderItems()->exists());
 
         if ($blocked !== null) {
             Notification::make()
                 ->title("{$blocked->product->name} can’t be removed")
-                ->body("{$blocked->committed()} units are held or sold. Set its stock to that number instead.")
+                ->body($blocked->committed() > 0
+                    ? "{$blocked->committed()} units are held or sold. Set its stock to that number instead."
+                    : 'It’s on past orders, so it stays on this drop. To stop selling it, set its stock to 0.')
                 ->danger()
                 ->send();
 

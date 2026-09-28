@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Checkout\CancelCheckoutController;
+use App\Http\Controllers\Checkout\OrderConfirmedController;
 use App\Http\Controllers\JoinWaitlistController;
 use App\Http\Controllers\SitemapController;
 use Illuminate\Support\Facades\Route;
@@ -28,3 +30,7 @@ Route::view('/thank-you', 'pages.thank-you')->name('thank-you');
 
 // Placeholder until the live order page is built.
 Route::view('/order', 'pages.order')->name('order');
+
+// Stripe sends customers back here. Neither page is cached: both depend on the order.
+Route::get('/checkout/cancel', CancelCheckoutController::class)->name('checkout.cancel');
+Route::get('/order-confirmed', OrderConfirmedController::class)->name('order-confirmed');

@@ -2,6 +2,8 @@
 
 namespace App\Payments;
 
+use App\Exceptions\PaymentProviderUnavailable;
+
 /**
  * Everything the app asks of the payment provider. Tests bind a fake in its place.
  */
@@ -18,4 +20,22 @@ interface PaymentGateway
      * @return list<WebhookEndpoint>
      */
     public function webhookEndpoints(): array;
+
+    /**
+     * @throws PaymentProviderUnavailable
+     */
+    public function createCheckoutSession(NewCheckoutSession $session): CheckoutSession;
+
+    /**
+     * @throws PaymentProviderUnavailable
+     */
+    public function retrieveCheckoutSession(string $sessionId): CheckoutSession;
+
+    /**
+     * Close the payment page if it's still open, and say where it ended up: expired, or complete when the
+     * customer paid first.
+     *
+     * @throws PaymentProviderUnavailable
+     */
+    public function expireCheckoutSession(string $sessionId): CheckoutSession;
 }

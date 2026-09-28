@@ -2,7 +2,11 @@
 
 namespace App\Payments;
 
+use App\Exceptions\PaymentProviderUnavailable;
+use Closure;
 use Illuminate\Support\Facades\Cache;
+use Stripe\Checkout\Session as StripeSession;
+use Stripe\Exception\ApiErrorException;
 use Stripe\Exception\InvalidRequestException;
 use Stripe\Product as StripeProduct;
 use Stripe\StripeClient;
@@ -69,5 +73,62 @@ final class StripePaymentGateway implements PaymentGateway
         }
 
         return $endpoints;
+    }
+
+    public function createCheckoutSession(NewCheckoutSession $session): CheckoutSession
+    {
+        $metadata = ['order_id' => $session->orderPublicId];
+
+        return $this->checkoutSession(fn (): StripeSession => $this->stripe->checkout->sessions->create([
+            'mode' => 'payment',
+            'line_items' => $session->lineItems,
+            'client_reference_id' => $session->orderPublicId,
+            'metadata' => $metadata,
+            'payment_intent_data' => ['metadata' => $metadata],
+            'phone_number_collection' => ['enabled' => true],
+            ...($session->collectShippingAddress ? ['shipping_address_collection' => ['allowed_countries' => ['AU']]] : []),
+            'expires_at' => $session->expiresAt->getTimestamp(),
+            'success_url' => $session->successUrl,
+            'cancel_url' => $session->cancelUrl,
+        ], ['idempotency_key' => "checkout-{$session->orderPublicId}"]));
+    }
+
+    public function retrieveCheckoutSession(string $sessionId): CheckoutSession
+    {
+        return $this->checkoutSession(fn (): StripeSession => $this->stripe->checkout->sessions->retrieve($sessionId));
+    }
+
+    public function expireCheckoutSession(string $sessionId): CheckoutSession
+    {
+        $session = $this->retrieveCheckoutSession($sessionId);
+
+        if ($session->status !== 'open') {
+            return $session;
+        }
+
+        try {
+            return $this->checkoutSession(fn (): StripeSession => $this->stripe->checkout->sessions->expire($sessionId));
+        } catch (PaymentProviderUnavailable $exception) {
+            // The customer may have paid in the moment between reading and expiring it.
+            if ($exception->getPrevious() instanceof InvalidRequestException) {
+                return $this->retrieveCheckoutSession($sessionId);
+            }
+
+            throw $exception;
+        }
+    }
+
+    /**
+     * @param  Closure(): StripeSession  $request
+     *
+     * @throws PaymentProviderUnavailable
+     */
+    private function checkoutSession(Closure $request): CheckoutSession
+    {
+        try {
+            return CheckoutSession::fromStripe($request()->toArray());
+        } catch (ApiErrorException $exception) {
+            throw new PaymentProviderUnavailable($exception->getMessage(), previous: $exception);
+        }
     }
 }

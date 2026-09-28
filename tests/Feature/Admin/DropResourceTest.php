@@ -1,11 +1,14 @@
 <?php
 
+use App\Enums\OrderStatus;
 use App\Enums\ProductType;
 use App\Filament\Resources\Drops\Pages\CreateDrop;
 use App\Filament\Resources\Drops\Pages\EditDrop;
 use App\Filament\Resources\Drops\Pages\ListDrops;
 use App\Models\Drop;
 use App\Models\DropItem;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\User;
 use App\Payments\PaymentGateway;
@@ -190,6 +193,28 @@ it('won’t remove a product customers are holding', function () {
         ->assertNotified('5kg Beef Box can’t be removed');
 
     expect($drop->items()->count())->toBe(1);
+});
+
+it('won’t remove a product that’s on an order, even one that was abandoned', function () {
+    $drop = Drop::factory()->open()->create();
+    $item = DropItem::factory()->for($drop)->for($this->box)->create(['stripe_price_id' => 'price_box', 'price' => 16000, 'quantity' => 5]);
+    OrderItem::factory()->for(Order::factory()->for($drop)->pending()->create(['status' => OrderStatus::Expired]))->create(['drop_item_id' => $item->id]);
+
+    livewire(EditDrop::class, ['record' => $drop->getRouteKey()])
+        ->fillForm(['items' => []])
+        ->call('save')
+        ->assertNotified('5kg Beef Box can’t be removed');
+
+    expect($drop->items()->count())->toBe(1);
+});
+
+it('only lets a drop be deleted before anyone has ordered from it', function () {
+    $drop = Drop::factory()->create();
+    livewire(EditDrop::class, ['record' => $drop->getRouteKey()])->assertActionVisible('delete');
+
+    Order::factory()->for($drop)->pending()->create(['status' => OrderStatus::Expired]);
+
+    livewire(EditDrop::class, ['record' => $drop->getRouteKey()])->assertActionHidden('delete');
 });
 
 it('closes a live drop from the list', function () {

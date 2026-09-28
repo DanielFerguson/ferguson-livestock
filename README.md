@@ -6,7 +6,7 @@ The public website and stock-aware ordering experience for Ferguson Livestock, a
 
 ![Murray Grey cattle at Ferguson Livestock](resources/images/cows-1.webp)
 
-> **Migration in progress:** `main` holds the Laravel rebuild. The live site is still the Astro version, served from its last Vercel deployment, until the switch-over. Drops, the admin and wait-list texts are built; checkout and the live order page arrive in later phases, so some highlights below describe the finished rebuild.
+> **Migration in progress:** `main` holds the Laravel rebuild. The live site is still the Astro version, served from its last Vercel deployment, until the switch-over. Drops, the admin, wait-list texts and the checkout behind the order page are built; the live order page itself arrives next, so some highlights below describe the finished rebuild.
 
 ## About the project
 
@@ -18,7 +18,8 @@ I designed and built the site end to end, including the visual system, content s
 
 - **Stock-aware ordering:** live availability is shared across beef boxes and individual cuts, including 10 kg bundles that consume two 5 kg stock units.
 - **Safe checkout reservations:** a single database transaction reserves every cart item together, preventing partial reservations and overselling during limited drops.
-- **Resilient stock recovery:** cancelled and expired Stripe sessions release reserved stock, while idempotent webhook handling prevents double releases.
+- **Resilient stock recovery:** cancelled and expired Stripe sessions release reserved stock exactly once, webhooks are stored and de-duplicated by event ID, and a scheduled sweep settles any checkout whose webhook is late or lost. A concurrency test races twenty buyers for the last five boxes.
+- **Orders admin:** paid orders with a printable delivery run sorted by suburb, a CSV export, bulk "mark fulfilled", and a log of every Stripe event with a retry button.
 - **Flexible fulfilment:** customers can select paid delivery across the Ballarat region or free farm pickup, with the correct options passed into Stripe Checkout.
 - **Drop-based sales:** releases are set up in the admin with their own prices, stock and delivery days, scheduled in Melbourne time, and checked automatically ten minutes before opening (Stripe prices, stock, delivery and webhooks).
 - **Wait list and SMS:** sign-ups are stored in the app with evidence of consent. Drop announcements are written, previewed (length, recipients and cost), scheduled and sent by text from the admin, replies land in an inbox, and anyone who replies STOP is opted out straight away.

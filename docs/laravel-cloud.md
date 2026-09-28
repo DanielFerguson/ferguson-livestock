@@ -13,7 +13,7 @@ How the Laravel app is hosted. The `production` environment is only created at t
 
 ## `staging` environment
 
-Tracks `main` and uses Stripe **test** keys once checkout exists.
+Tracks `main` and uses Stripe **test** keys.
 
 | Setting | Value |
 | --- | --- |
@@ -73,7 +73,30 @@ The seeder adds the boxes, extras and delivery fee without prices; each drop set
 
 Then sign in at `/admin`. Filament asks you to set up an authenticator app on first sign-in; keep the recovery codes somewhere safe. Only the `SHOP_ADMIN_EMAIL` account can sign in, even if other users exist.
 
-The scheduler must stay on: every minute it runs `drops:preflight`, which checks each published drop 10 minutes before it opens, then emails the admin and adds a notification in the admin.
+The scheduler must stay on. Every minute it runs:
+
+- `drops:preflight`, which checks each published drop 10 minutes before it opens, then emails the admin and adds a notification in the admin
+- `orders:sweep`, which settles checkouts whose payment page has closed, so a lost webhook never leaves stock held
+- `sms:send-scheduled`, which starts scheduled broadcasts
+
+## Stripe
+
+In the Stripe dashboard (test mode for staging, live mode for production):
+
+1. **Webhook endpoint** at `https://<host>/api/webhooks/stripe`, on API version `2026-08-26.dahlia`, sending these events:
+   - `checkout.session.completed`
+   - `checkout.session.expired`
+   - `checkout.session.async_payment_succeeded`
+   - `checkout.session.async_payment_failed`
+   - `charge.refunded`
+
+   Put its signing secret in `STRIPE_WEBHOOK_SECRET`. Each drop's pre-flight check confirms the endpoint exists and sends all five.
+2. **Prices:** each drop item needs a one-time AUD price. Paste its ID into the drop form, which checks it against Stripe.
+3. **Payment methods:** cards work with nothing else set up. If a bank debit such as BECS is turned on, those orders show as "Payment clearing" and keep their stock held until Stripe says the payment cleared or failed.
+
+Checkout sends customers to Stripe's payment page for 31 minutes (Stripe's minimum is 30). If they leave, the stock goes back on sale when Stripe closes the page, or straight away if they press Stripe's back link. Refunds are recorded on the order but never restock: adjust the drop's stock by hand if you want to sell the items again.
+
+Emails go through Resend when an order is paid: a confirmation to the customer (replies go to the farm's address) and a new-order email to the farm.
 
 ## Twilio (wait-list texts)
 

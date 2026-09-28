@@ -5,7 +5,6 @@ use App\Models\Drop;
 use App\Models\DropItem;
 use App\Models\Product;
 use App\Payments\PaymentGateway;
-use App\Payments\Price;
 use App\Payments\StripeWebhookEvents;
 use Tests\Fakes\FakePaymentGateway;
 
@@ -93,18 +92,7 @@ it('names the webhook events Stripe isn’t sending', function () {
 
 it('reports Stripe being unreachable instead of failing', function () {
     $drop = readyDrop($this->stripe);
-    app()->instance(PaymentGateway::class, new class implements PaymentGateway
-    {
-        public function retrievePrice(string $priceId): ?Price
-        {
-            throw new RuntimeException('Connection timed out');
-        }
-
-        public function webhookEndpoints(): array
-        {
-            throw new RuntimeException('Connection timed out');
-        }
-    });
+    app()->instance(PaymentGateway::class, (new FakePaymentGateway)->goOffline('Connection timed out'));
 
     expect(app(RunDropPreflight::class)($drop)['problems'])->toContain('Couldn’t reach Stripe to check this drop: Connection timed out');
 });

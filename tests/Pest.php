@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -22,3 +23,8 @@ pest()->extend(TestCase::class)
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->in('Browser');
+
+// Child processes can't see a test's uncommitted transaction, so these tests commit and truncate instead.
+pest()->extend(TestCase::class)
+    ->use(DatabaseTruncation::class)
+    ->in('Concurrency');
