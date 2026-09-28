@@ -3,10 +3,13 @@
 namespace App\Filament\Widgets;
 
 use App\Enums\OrderStatus;
+use App\Filament\Resources\Drops\DropResource;
 use App\Models\Drop;
 use App\Models\DropItem;
 use App\Models\OrderItem;
 use App\Support\Money;
+use Filament\Actions\Action;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
@@ -25,7 +28,7 @@ class CurrentDropStats extends TableWidget
     {
         $drop = Drop::featured();
 
-        return $table
+        $table
             ->heading($drop === null ? 'No drop yet' : $drop->name)
             ->query(DropItem::query()->where('drop_id', $drop->id ?? 0)->with(['product', 'orderItems.order'])->orderBy('id'))
             ->paginated(false)
@@ -39,6 +42,21 @@ class CurrentDropStats extends TableWidget
                     self::lines($record, [OrderStatus::Paid, OrderStatus::Fulfilled])->sum(fn (OrderItem $item): int => $item->lineTotal()),
                 )),
             ]);
+
+        if ($drop === null) {
+            $table
+                ->emptyStateIcon(Heroicon::OutlinedCalendarDays)
+                ->emptyStateHeading('Sales for the current drop show here')
+                ->emptyStateDescription('Create a drop to start taking orders.')
+                ->emptyStateActions([
+                    Action::make('createDrop')
+                        ->label('Create a drop')
+                        ->icon(Heroicon::OutlinedPlus)
+                        ->url(DropResource::getUrl('create')),
+                ]);
+        }
+
+        return $table;
     }
 
     /**

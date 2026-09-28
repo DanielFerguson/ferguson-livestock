@@ -30,3 +30,22 @@ it('shows what’s sold, at checkout and left of each item in the current drop',
         ->assertTableColumnStateSet('left', 5, $shop->mince)
         ->assertTableColumnStateSet('revenue', '$24', $shop->mince);
 });
+
+it('points to creating a drop when there is no current drop', function () {
+    config(['shop.admin_email' => 'daniel@example.com']);
+    $this->actingAs(User::factory()->withAppAuthentication()->create(['email' => 'daniel@example.com']));
+
+    livewire(CurrentDropStats::class)
+        ->assertSee('No drop yet')
+        ->assertSee('Create a drop');
+});
+
+it('does not offer to create a drop while one is current', function () {
+    config(['shop.admin_email' => 'daniel@example.com']);
+    $this->actingAs(User::factory()->withAppAuthentication()->create(['email' => 'daniel@example.com']));
+    $shop = StockedDrop::create(boxes: 5, mince: 10);
+
+    livewire(CurrentDropStats::class)
+        ->assertSee($shop->drop->name)
+        ->assertDontSee('Create a drop');
+});

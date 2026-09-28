@@ -1,0 +1,48 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/filament/**/*';
+
+/*
+ * The brand block from resources/views/filament/admin/logo.blade.php: the circular mark beside the wordmark in the
+ * top bar, stacked and larger on the sign-in page. Cormorant Garamond is only shipped in weight 600, so anything set in
+ * it pins that weight rather than letting the browser fake a bold.
+ */
+.fl-brand {
+    @apply inline-flex items-center gap-3 text-gray-950 dark:text-white;
+}
+
+.fl-brand-mark {
+    @apply size-10 shrink-0 rounded-full object-cover dark:ring-1 dark:ring-white/15;
+}
+
+.fl-brand-name {
+    @apply text-2xl leading-none tracking-tight;
+    font-family: var(--font-serif);
+    font-weight: 600;
+}
+
+.fi-simple-layout .fl-brand {
+    @apply flex-col gap-4;
+}
+
+.fi-simple-layout .fl-brand-mark {
+    @apply size-24;
+}
+
+.fi-simple-layout .fl-brand-name {
+    @apply text-4xl;
+}
+
+/* Page titles pick up the site's display face; Cormorant runs small, so they go up a size. */
+.fi-header-heading {
+    @apply text-3xl tracking-tight sm:text-4xl;
+    font-family: var(--font-serif);
+    font-weight: 600;
+}
+
+.fi-simple-header-heading {
+    @apply text-2xl tracking-tight;
+    font-family: var(--font-serif);
+    font-weight: 600;
+}

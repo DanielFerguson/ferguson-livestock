@@ -63,3 +63,12 @@ it('renders the texting pages in a real browser without errors', function () {
         SmsReplyResource::getUrl(),
     ])->assertNoJavaScriptErrors();
 });
+
+it('shows the logo, the site fonts and the admin theme on the dashboard', function () {
+    visit('/admin')
+        ->assertScript("document.querySelector('.fl-brand-mark').naturalWidth > 0")
+        ->assertScript("getComputedStyle(document.querySelector('.fl-brand-mark')).width", '40px')
+        ->assertScript("getComputedStyle(document.querySelector('.fi-header-heading')).fontFamily.includes('Cormorant Garamond')")
+        ->assertScript("document.fonts.load('600 1em \"Cormorant Garamond\"').then(faces => faces.length > 0)")
+        ->assertNoJavaScriptErrors();
+});

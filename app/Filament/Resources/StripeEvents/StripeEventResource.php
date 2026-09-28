@@ -9,6 +9,7 @@ use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use UnitEnum;
 
 /**
  * Every webhook Stripe has sent, to check an order's history or retry an event that failed.
@@ -20,6 +21,8 @@ class StripeEventResource extends Resource
     protected static ?string $modelLabel = 'Stripe event';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBolt;
+
+    protected static string|UnitEnum|null $navigationGroup = 'System';
 
     protected static ?int $navigationSort = 9;
 
