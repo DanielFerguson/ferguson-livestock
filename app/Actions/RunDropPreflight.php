@@ -106,10 +106,16 @@ final readonly class RunDropPreflight
     }
 
     /**
+     * Locally, `stripe listen` forwards events without a registered endpoint, so there's nothing to check.
+     *
      * @return list<string>
      */
     private function webhookProblems(): array
     {
+        if (app()->isLocal()) {
+            return [];
+        }
+
         return StripeWebhookEvents::problems($this->payments->webhookEndpoints(), config()->string('app.url'));
     }
 }

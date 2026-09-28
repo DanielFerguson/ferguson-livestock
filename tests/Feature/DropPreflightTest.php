@@ -90,6 +90,14 @@ it('names the webhook events Stripe isn’t sending', function () {
         ->toContain('The Stripe webhook doesn’t send checkout.session.expired, checkout.session.async_payment_succeeded, checkout.session.async_payment_failed, charge.refunded.');
 });
 
+it('skips the webhook check locally, where stripe listen forwards events', function () {
+    app()->detectEnvironment(fn (): string => 'local');
+    $drop = readyDrop($this->stripe);
+    app()->instance(PaymentGateway::class, (new FakePaymentGateway)->addPrice('price_box', 16000)->addPrice('price_delivery', 1500));
+
+    expect(app(RunDropPreflight::class)($drop)['problems'])->toBe([]);
+});
+
 it('reports Stripe being unreachable instead of failing', function () {
     $drop = readyDrop($this->stripe);
     app()->instance(PaymentGateway::class, (new FakePaymentGateway)->goOffline('Connection timed out'));
