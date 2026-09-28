@@ -21,7 +21,7 @@ I designed and built the site end to end, including the visual system, content s
 - **Resilient stock recovery:** cancelled and expired Stripe sessions release reserved stock, while idempotent webhook handling prevents double releases.
 - **Flexible fulfilment:** customers can select paid delivery across the Ballarat region or free farm pickup, with the correct options passed into Stripe Checkout.
 - **Drop-based sales:** releases can be activated immediately or scheduled in advance without redeploying the site.
-- **Lead capture:** Klaviyo integration supports a waitlist between product drops.
+- **Wait list and SMS:** sign-ups are stored in the app with evidence of consent, and drop announcements are sent by text from the admin.
 - **Search-ready publishing:** canonical URLs, sitemap generation, structured data, social metadata, and intentionally excluded confirmation routes are built in.
 - **Accessible, responsive UI:** semantic page structure, descriptive image text, mobile navigation, and clear sold-out and extras-only states support the full purchase journey.
 
@@ -55,7 +55,7 @@ Stripe webhooks are stored and de-duplicated by event ID, and a scheduled sweep 
 | Front end | Blade, Tailwind CSS 4 and Vite, with self-hosted fonts |
 | Database, cache and queue | Postgres, Redis (Laravel Valkey in production) and Laravel Cloud's managed queue |
 | Payments | Stripe Checkout and signed webhooks |
-| Email marketing | Klaviyo |
+| Wait list and SMS | Built-in subscriber list, sending through an SMS provider |
 | Tests and static analysis | Pest 5 (including browser tests with Playwright), Larastan and Pint |
 | Social image | Satori, Resvg and Sharp |
 | Hosting | Laravel Cloud (Sydney) |
@@ -84,14 +84,15 @@ composer run dev
 
 `composer run dev` starts the app, queue worker, log tail and Vite together. The site is available at `http://localhost:8000`.
 
-`.env.example` is set up for Herd's Postgres (user `root`, no password) and Redis. Stripe, Klaviyo and Resend credentials are added in later phases; use test-mode keys locally and never commit a populated `.env` file.
+`.env.example` is set up for Herd's Postgres (user `root`, no password) and Redis. Stripe, SMS and Resend credentials are added in later phases; use test-mode keys locally and never commit a populated `.env` file.
 
 ## Commands
 
 | Command | Purpose |
 | --- | --- |
 | `composer run dev` | Start the app, queue worker, logs and Vite |
-| `npm run build` | Build the production CSS, JavaScript, fonts and images |
+| `npm run build` | Build the responsive images, then the production CSS and fonts |
+| `npm run images` | Regenerate the AVIF/WebP variants in `resources/images/variants.json` |
 | `vendor/bin/pest --testsuite=Unit,Feature` | Run the unit and feature tests (add `--parallel` for speed) |
 | `vendor/bin/pest --testsuite=Browser` | Run the browser tests; needs `npm run build` and `npx playwright install chromium` first |
 | `vendor/bin/phpstan analyse` | Static analysis with Larastan |
@@ -103,15 +104,16 @@ CI runs linting, static analysis, the unit and feature tests against Postgres 18
 ## Project structure
 
 ```text
-app/                  Application code (HTTP middleware, models, providers)
-config/shop.php       Business facts and brand copy used across pages and metadata
+app/                  Application code (middleware, controllers, jobs, support classes)
+config/shop.php       Business facts, brand copy and navigation
+config/catalogue.php  Product names, contents and display prices
 resources/views/      Blade layouts, components and pages
 resources/css/        Tailwind entry point and design tokens
 resources/fonts/      Self-hosted fonts (SIL Open Font License)
-resources/images/     Source photography and logo
+resources/images/     Source photography, logo and variants.json (generated/ is built)
 routes/               Web routes
 tests/                Pest unit, feature, browser and architecture tests
-scripts/              Social image generation
+scripts/              Responsive image and social image generation
 docs/                 Product decisions, implementation plans and source facts
 public/               Icons, social artwork and crawler configuration
 ```

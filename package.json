@@ -6,8 +6,9 @@
         "node": ">=24"
     },
     "scripts": {
-        "build": "vite build",
-        "dev": "vite",
+        "images": "node scripts/build-images.mjs",
+        "build": "npm run images && vite build",
+        "dev": "npm run images && vite",
         "og-image": "node scripts/generate-og-image.mjs"
     },
     "devDependencies": {

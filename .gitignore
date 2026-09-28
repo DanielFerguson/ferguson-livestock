@@ -30,6 +30,9 @@ Thumbs.db
 # Pest browser test artefacts
 /tests/Browser/Screenshots
 
+# Responsive image variants (built by scripts/build-images.mjs)
+/resources/images/generated/
+
 # OG image generation fonts (downloaded by scripts/generate-og-image.mjs)
 /scripts/fonts/
 

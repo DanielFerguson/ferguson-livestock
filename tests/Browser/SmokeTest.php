@@ -1,7 +1,10 @@
 <?php
 
-it('renders the homepage in a real browser without JavaScript errors', function () {
-    visit('/')
+use App\Support\PublicPages;
+
+it('renders every public page in a real browser without errors', function (string $path) {
+    visit($path)
         ->assertSee('Ferguson Livestock')
-        ->assertNoJavaScriptErrors();
-});
+        ->assertNoJavaScriptErrors()
+        ->assertNoConsoleLogs();
+})->with(fn () => [...PublicPages::indexable(), ...PublicPages::noindex()]);

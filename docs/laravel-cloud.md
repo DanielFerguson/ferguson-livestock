@@ -22,7 +22,7 @@ Tracks the `laravel-migration` branch and uses Stripe **test** keys once checkou
 | Compute | Flex 1 GiB, 1 replica, sleep allowed |
 | Scheduler | On |
 | Build commands | `composer install --no-dev --optimize-autoloader`<br>`npm ci`<br>`npm run build`<br>`php artisan optimize` |
-| Deploy commands | `php artisan migrate --force` |
+| Deploy commands | `php artisan migrate --force`<br>`php artisan responsecache:clear` |
 
 Resources to attach:
 
@@ -38,6 +38,8 @@ APP_DEBUG=false
 CACHE_STORE=redis
 SESSION_DRIVER=redis
 ```
+
+The response cache uses `CACHE_STORE`, so every replica shares the cached marketing pages. The deploy command clears it, so a deploy never serves stale pages.
 
 `APP_ENV=staging` matters: every non-production response is sent with `X-Robots-Tag: noindex, nofollow`, because staging pages carry the production canonical URLs.
 

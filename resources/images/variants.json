@@ -1,0 +1,10 @@
+{
+    "logo": { "source": "logo.webp", "widths": [44, 88] },
+    "hero-cattle": { "source": "cows-10.webp", "widths": [640, 960], "quality": { "avif": 45, "webp": 60 } },
+    "family-portrait": { "source": "family-1.webp", "aspect": "4:5", "widths": [360, 578] },
+    "family-landscape": { "source": "family-1.webp", "aspect": "4:3", "widths": [480, 800, 964] },
+    "daniel-with-cattle-tall": { "source": "1.webp", "aspect": "3:4", "widths": [280, 420, 600] },
+    "daniel-with-cattle": { "source": "1.webp", "aspect": "4:5", "widths": [420, 650, 850] },
+    "murray-grey": { "source": "4.webp", "aspect": "1:1", "widths": [500, 720, 960] },
+    "beef-box": { "source": "box.webp", "widths": [480, 720] }
+}
