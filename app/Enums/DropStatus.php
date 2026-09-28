@@ -11,6 +11,7 @@ use Filament\Support\Contracts\HasLabel;
 enum DropStatus: string implements HasColor, HasLabel
 {
     case Draft = 'draft';
+    case Announced = 'announced';
     case Scheduled = 'scheduled';
     case Live = 'live';
     case SoldOut = 'sold_out';
@@ -20,6 +21,7 @@ enum DropStatus: string implements HasColor, HasLabel
     {
         return match ($this) {
             self::Draft => 'Draft',
+            self::Announced => 'Announced',
             self::Scheduled => 'Scheduled',
             self::Live => 'Live',
             self::SoldOut => 'Sold out',
@@ -31,6 +33,7 @@ enum DropStatus: string implements HasColor, HasLabel
     {
         return match ($this) {
             self::Draft => 'gray',
+            self::Announced => 'primary',
             self::Scheduled => 'info',
             self::Live => 'success',
             self::SoldOut => 'warning',

@@ -19,11 +19,11 @@ final class DropSnapshot
     private const string CACHE_KEY = 'drop-snapshot';
 
     /**
-     * @return array{drop: array{id: int, name: string, state: string, opens_at: string, closes_at: string|null}|null, server_time: string, items: array<string, array{available: int, max: int}>, held: int}
+     * @return array{drop: array{id: int, name: string, state: string, opens_at: string, closes_at: string|null}|null, announced: array{opens_at: string, label: string}|null, server_time: string, items: array<string, array{available: int, max: int}>, held: int}
      */
     public static function current(): array
     {
-        /** @var array{drop: array{id: int, name: string, state: string, opens_at: string, closes_at: string|null}|null, items: array<string, array{available: int, max: int}>, held: int} $snapshot */
+        /** @var array{drop: array{id: int, name: string, state: string, opens_at: string, closes_at: string|null}|null, announced: array{opens_at: string, label: string}|null, items: array<string, array{available: int, max: int}>, held: int} $snapshot */
         $snapshot = Cache::remember(self::CACHE_KEY, 1, fn (): array => self::build());
 
         return [...$snapshot, 'server_time' => now()->toIso8601ZuluString('millisecond')];
@@ -35,14 +35,14 @@ final class DropSnapshot
     }
 
     /**
-     * @return array{drop: array{id: int, name: string, state: string, opens_at: string, closes_at: string|null}|null, items: array<string, array{available: int, max: int}>, held: int}
+     * @return array{drop: array{id: int, name: string, state: string, opens_at: string, closes_at: string|null}|null, announced: array{opens_at: string, label: string}|null, items: array<string, array{available: int, max: int}>, held: int}
      */
     private static function build(): array
     {
         $drop = Drop::featured()?->load('items.product');
 
         if ($drop === null) {
-            return ['drop' => null, 'items' => [], 'held' => 0];
+            return ['drop' => null, 'announced' => self::announced(), 'items' => [], 'held' => 0];
         }
 
         $items = [];
@@ -63,9 +63,22 @@ final class DropSnapshot
                 'opens_at' => $drop->opens_at->toIso8601ZuluString(),
                 'closes_at' => $drop->effectiveClosesAt()?->toIso8601ZuluString(),
             ],
+            'announced' => self::announced(),
             'items' => $items,
             'held' => $drop->orders()->where('status', OrderStatus::Pending)->count(),
         ];
+    }
+
+    /**
+     * The next drop announced before it is published, for the "Next drop: Saturday 14 November" messages.
+     *
+     * @return array{opens_at: string, label: string}|null
+     */
+    private static function announced(): ?array
+    {
+        $drop = Drop::announced();
+
+        return $drop === null ? null : ['opens_at' => $drop->opens_at->toIso8601ZuluString(), 'label' => $drop->announcedLabel()];
     }
 
     /**

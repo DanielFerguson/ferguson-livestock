@@ -18,9 +18,15 @@
     @else
         <section class="bg-forest py-16 text-cream lg:py-24">
             <div class="mx-auto max-w-4xl px-6 text-center">
-                <x-section-heading eyebrow="Ordering" :level="1" size="page" tone="dark" align="center" intro="Ordering moves to this page when the next drop opens. Join the wait list below and we’ll text you as soon as it does.">
-                    The next drop is being prepared.
-                </x-section-heading>
+                @if ($announcedLabel !== null)
+                    <x-section-heading eyebrow="Ordering" :level="1" size="page" tone="dark" align="center" intro="We’re still finalising what’s in it. Join the wait list below and we’ll text you as soon as orders open.">
+                        The next drop is {{ $announcedLabel }}.
+                    </x-section-heading>
+                @else
+                    <x-section-heading eyebrow="Ordering" :level="1" size="page" tone="dark" align="center" intro="Ordering moves to this page when the next drop opens. Join the wait list below and we’ll text you as soon as it does.">
+                        The next drop is being prepared.
+                    </x-section-heading>
+                @endif
             </div>
         </section>
     @endif

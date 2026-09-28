@@ -105,6 +105,37 @@ it('shows the wait list on the order page between drops', function () {
         ->assertSee('Join the wait list');
 });
 
+it('shows the announced date on the order page between drops', function () {
+    $this->travelTo('2026-10-01 12:00');
+    Drop::factory()->announced()->create(['opens_at' => '2026-11-13 22:00:00']);
+
+    $this->get(route('order'))
+        ->assertOk()
+        ->assertSee('The next drop is Saturday 14 November.')
+        ->assertDontSee('1. Choose a box')
+        ->assertSee('Join the wait list');
+});
+
+it('shows the announced date on the order page after the last drop has closed', function () {
+    $this->travelTo('2026-10-01 12:00');
+    Drop::factory()->closed()->create();
+    Drop::factory()->announced()->create(['opens_at' => '2026-11-13 22:00:00']);
+
+    $this->get(route('order'))
+        ->assertSee('The next drop is Saturday 14 November.')
+        ->assertDontSee('1. Choose a box');
+});
+
+it('puts the order form ahead of an announced date while a drop is open', function () {
+    $this->travelTo('2026-10-01 12:00');
+    StockedDrop::create();
+    Drop::factory()->announced()->create(['opens_at' => '2026-11-13 22:00:00']);
+
+    $this->get(route('order'))
+        ->assertSee('1. Choose a box')
+        ->assertDontSee('The next drop is Saturday 14 November.');
+});
+
 it('says the order was cancelled when the customer comes back from Stripe', function () {
     $shop = StockedDrop::create();
 

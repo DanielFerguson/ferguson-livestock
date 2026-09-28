@@ -13,7 +13,7 @@
     <p data-drop-show="sold_out" @if ($status !== DropStatus::SoldOut) hidden @endif>
         The boxes have sold out. <span data-drop-held>{{ $held }}</span> in checkout may free up, and any extras left can still be ordered.
     </p>
-    <p data-drop-show="closed none" hidden>This drop has closed. Join the wait list and we’ll text you when the next one opens.</p>
+    <p data-drop-show="closed none announced" hidden>This drop has closed. Join the wait list and we’ll text you when the next one opens.</p>
 
     <p data-drop-paused hidden role="status" class="text-base text-warm-dark">Live updates paused, reconnecting…</p>
 

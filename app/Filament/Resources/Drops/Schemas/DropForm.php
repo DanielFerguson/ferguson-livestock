@@ -52,8 +52,17 @@ class DropForm
                         Toggle::make('published_at')
                             ->label('Published')
                             ->helperText('Drafts are hidden from customers. A published drop goes live at its opening time, and closes the previous drop.')
-                            ->formatStateUsing(fn (mixed $state): bool => filled($state))
+                            ->live()
+                            // A toggle's default state is false, which filled() counts as filled: without the check a draft opens as published.
+                            ->formatStateUsing(fn (mixed $state): bool => $state !== false && filled($state))
                             ->dehydrateStateUsing(fn (bool $state, ?Drop $record): ?CarbonImmutable => $state ? ($record->published_at ?? now()) : null)
+                            ->columnSpanFull(),
+                        Toggle::make('announced_at')
+                            ->label('Announce the date on the website')
+                            ->helperText('Shows “Next drop: {date}” with a link to the wait list. The time, products and prices stay hidden until you publish.')
+                            ->visible(fn (Get $get): bool => ! $get('published_at'))
+                            ->formatStateUsing(fn (mixed $state): bool => $state !== false && filled($state))
+                            ->dehydrateStateUsing(fn (bool $state, ?Drop $record): ?CarbonImmutable => $state ? ($record?->announced_at ?? now()) : null)
                             ->columnSpanFull(),
                         Repeater::make('delivery_days')
                             ->label('Delivery days')

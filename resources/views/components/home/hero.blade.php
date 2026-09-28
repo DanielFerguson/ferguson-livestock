@@ -44,11 +44,22 @@
                     @endif
                 </h2>
                 @php($state = $liveDrop['drop']['state'] ?? 'none')
+                @php($announcedLabel = $liveDrop['announced']['label'] ?? null)
+                @php($showAnnounced = $announcedLabel !== null && in_array($state, ['none', 'closed'], true))
                 <div class="mb-6 text-gray-600" aria-live="polite">
                     <p data-drop-show="live" @if ($state !== 'live') hidden @endif>Orders are open now. Stock updates as people order.</p>
-                    <p data-drop-show="sold_out" @if ($state !== 'sold_out') hidden @endif>This drop’s boxes have sold out. Join the wait list for the next one.</p>
+                    <p data-drop-show="sold_out" @if ($state !== 'sold_out') hidden @endif>
+                        This drop’s boxes have sold out.
+                        @if ($announcedLabel !== null)
+                            <span data-drop-announced>The next drop is {{ $announcedLabel }}.</span>
+                        @endif
+                        Join the wait list for the next one.
+                    </p>
                     <p data-drop-show="scheduled" @if ($state !== 'scheduled') hidden @endif>The next drop opens in <span data-drop-countdown></span>.</p>
-                    <p data-drop-show="closed none" @if (in_array($state, ['live', 'sold_out', 'scheduled'], true)) hidden @endif>Check the current drop, or join the next one if boxes have sold out.</p>
+                    @if ($announcedLabel !== null)
+                        <p data-drop-show="announced" @if (! $showAnnounced) hidden @endif>The next drop is {{ $announcedLabel }}. Stock and prices are still to come, so join the wait list and we’ll text you when orders open.</p>
+                    @endif
+                    <p data-drop-show="closed none" @if (in_array($state, ['live', 'sold_out', 'scheduled'], true) || $showAnnounced) hidden @endif>Check the current drop, or join the next one if boxes have sold out.</p>
                 </div>
 
                 <div class="mb-6 divide-y divide-forest/10 border-y border-forest/10">

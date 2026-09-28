@@ -1,7 +1,9 @@
 <?php
 
+use App\Models\Drop;
 use App\Models\DropItem;
 use App\Stock\DropSnapshot;
+use Carbon\CarbonImmutable;
 use Tests\Fixtures\StockedDrop;
 
 beforeEach(fn () => config(['shop.drop_poll_ms' => 200]));
@@ -31,5 +33,40 @@ it('opens the drop on time, without a reload', function () {
         ->assertSee('Orders open')
         ->assertSee('Orders are open. Stock updates live as people order.')
         ->assertSee('Continue to payment')
+        ->assertNoJavaScriptErrors();
+});
+
+it('announces the next drop’s date, then goes back to coming soon once it has passed', function () {
+    // Three seconds before 9am on Saturday 14 November in Melbourne.
+    $this->travelTo(CarbonImmutable::parse('2026-11-13 21:59:57', 'UTC'));
+    Drop::factory()->announced()->create(['opens_at' => '2026-11-13 22:00:00']);
+
+    visit(route('home'))
+        ->assertSee('Next drop: Saturday 14 November')
+        ->assertSee('Next drop coming soon')
+        ->assertDontSee('Next drop: Saturday 14 November')
+        ->assertNoJavaScriptErrors();
+});
+
+it('drops the announced date from the sold-out message once it has passed', function () {
+    StockedDrop::create(boxes: 0, mince: 0);
+    $announced = Drop::factory()->announced()->create(['opens_at' => now()->addSeconds(3)]);
+    $message = "Next drop {$announced->announcedLabel()}";
+
+    visit(route('home'))
+        ->assertSee('Boxes have sold out')
+        ->assertSee($message)
+        ->assertDontSee($message)
+        ->assertSee('Boxes have sold out')
+        ->assertNoJavaScriptErrors();
+});
+
+it('tells people the drop has closed, and points to the wait list, when a date is announced', function () {
+    StockedDrop::create(drop: ['closes_at' => now()->addSeconds(4)]);
+    Drop::factory()->announced()->create(['opens_at' => now()->addWeek()]);
+
+    visit(route('order'))
+        ->assertSee('Orders are open. Stock updates live as people order.')
+        ->assertSee('This drop has closed. Join the wait list and we’ll text you when the next one opens.')
         ->assertNoJavaScriptErrors();
 });

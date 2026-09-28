@@ -26,7 +26,7 @@ class EditDrop extends EditRecord
             DropActions::duplicate(),
             DropActions::closeNow(),
             DeleteAction::make()
-                ->visible(fn (Drop $record): bool => in_array($record->status(), [DropStatus::Draft, DropStatus::Scheduled], true)
+                ->visible(fn (Drop $record): bool => in_array($record->status(), [DropStatus::Draft, DropStatus::Announced, DropStatus::Scheduled], true)
                     && $record->items->every(fn (DropItem $item): bool => $item->committed() === 0)
                     && ! $record->orders()->exists()),
         ];

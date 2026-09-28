@@ -5,8 +5,10 @@
  * every 30 seconds while one is scheduled, and not at all otherwise or while the tab is hidden. Each snapshot
  * is published as a `drop-status` event on window, and elements opt in with data attributes:
  *
- *   data-drop-show="live sold_out"   shown only in these states (none, scheduled, live, sold_out, closed)
+ *   data-drop-show="live sold_out"   shown only in these states (none, scheduled, live, sold_out, closed, announced)
+ *                                    "announced" stands in for none/closed while the next drop's date is announced
  *   data-drop-stock="product-slug"   "3 left", "Sold out" or "Available"
+ *   data-drop-announced              shown only while the next drop's date is announced and hasn't passed
  *   data-drop-countdown              time until the drop opens, by the server's clock
  *   data-drop-held                   how many checkouts could still free stock up
  *   data-drop-paused                 shown while updates can't get through
@@ -20,6 +22,7 @@ let offset = 0; // the server's clock minus this device's, in milliseconds
 let failures = 0;
 let timer;
 let lastState;
+let lastView;
 
 const serverNow = () => Date.now() + offset;
 const opensIn = () => (snapshot?.drop ? Date.parse(snapshot.drop.opens_at) - serverNow() : Infinity);
@@ -30,6 +33,17 @@ function state() {
     if (snapshot.drop.state === 'scheduled' && opensIn() <= 0) return 'live';
     return snapshot.drop.state;
 }
+
+/** Whether a draft drop's date is announced and still ahead. It lapses on its own clock, with no poll. */
+const announced = () => Boolean(snapshot?.announced) && Date.parse(snapshot.announced.opens_at) > serverNow();
+
+/** What data-drop-show matches against: the state, except that an announced date replaces none and closed. */
+function shown() {
+    const now = state();
+    return announced() && (now === 'none' || now === 'closed') ? 'announced' : now;
+}
+
+const viewKey = () => `${shown()}:${announced()}`;
 
 /** Keep in step with App\Stock\StockLabel. */
 function stockText(item) {
@@ -96,8 +110,10 @@ function render() {
     for (const el of document.querySelectorAll('[data-drop-paused]')) el.hidden = failures === 0;
     if (!snapshot) return; // keep the server's own rendering until the first snapshot arrives
 
-    const now = state();
+    lastView = viewKey();
+    const now = shown();
     for (const el of document.querySelectorAll('[data-drop-show]')) el.hidden = !el.dataset.dropShow.split(' ').includes(now);
+    for (const el of document.querySelectorAll('[data-drop-announced]')) el.hidden = !announced();
     for (const el of document.querySelectorAll('[data-drop-stock]')) el.textContent = stockText(snapshot.items?.[el.dataset.dropStock]);
     for (const el of document.querySelectorAll('[data-drop-held]')) el.textContent = snapshot.held;
     tick();
@@ -112,6 +128,8 @@ setInterval(() => {
     if (state() !== lastState) {
         publish(); // the drop just opened on the server's clock
         poll();
+    } else if (viewKey() !== lastView) {
+        render(); // an announced date has just passed
     } else if (state() === 'scheduled') {
         tick();
     }

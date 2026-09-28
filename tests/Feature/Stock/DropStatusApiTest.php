@@ -19,6 +19,7 @@ it('describes the open drop and what’s left of each item', function () {
                 'opens_at' => $shop->drop->opens_at->toIso8601ZuluString(),
                 'closes_at' => null,
             ],
+            'announced' => null,
             'server_time' => now()->toIso8601ZuluString('millisecond'),
             'items' => [
                 $shop->box->product->slug => ['available' => 5, 'max' => 1],
@@ -60,7 +61,36 @@ it('says when the next drop opens', function () {
 it('has nothing to report before the first drop', function () {
     $this->getJson(route('drop-status'))
         ->assertOk()
-        ->assertJson(['drop' => null, 'items' => [], 'held' => 0]);
+        ->assertJson(['drop' => null, 'announced' => null, 'items' => [], 'held' => 0]);
+});
+
+it('announces the next drop’s date before the drop is published', function () {
+    $this->travelTo('2026-10-01 12:00');
+    Drop::factory()->announced()->create(['opens_at' => '2026-11-13 22:00:00']);
+
+    $this->getJson(route('drop-status'))
+        ->assertJsonPath('drop', null)
+        ->assertJsonPath('announced', ['opens_at' => '2026-11-13T22:00:00Z', 'label' => 'Saturday 14 November']);
+});
+
+it('shows a date the farm has just announced straight away', function () {
+    $this->travelTo('2026-10-01 12:00');
+    $drop = Drop::factory()->draft()->create(['opens_at' => '2026-11-13 22:00:00']);
+    $this->getJson(route('drop-status'))->assertJsonPath('announced', null);
+
+    $drop->update(['announced_at' => now()]);
+
+    $this->getJson(route('drop-status'))->assertJsonPath('announced.label', 'Saturday 14 November');
+});
+
+it('announces the next drop’s date alongside a sold-out drop', function () {
+    $this->travelTo('2026-10-01 12:00');
+    StockedDrop::create(boxes: 0, mince: 0);
+    Drop::factory()->announced()->create(['opens_at' => '2026-11-13 22:00:00']);
+
+    $this->getJson(route('drop-status'))
+        ->assertJsonPath('drop.state', 'sold_out')
+        ->assertJsonPath('announced.label', 'Saturday 14 November');
 });
 
 it('can be cached for a second by the edge, and sets no cookies', function () {

@@ -39,3 +39,12 @@ it('duplicates a drop as a draft a week later, with fresh stock', function () {
             ['price' => 1500, 'stripe_price_id' => 'price_delivery', 'quantity' => null, 'available' => null],
         ]);
 });
+
+it('doesn’t announce a duplicated drop on the website', function () {
+    $drop = Drop::factory()->announced()->create();
+
+    $copy = $drop->duplicateAsDraft();
+
+    expect($copy->announced_at)->toBeNull()
+        ->and($copy->status())->toBe(DropStatus::Draft);
+});

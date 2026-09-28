@@ -83,3 +83,23 @@ it('is not closed by a later draft', function () {
 
     expect($current->status())->toBe(DropStatus::Live);
 });
+
+it('is announced while an unpublished drop has its date on the website', function () {
+    $drop = Drop::factory()->announced()->create(['opens_at' => now()->addWeek()]);
+
+    expect($drop->status())->toBe(DropStatus::Announced);
+});
+
+it('goes back to a draft once its announced date has passed', function () {
+    $drop = Drop::factory()->announced()->create(['opens_at' => now()->addWeek()]);
+
+    $this->travel(8)->days();
+
+    expect($drop->status())->toBe(DropStatus::Draft);
+});
+
+it('is scheduled rather than announced once published', function () {
+    $drop = Drop::factory()->announced()->create(['published_at' => now(), 'opens_at' => now()->addWeek()]);
+
+    expect($drop->status())->toBe(DropStatus::Scheduled);
+});

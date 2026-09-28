@@ -34,6 +34,14 @@ class DropFactory extends Factory
     }
 
     /**
+     * An unpublished drop whose date is on the website, with no stock or prices yet.
+     */
+    public function announced(): static
+    {
+        return $this->draft()->state(fn () => ['announced_at' => now()]);
+    }
+
+    /**
      * Opened an hour ago and still taking orders.
      */
     public function open(): static

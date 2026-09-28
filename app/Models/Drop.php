@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\DB;
  * @property CarbonImmutable|null $closes_at
  * @property CarbonImmutable|null $closed_at
  * @property CarbonImmutable|null $published_at
+ * @property CarbonImmutable|null $announced_at
  * @property list<string> $delivery_days
  * @property CarbonImmutable|null $preflight_ran_at
  * @property array{passed: bool, problems: list<string>, checked_at: string}|null $preflight_report
@@ -32,7 +33,7 @@ use Illuminate\Support\Facades\DB;
  * @property CarbonImmutable $updated_at
  * @property-read Collection<int, DropItem> $items
  */
-#[Fillable(['name', 'opens_at', 'closes_at', 'closed_at', 'published_at', 'delivery_days', 'preflight_ran_at', 'preflight_report'])]
+#[Fillable(['name', 'opens_at', 'closes_at', 'closed_at', 'published_at', 'announced_at', 'delivery_days', 'preflight_ran_at', 'preflight_report'])]
 class Drop extends Model
 {
     use ClearsResponseCache;
@@ -81,6 +82,27 @@ class Drop extends Model
     }
 
     /**
+     * The next unpublished drop whose date is announced on the website, before its stock and prices are known.
+     */
+    public static function announced(): ?self
+    {
+        return self::query()
+            ->whereNull('published_at')
+            ->whereNotNull('announced_at')
+            ->where('opens_at', '>', now())
+            ->orderBy('opens_at')
+            ->first();
+    }
+
+    /**
+     * The opening day as customers read it, in shop time: "Saturday 14 November".
+     */
+    public function announcedLabel(): string
+    {
+        return $this->opens_at->setTimezone(config()->string('shop.timezone'))->format('l j F');
+    }
+
+    /**
      * A published drop whose opening clashes with this window: the same opening time, one opening inside
      * this window's explicit close time, or this one opening inside another's. Opening after a drop with
      * no close time is fine; that simply closes the earlier drop.
@@ -105,7 +127,7 @@ class Drop extends Model
     public function status(): DropStatus
     {
         if ($this->published_at === null) {
-            return DropStatus::Draft;
+            return $this->announced_at !== null && now()->lt($this->opens_at) ? DropStatus::Announced : DropStatus::Draft;
         }
 
         if (now()->lt($this->opens_at)) {
@@ -137,7 +159,7 @@ class Drop extends Model
     public function duplicateAsDraft(): self
     {
         return DB::transaction(function (): self {
-            $copy = $this->replicate(['closed_at', 'published_at', 'preflight_ran_at', 'preflight_report']);
+            $copy = $this->replicate(['closed_at', 'published_at', 'announced_at', 'preflight_ran_at', 'preflight_report']);
             $copy->name = "{$this->name} (copy)";
             $copy->opens_at = $this->opens_at->addWeek();
             $copy->closes_at = $this->closes_at?->addWeek();
@@ -198,6 +220,7 @@ class Drop extends Model
             'closes_at' => 'immutable_datetime',
             'closed_at' => 'immutable_datetime',
             'published_at' => 'immutable_datetime',
+            'announced_at' => 'immutable_datetime',
             'delivery_days' => 'array',
             'preflight_ran_at' => 'immutable_datetime',
             'preflight_report' => 'array',

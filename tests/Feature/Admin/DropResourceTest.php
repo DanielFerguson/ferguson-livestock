@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\DropStatus;
 use App\Enums\OrderStatus;
 use App\Enums\ProductType;
 use App\Filament\Resources\Drops\Pages\CreateDrop;
@@ -99,6 +100,63 @@ it('keeps a draft unpublished', function () {
     livewire(CreateDrop::class)->fillForm(dropForm(['published_at' => false]))->call('create')->assertHasNoFormErrors();
 
     expect(Drop::sole()->published_at)->toBeNull();
+});
+
+it('starts a new drop as a draft', function () {
+    livewire(CreateDrop::class)->assertFormSet(['published_at' => false, 'announced_at' => false]);
+});
+
+it('keeps a draft unpublished when it is edited and saved', function () {
+    $drop = Drop::factory()->draft()->create();
+
+    livewire(EditDrop::class, ['record' => $drop->getRouteKey()])
+        ->assertFormSet(['published_at' => false])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect($drop->refresh()->published_at)->toBeNull();
+});
+
+it('announces a draft’s date on the website without publishing it', function () {
+    livewire(CreateDrop::class)
+        ->fillForm(dropForm(['published_at' => false, 'announced_at' => true, 'items' => []]))
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    $drop = Drop::sole();
+
+    expect($drop->published_at)->toBeNull()
+        ->and($drop->announced_at)->not->toBeNull()
+        ->and($drop->status())->toBe(DropStatus::Announced);
+});
+
+it('doesn’t announce a draft unless asked', function () {
+    livewire(CreateDrop::class)
+        ->fillForm(dropForm(['published_at' => false, 'items' => []]))
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    expect(Drop::sole()->announced_at)->toBeNull();
+});
+
+it('stops announcing when the toggle is switched off', function () {
+    $drop = Drop::factory()->announced()->create(['opens_at' => '2026-11-13 22:00:00']);
+
+    livewire(EditDrop::class, ['record' => $drop->getRouteKey()])
+        ->assertFormSet(['announced_at' => true])
+        ->fillForm(['announced_at' => false])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect($drop->refresh()->announced_at)->toBeNull();
+});
+
+it('offers to announce a draft, but not a published drop', function () {
+    livewire(CreateDrop::class)
+        ->fillForm(['published_at' => false])
+        ->assertFormFieldVisible('announced_at')
+        ->fillForm(['published_at' => true])
+        ->assertFormFieldHidden('announced_at');
 });
 
 it('rejects opening times that daylight saving skips or repeats', function (string $time, string $message) {
@@ -215,6 +273,25 @@ it('only lets a drop be deleted before anyone has ordered from it', function () 
     Order::factory()->for($drop)->pending()->create(['status' => OrderStatus::Expired]);
 
     livewire(EditDrop::class, ['record' => $drop->getRouteKey()])->assertActionHidden('delete');
+});
+
+it('lets an announced draft be deleted', function () {
+    $drop = Drop::factory()->announced()->create();
+
+    livewire(EditDrop::class, ['record' => $drop->getRouteKey()])->assertActionVisible('delete');
+});
+
+it('stops announcing the date once the draft is published', function () {
+    $drop = Drop::factory()->announced()->create(['opens_at' => '2026-11-13 22:00:00']);
+
+    livewire(EditDrop::class, ['record' => $drop->getRouteKey()])
+        ->assertFormSet(['published_at' => false, 'announced_at' => true])
+        ->fillForm(['published_at' => true])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect(Drop::announced())->toBeNull()
+        ->and($drop->refresh()->status())->toBe(DropStatus::Scheduled);
 });
 
 it('closes a live drop from the list', function () {
