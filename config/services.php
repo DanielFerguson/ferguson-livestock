@@ -19,6 +19,15 @@ return [
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
     ],
 
+    'twilio' => [
+        'sid' => env('TWILIO_ACCOUNT_SID'),
+        'token' => env('TWILIO_AUTH_TOKEN'),
+        // The shop's Australian mobile number in E.164, e.g. +61400000000.
+        'from' => env('TWILIO_FROM_NUMBER'),
+        // What Twilio charges per text (segment) to Australian mobiles, in AUD cents. Only used for cost estimates.
+        'segment_cost' => (int) env('TWILIO_SEGMENT_COST', 8),
+    ],
+
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],

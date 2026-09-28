@@ -4,7 +4,9 @@ namespace App\Filament\Resources\Drops\Actions;
 
 use App\Actions\RunDropPreflight;
 use App\Filament\Resources\Drops\DropResource;
+use App\Filament\Resources\SmsBroadcasts\SmsBroadcastResource;
 use App\Models\Drop;
+use App\Models\SmsBroadcast;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
@@ -50,6 +52,32 @@ final class DropActions
             });
     }
 
+    /**
+     * Draft a text to the wait list with the drop's opening time and the order link, ready to check and schedule.
+     */
+    public static function announce(): Action
+    {
+        return Action::make('announce')
+            ->label('Announce by text')
+            ->icon(Heroicon::OutlinedMegaphone)
+            ->color('gray')
+            ->action(function (Drop $record): void {
+                $broadcast = SmsBroadcast::create([
+                    'body' => self::announcement($record),
+                    'drop_id' => $record->id,
+                    'created_by' => auth()->id(),
+                ]);
+
+                Notification::make()
+                    ->title('Announcement drafted')
+                    ->body('Check the wording, send yourself a test, then schedule it for when the drop opens.')
+                    ->success()
+                    ->send();
+
+                redirect(SmsBroadcastResource::getUrl('edit', ['record' => $broadcast]));
+            });
+    }
+
     public static function runPreflight(): Action
     {
         return Action::make('runPreflight')
@@ -68,5 +96,17 @@ final class DropActions
 
                 $notification->send();
             });
+    }
+
+    /**
+     * "Our next beef drop opens Saturday 10 October at 9am. Order at fergusonlivestock.com.au/order"
+     */
+    private static function announcement(Drop $drop): string
+    {
+        $opensAt = $drop->opens_at->setTimezone(config()->string('shop.timezone'));
+        $time = $opensAt->minute === 0 ? $opensAt->format('ga') : $opensAt->format('g:ia');
+        $site = preg_replace('#^https?://(www\.)?#', '', rtrim(config()->string('shop.url'), '/'));
+
+        return "Our next beef drop opens {$opensAt->format('l j F')} at {$time}. Order at {$site}".route('order', absolute: false);
     }
 }

@@ -9,19 +9,22 @@ use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Someone on the wait list who has agreed to receive drop announcements by text.
  *
  * @property int $id
- * @property string $first_name
+ * @property string|null $first_name
  * @property string $phone
- * @property string $postcode
+ * @property string|null $postcode
  * @property CarbonImmutable $consented_at
  * @property string $consent_source
  * @property string $consent_wording
  * @property string|null $consent_ip
  * @property CarbonImmutable|null $unsubscribed_at
+ * @property CarbonImmutable $created_at
+ * @property CarbonImmutable $updated_at
  */
 #[Fillable(['first_name', 'phone', 'postcode', 'consented_at', 'consent_source', 'consent_wording', 'consent_ip', 'unsubscribed_at'])]
 class Subscriber extends Model
@@ -33,6 +36,11 @@ class Subscriber extends Model
      * What the wait-list checkbox says. Stored with each sign-up as evidence of consent.
      */
     public const string CONSENT_WORDING = 'I agree to receive Ferguson Livestock text messages about beef drops. I can opt out at any time.';
+
+    /**
+     * Stored for people imported from Klaviyo, whose export has the date they agreed but not the form's wording.
+     */
+    public const string KLAVIYO_CONSENT_WORDING = 'Agreed to Ferguson Livestock text messages on a Klaviyo sign-up form. Klaviyo recorded the date; its export doesn’t include the form’s wording.';
 
     /**
      * Record a wait-list sign-up. Signing up again refreshes the details and consent, and undoes an earlier opt-out.
@@ -48,6 +56,28 @@ class Subscriber extends Model
             'consent_ip' => $ip,
             'unsubscribed_at' => null,
         ]);
+    }
+
+    /**
+     * @return HasMany<SmsMessage, $this>
+     */
+    public function messages(): HasMany
+    {
+        return $this->hasMany(SmsMessage::class);
+    }
+
+    public function isSubscribed(): bool
+    {
+        return $this->unsubscribed_at === null;
+    }
+
+    /**
+     * Stop texting them. Opting out again keeps the original date.
+     */
+    public function optOut(): void
+    {
+        $this->unsubscribed_at ??= now();
+        $this->save();
     }
 
     /**

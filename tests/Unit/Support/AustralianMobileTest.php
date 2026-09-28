@@ -24,3 +24,16 @@ it('rejects numbers that cannot receive text messages', function (string $typed)
     'letters' => 'call me',
     'empty' => '',
 ]);
+
+it('writes a mobile number the way Australians read it', function () {
+    expect(AustralianMobile::format('+61412345678'))->toBe('0412 345 678');
+});
+
+it('turns a search for a mobile number into the digits stored', function (string $search, ?string $digits) {
+    expect(AustralianMobile::searchDigits($search))->toBe($digits);
+})->with([
+    ['0412 345', '412345'],
+    ['+61412345678', '412345678'],
+    ['61412', '412'],
+    ['Jane', null],
+]);

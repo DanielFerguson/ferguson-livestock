@@ -6,7 +6,7 @@ The public website and stock-aware ordering experience for Ferguson Livestock, a
 
 ![Murray Grey cattle at Ferguson Livestock](resources/images/cows-1.webp)
 
-> **Migration in progress:** this branch rebuilds the site in Laravel. The live site on `main` is still the Astro version until the switch-over. Drops and the admin are built; the wait-list texts, checkout and live order page arrive in later phases, so some highlights below describe the finished rebuild.
+> **Migration in progress:** `main` holds the Laravel rebuild. The live site is still the Astro version, served from its last Vercel deployment, until the switch-over. Drops, the admin and wait-list texts are built; checkout and the live order page arrive in later phases, so some highlights below describe the finished rebuild.
 
 ## About the project
 
@@ -21,7 +21,7 @@ I designed and built the site end to end, including the visual system, content s
 - **Resilient stock recovery:** cancelled and expired Stripe sessions release reserved stock, while idempotent webhook handling prevents double releases.
 - **Flexible fulfilment:** customers can select paid delivery across the Ballarat region or free farm pickup, with the correct options passed into Stripe Checkout.
 - **Drop-based sales:** releases are set up in the admin with their own prices, stock and delivery days, scheduled in Melbourne time, and checked automatically ten minutes before opening (Stripe prices, stock, delivery and webhooks).
-- **Wait list and SMS:** sign-ups are stored in the app with evidence of consent, and drop announcements are sent by text from the admin.
+- **Wait list and SMS:** sign-ups are stored in the app with evidence of consent. Drop announcements are written, previewed (length, recipients and cost), scheduled and sent by text from the admin, replies land in an inbox, and anyone who replies STOP is opted out straight away.
 - **Search-ready publishing:** canonical URLs, sitemap generation, structured data, social metadata, and intentionally excluded confirmation routes are built in.
 - **Accessible, responsive UI:** semantic page structure, descriptive image text, mobile navigation, and clear sold-out and extras-only states support the full purchase journey.
 
@@ -56,7 +56,7 @@ Stripe webhooks are stored and de-duplicated by event ID, and a scheduled sweep 
 | Database, cache and queue | Postgres, Redis (Laravel Valkey in production) and Laravel Cloud's managed queue |
 | Admin | Filament 5, with required two-factor sign-in |
 | Payments | Stripe Checkout and signed webhooks |
-| Wait list and SMS | Built-in subscriber list, sending through an SMS provider |
+| Wait list and SMS | Built-in subscriber list and broadcasts, sent through Twilio with signed webhooks |
 | Tests and static analysis | Pest 5 (including browser tests with Playwright), Larastan and Pint |
 | Social image | Satori, Resvg and Sharp |
 | Hosting | Laravel Cloud (Sydney) |
@@ -85,7 +85,7 @@ composer run dev
 
 `composer run dev` starts the app, queue worker, log tail and Vite together. The site is available at `http://localhost:8000`.
 
-`.env.example` is set up for Herd's Postgres (user `root`, no password) and Redis. Seeding adds the products and an open demo drop. Mail goes to the log. Stripe keys are only needed for the admin's price checks; use test-mode keys locally and never commit a populated `.env` file.
+`.env.example` is set up for Herd's Postgres (user `root`, no password) and Redis. Seeding adds the products and an open demo drop. Mail goes to the log. Stripe keys are only needed for the admin's price checks, and Twilio credentials only for sending real texts (the tests use fakes for both). Use test-mode keys locally and never commit a populated `.env` file.
 
 ### Admin
 

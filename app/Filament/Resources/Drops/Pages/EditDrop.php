@@ -22,6 +22,7 @@ class EditDrop extends EditRecord
     {
         return [
             DropActions::runPreflight(),
+            DropActions::announce(),
             DropActions::duplicate(),
             DropActions::closeNow(),
             DeleteAction::make()

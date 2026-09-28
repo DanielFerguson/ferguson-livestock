@@ -5,6 +5,8 @@ namespace App\Providers;
 use App\Http\Requests\JoinWaitlistRequest;
 use App\Payments\PaymentGateway;
 use App\Payments\StripePaymentGateway;
+use App\Sms\SmsGateway;
+use App\Sms\TwilioSmsGateway;
 use App\Support\Catalogue;
 use App\Support\Faqs;
 use App\Support\ResponsiveImages;
@@ -33,6 +35,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(Catalogue::class, fn (): Catalogue => Catalogue::fromDatabase());
 
         $this->app->singleton(PaymentGateway::class, fn (): PaymentGateway => StripePaymentGateway::fromConfig());
+
+        $this->app->singleton(SmsGateway::class, fn (): SmsGateway => TwilioSmsGateway::fromConfig());
 
         $this->app->singleton(ResponsiveImages::class, function (): ResponsiveImages {
             /** @var array<string, array{source: string, widths: non-empty-list<int>, aspect?: string}> $variants */
