@@ -3,6 +3,7 @@
 use App\Http\Controllers\Checkout\CancelCheckoutController;
 use App\Http\Controllers\Checkout\OrderConfirmedController;
 use App\Http\Controllers\JoinWaitlistController;
+use App\Http\Controllers\OrderPageController;
 use App\Http\Controllers\SitemapController;
 use Illuminate\Support\Facades\Route;
 use Spatie\ResponseCache\Middlewares\CacheResponse;
@@ -28,8 +29,8 @@ Route::permanentRedirect('/delivery-and-refunds', '/delivery#refunds');
 Route::post('/waitlist', JoinWaitlistController::class)->middleware('throttle:waitlist')->name('waitlist.store');
 Route::view('/thank-you', 'pages.thank-you')->name('thank-you');
 
-// Placeholder until the live order page is built.
-Route::view('/order', 'pages.order')->name('order');
+// Not cached: the form holds each visitor's choices.
+Route::get('/order', OrderPageController::class)->name('order');
 
 // Stripe sends customers back here. Neither page is cached: both depend on the order.
 Route::get('/checkout/cancel', CancelCheckoutController::class)->name('checkout.cancel');

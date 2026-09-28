@@ -55,6 +55,9 @@
                             @else
                                 <span class="font-display text-3xl font-semibold text-forest">Price set with each drop</span>
                             @endif
+                            @isset($liveDrop['items'][$box->slug])
+                                <span class="ml-auto pb-1 text-sm font-semibold text-forest" data-drop-stock="{{ $box->slug }}">{{ \App\Stock\StockLabel::text($liveDrop['items'][$box->slug]['available']) }}</span>
+                            @endisset
                         </div>
                         <ul class="space-y-3 text-base leading-relaxed text-gray-700">
                             @foreach ($box->box->contents ?? [] as $item)

@@ -32,7 +32,7 @@ final class StockLedger
      */
     public function reserve(Drop $drop, array $quantities, DeliveryMethod $deliveryMethod, ?CarbonImmutable $deliveryDay, string $sessionFingerprint, CarbonImmutable $expiresAt): Order
     {
-        return DB::transaction(function () use ($drop, $quantities, $deliveryMethod, $deliveryDay, $sessionFingerprint, $expiresAt): Order {
+        $order = DB::transaction(function () use ($drop, $quantities, $deliveryMethod, $deliveryDay, $sessionFingerprint, $expiresAt): Order {
             $drop = Drop::query()->with('items.product')->findOrFail($drop->id);
 
             if (! $drop->status()->isOpen()) {
@@ -65,6 +65,10 @@ final class StockLedger
 
             return $order->load('items');
         });
+
+        DropSnapshot::forget();
+
+        return $order;
     }
 
     /**
@@ -72,7 +76,7 @@ final class StockLedger
      */
     public function release(Order $order): bool
     {
-        return DB::transaction(function () use ($order): bool {
+        $released = DB::transaction(function () use ($order): bool {
             $claimed = Order::query()->whereKey($order->id)->whereNull('released_at')->update(['released_at' => now(), 'updated_at' => now()]);
 
             if ($claimed === 0) {
@@ -95,6 +99,12 @@ final class StockLedger
 
             return true;
         });
+
+        if ($released) {
+            DropSnapshot::forget();
+        }
+
+        return $released;
     }
 
     /**

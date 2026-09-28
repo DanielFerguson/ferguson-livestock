@@ -6,8 +6,8 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
     plugins: [
         laravel({
-            // No JavaScript entry yet: pages ship zero JS until the live stock script arrives.
-            input: ['resources/css/app.css'],
+            // The live stock script runs on every page; the order form's script only on /order.
+            input: ['resources/css/app.css', 'resources/js/drop-status.js', 'resources/js/order-form.js'],
             // Responsive variants built by scripts/build-images.mjs, referenced with Vite::asset().
             assets: ['resources/images/generated/**'],
             refresh: true,

@@ -28,6 +28,9 @@ return [
     // The only account allowed into /admin. Pre-flight alerts go here too.
     'admin_email' => env('SHOP_ADMIN_EMAIL'),
 
+    // How often pages check live stock while a drop is open, in milliseconds. Tests poll faster.
+    'drop_poll_ms' => (int) env('SHOP_DROP_POLL_MS', 2000),
+
     // The admin's mobile in E.164 (+614...), for test texts of broadcasts.
     'admin_phone' => env('SHOP_ADMIN_PHONE'),
 

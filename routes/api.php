@@ -1,10 +1,13 @@
 <?php
 
+use App\Http\Controllers\DropStatusController;
 use App\Http\Controllers\Webhooks\StripeWebhookController;
 use App\Http\Controllers\Webhooks\TwilioInboundController;
 use App\Http\Controllers\Webhooks\TwilioStatusController;
 use App\Http\Middleware\ValidateTwilioSignature;
 use Illuminate\Support\Facades\Route;
+
+Route::get('drop', DropStatusController::class)->name('drop-status');
 
 // Same path as the Astro site, so the Stripe endpoint's URL doesn't change at the switch-over.
 Route::post('webhooks/stripe', StripeWebhookController::class)->name('webhooks.stripe');

@@ -98,6 +98,19 @@ Checkout sends customers to Stripe's payment page for 31 minutes (Stripe's minim
 
 Emails go through Resend when an order is paid: a confirmation to the customer (replies go to the farm's address) and a new-order email to the farm.
 
+## Drop day
+
+Every page polls `/api/drop` for live stock: every couple of seconds while a drop is live or about to open, every 30 seconds while one is scheduled, and not at all otherwise or in background tabs. The feed is built at most once a second and rebuilt straight after any stock change, and it may be cached by Cloudflare for a second too. `SHOP_DROP_POLL_MS` changes the polling interval (default 2000).
+
+Before each drop:
+
+1. Raise the minimum replicas (Growth plan autoscaling isn't scheduled). The pre-flight email reminds you.
+2. Watch the dashboard's current-drop table, which refreshes every five seconds.
+
+**Load test (staging):** `k6 run -e BASE_URL=https://<staging-host> scripts/load/drop-day.js` runs 500 visitors polling the feed for five minutes, with some loading the order page. It fails if more than 1% of requests fail or the feed's 95th percentile goes over 300 ms. It doesn't start checkouts (see the script's notes).
+
+**Check visitors' IP addresses once:** checkout limits tries per IP address, so the app must see each visitor's own address, not a proxy's. After deploying staging, join the wait list from your phone, then check the subscriber's IP address in the admin matches your phone's. If it shows the same address for everyone, tell Laravel which proxies to trust before the first drop.
+
 ## Twilio (wait-list texts)
 
 Texts go out from one Australian 04xx number, so people can reply. In the Twilio console:

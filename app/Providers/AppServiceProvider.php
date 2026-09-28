@@ -7,6 +7,7 @@ use App\Payments\PaymentGateway;
 use App\Payments\StripePaymentGateway;
 use App\Sms\SmsGateway;
 use App\Sms\TwilioSmsGateway;
+use App\Stock\DropSnapshot;
 use App\Support\Catalogue;
 use App\Support\Faqs;
 use App\Support\ResponsiveImages;
@@ -72,6 +73,7 @@ class AppServiceProvider extends ServiceProvider
 
         View::composer(['pages.home', 'pages.beef-boxes', 'pages.delivery'], fn (\Illuminate\View\View $view) => $view->with('catalogue', $this->app->make(Catalogue::class)));
         View::composer(['pages.home', 'pages.faq'], fn (\Illuminate\View\View $view) => $view->with('faqs', $this->app->make(Faqs::class)->all()));
+        View::composer(['components.announcement-bar', 'components.home.hero', 'pages.beef-boxes'], fn (\Illuminate\View\View $view) => $view->with('liveDrop', DropSnapshot::current()));
 
         RateLimiter::for('waitlist', fn (Request $request) => Limit::perMinutes(10, 5)
             ->by((string) $request->ip())

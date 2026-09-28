@@ -6,7 +6,7 @@ The public website and stock-aware ordering experience for Ferguson Livestock, a
 
 ![Murray Grey cattle at Ferguson Livestock](resources/images/cows-1.webp)
 
-> **Migration in progress:** `main` holds the Laravel rebuild. The live site is still the Astro version, served from its last Vercel deployment, until the switch-over. Drops, the admin, wait-list texts and the checkout behind the order page are built; the live order page itself arrives next, so some highlights below describe the finished rebuild.
+> **Migration in progress:** `main` holds the Laravel rebuild. The live site is still the Astro version, served from its last Vercel deployment, until the switch-over. Drops, the admin, wait-list texts, checkout and the live order page are built; what's left is the switch-over.
 
 ## About the project
 
@@ -16,7 +16,7 @@ I designed and built the site end to end, including the visual system, content s
 
 ## Highlights
 
-- **Stock-aware ordering:** live availability is shared across beef boxes and individual cuts, including 10 kg bundles that consume two 5 kg stock units.
+- **Stock-aware ordering:** live availability is shared across beef boxes and individual cuts, including 10 kg bundles that consume two 5 kg stock units. Every page polls a one-second snapshot of the drop (about 1 KB of JavaScript, no framework), so counts, countdowns and sold-out states update without a reload, and the order form trims a customer's choices, saying what changed, the moment stock runs out.
 - **Safe checkout reservations:** a single database transaction reserves every cart item together, preventing partial reservations and overselling during limited drops.
 - **Resilient stock recovery:** cancelled and expired Stripe sessions release reserved stock exactly once, webhooks are stored and de-duplicated by event ID, and a scheduled sweep settles any checkout whose webhook is late or lost. A concurrency test races twenty buyers for the last five boxes.
 - **Orders admin:** paid orders with a printable delivery run sorted by suburb, a CSV export, bulk "mark fulfilled", and a log of every Stripe event with a retry button.

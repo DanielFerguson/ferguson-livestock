@@ -9,6 +9,8 @@
     'structuredData' => null,
     // Font aliases from vite.config.js; the confirmation pages add 'caveat'.
     'fonts' => ['source-sans', 'cormorant'],
+    // Extra Vite entries for this page, e.g. the order form's script.
+    'scripts' => [],
 ])
 
 @php
@@ -71,7 +73,7 @@
     <meta name="geo.placename" content="{{ config('shop.location.locality') }}">
 
     @fonts($fonts)
-    @vite('resources/css/app.css')
+    @vite(['resources/css/app.css', 'resources/js/drop-status.js', ...$scripts])
 
     @foreach ($schemas as $schema)
         <script type="application/ld+json">{!! json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_THROW_ON_ERROR) !!}</script>
@@ -82,7 +84,7 @@
         {"prefetch": [{"where": {"and": [{"href_matches": "/*"}, {"not": {"href_matches": ["/order", "/order-confirmed", "/thank-you", "/waitlist", "/checkout/*", "/api/*", "/admin", "/admin/*"]}}]}, "eagerness": "moderate"}]}
     </script>
 </head>
-<body class="overflow-x-hidden bg-cream font-sans leading-relaxed text-gray-800">
+<body class="overflow-x-hidden bg-cream font-sans leading-relaxed text-gray-800" data-drop-status="{{ route('drop-status') }}" data-drop-poll="{{ config('shop.drop_poll_ms') }}">
     <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-100 focus:rounded-lg focus:bg-forest focus:px-4 focus:py-2 focus:text-cream">
         Skip to main content
     </a>

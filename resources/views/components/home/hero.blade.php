@@ -43,9 +43,13 @@
                         Farm-direct beef boxes
                     @endif
                 </h2>
-                <p class="mb-6 text-gray-600" aria-live="polite">
-                    Check the current drop, or join the next one if boxes have sold out.
-                </p>
+                @php($state = $liveDrop['drop']['state'] ?? 'none')
+                <div class="mb-6 text-gray-600" aria-live="polite">
+                    <p data-drop-show="live" @if ($state !== 'live') hidden @endif>Orders are open now. Stock updates as people order.</p>
+                    <p data-drop-show="sold_out" @if ($state !== 'sold_out') hidden @endif>This drop’s boxes have sold out. Join the wait list for the next one.</p>
+                    <p data-drop-show="scheduled" @if ($state !== 'scheduled') hidden @endif>The next drop opens in <span data-drop-countdown></span>.</p>
+                    <p data-drop-show="closed none" @if (in_array($state, ['live', 'sold_out', 'scheduled'], true)) hidden @endif>Check the current drop, or join the next one if boxes have sold out.</p>
+                </div>
 
                 <div class="mb-6 divide-y divide-forest/10 border-y border-forest/10">
                     @foreach ($catalogue->boxes() as $box)
@@ -58,6 +62,9 @@
                                 <div class="text-right">
                                     <p class="font-bold text-forest">{{ Money::format($box->price) }}</p>
                                     <p class="text-xs text-sage">{{ Money::perKg((int) $box->box?->perKgPrice) }}</p>
+                                    @isset($liveDrop['items'][$box->slug])
+                                        <p class="text-xs font-semibold text-forest" data-drop-stock="{{ $box->slug }}">{{ \App\Stock\StockLabel::text($liveDrop['items'][$box->slug]['available']) }}</p>
+                                    @endisset
                                 </div>
                             @endif
                         </div>

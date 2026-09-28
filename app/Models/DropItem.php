@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Exceptions\QuantityBelowCommitted;
 use App\Models\Concerns\ClearsResponseCache;
+use App\Stock\DropSnapshot;
 use Carbon\CarbonImmutable;
 use Database\Factories\DropItemFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -104,6 +105,8 @@ class DropItem extends Model
                 ->where('available', '>=', -$difference)
                 ->incrementEach(['quantity' => $difference, 'available' => $difference], ['updated_at' => now()]) === 1;
         });
+
+        DropSnapshot::forget();
 
         if (! $updated) {
             throw new QuantityBelowCommitted(self::query()->whereKey($this->getKey())->firstOrFail()->committed());
