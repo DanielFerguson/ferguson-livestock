@@ -1,10 +1,9 @@
 # robots.txt for Ferguson Livestock
-# https://fergusonlivestock.com.au
+# https://www.fergusonlivestock.com.au
 
 User-agent: *
 Allow: /
-
-# Sitemap location
 Disallow: /api/
+Disallow: /admin
 
 Sitemap: https://www.fergusonlivestock.com.au/sitemap-index.xml

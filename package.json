@@ -1,28 +1,29 @@
 {
-  "name": "ferguson-livestock",
-  "type": "module",
-  "version": "0.0.1",
-  "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
-    "check": "bun run build && bun scripts/check-site.mjs",
-    "preview": "astro preview",
-    "astro": "astro",
-    "generate:og": "bun scripts/generate-og-image.mjs"
-  },
-  "dependencies": {
-    "@astrojs/sitemap": "^3.6.0",
-    "@astrojs/vercel": "^9.0.2",
-    "@fontsource-variable/source-sans-3": "^5.2.9",
-    "@fontsource/caveat": "^5.2.8",
-    "@fontsource/cormorant-garamond": "^5.2.11",
-    "@resvg/resvg-js": "^2.6.2",
-    "@tailwindcss/vite": "^4.1.17",
-    "@upstash/redis": "^1.37.0",
-    "astro": "^5.16.2",
-    "satori": "^0.18.3",
-    "sharp": "^0.34.5",
-    "stripe": "^21.0.1",
-    "tailwindcss": "^4.1.17"
-  }
+    "$schema": "https://www.schemastore.org/package.json",
+    "private": true,
+    "type": "module",
+    "engines": {
+        "node": ">=24"
+    },
+    "scripts": {
+        "images": "node scripts/build-images.mjs",
+        "build": "npm run images && vite build",
+        "dev": "npm run images && vite",
+        "og-image": "node scripts/generate-og-image.mjs"
+    },
+    "devDependencies": {
+        "@resvg/resvg-js": "^2.6.2",
+        "@tailwindcss/vite": "^4.3.3",
+        "concurrently": "^10.0.5",
+        "fontaine": "^0.8.2",
+        "laravel-vite-plugin": "^3.2.0",
+        "playwright": "^1.63.0",
+        "satori": "^0.33.5",
+        "sharp": "^0.35.5",
+        "tailwindcss": "^4.3.3",
+        "vite": "^8.3.1"
+    },
+    "optionalDependencies": {
+        "@laravel/multiplex": "^0.4.4"
+    }
 }

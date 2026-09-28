@@ -4,7 +4,9 @@ The public website and stock-aware ordering experience for Ferguson Livestock, a
 
 [Visit the live site](https://www.fergusonlivestock.com.au) · [View the repository](https://github.com/DanielFerguson/ferguson-livestock)
 
-![Murray Grey cattle at Ferguson Livestock](src/assets/images/cows-1.webp)
+![Murray Grey cattle at Ferguson Livestock](resources/images/cows-1.webp)
+
+> **Migration in progress:** this branch rebuilds the site in Laravel. The live site on `main` is still the Astro version until the switch-over. Drops and the admin are built; the wait-list texts, checkout and live order page arrive in later phases, so some highlights below describe the finished rebuild.
 
 ## About the project
 
@@ -15,110 +17,119 @@ I designed and built the site end to end, including the visual system, content s
 ## Highlights
 
 - **Stock-aware ordering:** live availability is shared across beef boxes and individual cuts, including 10 kg bundles that consume two 5 kg stock units.
-- **Safe checkout reservations:** an atomic Redis operation reserves every cart item together, preventing partial reservations and overselling during limited drops.
+- **Safe checkout reservations:** a single database transaction reserves every cart item together, preventing partial reservations and overselling during limited drops.
 - **Resilient stock recovery:** cancelled and expired Stripe sessions release reserved stock, while idempotent webhook handling prevents double releases.
 - **Flexible fulfilment:** customers can select paid delivery across the Ballarat region or free farm pickup, with the correct options passed into Stripe Checkout.
-- **Drop-based sales:** releases can be activated immediately or scheduled in advance without redeploying the site.
-- **Lead capture:** Klaviyo integration supports a waitlist between product drops.
+- **Drop-based sales:** releases are set up in the admin with their own prices, stock and delivery days, scheduled in Melbourne time, and checked automatically ten minutes before opening (Stripe prices, stock, delivery and webhooks).
+- **Wait list and SMS:** sign-ups are stored in the app with evidence of consent, and drop announcements are sent by text from the admin.
 - **Search-ready publishing:** canonical URLs, sitemap generation, structured data, social metadata, and intentionally excluded confirmation routes are built in.
 - **Accessible, responsive UI:** semantic page structure, descriptive image text, mobile navigation, and clear sold-out and extras-only states support the full purchase journey.
 
 ## How it works
 
 ```text
-Customer builds an order
+Customer builds an order on the live order page
         │
         ▼
-Astro validates the cart server-side
+Laravel checks the drop is open and validates the order
         │
         ▼
-Upstash Redis atomically reserves stock
+One Postgres transaction reserves every item (or none)
         │
         ▼
 Stripe Checkout processes payment
         │
-        ├── completed → reservation removed; stock remains sold
-        ├── expired   → reservation claimed; stock restored
-        └── refunded  → stock restored once, idempotently
+        ├── paid            → order confirmed; confirmation emails sent
+        ├── payment pending → stock stays held until the bank payment settles
+        ├── expired/failed  → reservation released, exactly once
+        └── refunded        → refund recorded; stock is adjusted by hand
 ```
 
-Stock reservations expire slightly after the Stripe Checkout session. This gives the webhook time to reconcile the order while ensuring abandoned carts do not hold limited inventory indefinitely.
+Stripe webhooks are stored and de-duplicated by event ID, and a scheduled sweep reconciles any checkout whose webhook is late or missing, so abandoned carts never hold limited stock indefinitely.
 
 ## Technology
 
 | Area | Tools |
 | --- | --- |
-| Front end | Astro 5, TypeScript, Tailwind CSS 4 |
+| Framework | Laravel 13 on PHP 8.5 |
+| Front end | Blade, Tailwind CSS 4 and Vite, with self-hosted fonts |
+| Database, cache and queue | Postgres, Redis (Laravel Valkey in production) and Laravel Cloud's managed queue |
+| Admin | Filament 5, with required two-factor sign-in |
 | Payments | Stripe Checkout and signed webhooks |
-| Inventory | Upstash Redis and atomic Lua scripts |
-| Email marketing | Klaviyo |
-| Images and metadata | Astro Assets, Sharp, Satori, Resvg |
-| Hosting | Vercel |
-| Package manager | Bun |
+| Wait list and SMS | Built-in subscriber list, sending through an SMS provider |
+| Tests and static analysis | Pest 5 (including browser tests with Playwright), Larastan and Pint |
+| Social image | Satori, Resvg and Sharp |
+| Hosting | Laravel Cloud (Sydney) |
 
 ## Local development
 
 ### Prerequisites
 
-- [Bun](https://bun.sh)
-- Stripe, Upstash Redis, and Klaviyo credentials for testing the complete ordering flow
+- PHP 8.4 or newer with the `pdo_pgsql`, `redis`, `intl` and `sockets` extensions, and Composer
+- Node 24 and npm
+- Postgres and Redis ([Laravel Herd](https://herd.laravel.com) provides both)
 
 ### Setup
 
 ```sh
 git clone https://github.com/DanielFerguson/ferguson-livestock.git
 cd ferguson-livestock
-bun install
+composer install
+npm install
 cp .env.example .env
-bun dev
+php artisan key:generate
+createdb ferguson_livestock && createdb ferguson_livestock_testing
+php artisan migrate --seed
+composer run dev
 ```
 
-The development server is available at `http://localhost:4321`.
+`composer run dev` starts the app, queue worker, log tail and Vite together. The site is available at `http://localhost:8000`.
 
-The content pages can be developed without live third-party credentials. Checkout, inventory, stock seeding, and waitlist requests require their corresponding environment variables from `.env.example`.
+`.env.example` is set up for Herd's Postgres (user `root`, no password) and Redis. Seeding adds the products and an open demo drop. Mail goes to the log. Stripe keys are only needed for the admin's price checks; use test-mode keys locally and never commit a populated `.env` file.
 
-## Environment variables
+### Admin
 
-| Variable | Purpose |
-| --- | --- |
-| `STRIPE_SECRET_KEY` | Creates Checkout sessions and retrieves order details |
-| `STRIPE_WEBHOOK_SECRET` | Verifies incoming Stripe webhook signatures |
-| `UPSTASH_REDIS_REST_URL` | Connects to the inventory store |
-| `UPSTASH_REDIS_REST_TOKEN` | Authenticates Redis requests |
-| `KLAVIYO_PUBLIC_API_KEY` | Identifies the Klaviyo account for subscriptions |
-| `KLAVIYO_API_KEY` | Updates subscriber profile details |
-| `KLAVIYO_LIST_ID` | Selects the waitlist destination |
-| `STOCK_SEED_SECRET` | Protects the stock-initialisation endpoint |
+The admin lives at `http://localhost:8000/admin`. Set `SHOP_ADMIN_EMAIL` in `.env`, then create that user:
 
-Use test credentials for local development and never commit a populated `.env` file.
+```sh
+php artisan make:filament-user
+```
+
+On first sign-in, Filament asks you to set up an authenticator app. Only the `SHOP_ADMIN_EMAIL` account can sign in.
 
 ## Commands
 
 | Command | Purpose |
 | --- | --- |
-| `bun dev` | Start the local development server |
-| `bun run build` | Create the production build in `dist/` |
-| `bun run check` | Build and run the repository's publishing checks |
-| `bun run preview` | Preview the production build locally |
-| `bun run generate:og` | Regenerate the social sharing image |
+| `composer run dev` | Start the app, queue worker, logs and Vite |
+| `npm run build` | Build the responsive images, then the production CSS and fonts |
+| `npm run images` | Regenerate the AVIF/WebP variants in `resources/images/variants.json` |
+| `vendor/bin/pest --testsuite=Unit,Feature` | Run the unit and feature tests (add `--parallel` for speed) |
+| `vendor/bin/pest --testsuite=Browser` | Run the browser tests; needs `npm run build` and `npx playwright install chromium` first |
+| `vendor/bin/phpstan analyse` | Static analysis with Larastan |
+| `vendor/bin/pint` | Format PHP code |
+| `npm run og-image` | Regenerate `public/og-image.jpg` (pass `-- <path>` to preview elsewhere) |
 
-The custom check verifies important release constraints across the generated site, including canonical metadata, one primary heading per page, image alt attributes, valid JSON-LD, sitemap exclusions, and the absence of retired or unverified claims.
+CI runs linting, static analysis, the unit and feature tests against Postgres 18, and the browser tests on every pull request.
 
 ## Project structure
 
 ```text
-src/
-├── components/       Reusable storefront and brand sections
-├── config/           Typed business, content, and product data
-├── lib/              Stripe, Redis, and SEO helpers
-├── pages/            Public routes and server API endpoints
-└── styles/           Global design system and responsive styles
-scripts/              OG image generation and release checks
-docs/                 Product decisions, implementation plans, and source facts
-public/               Icons, social artwork, and crawler configuration
+app/                  Application code (models, Filament admin, payments, actions, support classes)
+config/shop.php       Business facts, brand copy and navigation
+config/catalogue.php  Starting product data for ProductSeeder, with suggested prices for the demo drop
+resources/views/      Blade layouts, components and pages
+resources/css/        Tailwind entry point and design tokens
+resources/fonts/      Self-hosted fonts (SIL Open Font License)
+resources/images/     Source photography, logo and variants.json (generated/ is built)
+routes/               Web routes
+tests/                Pest unit, feature, browser and architecture tests
+scripts/              Responsive image and social image generation
+docs/                 Product decisions, implementation plans and source facts
+public/               Icons, social artwork and crawler configuration
 ```
 
-Commercial facts and sensitive marketing claims are deliberately centralised in [`docs/content/business-facts.md`](docs/content/business-facts.md), while prices, inventory, delivery fees, and product contents live in typed configuration. This reduces the chance of stale claims being repeated across pages, metadata, and structured data.
+Commercial facts and sensitive marketing claims are deliberately centralised in [`docs/content/business-facts.md`](docs/content/business-facts.md), while product contents are managed in the admin, and prices, stock and the delivery fee are set per drop. This reduces the chance of stale claims being repeated across pages, metadata, and structured data.
 
 ## Design direction
 

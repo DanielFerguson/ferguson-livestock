@@ -1,0 +1,106 @@
+/* Scan only where markup lives, so docs and scripts don't add unused utilities. */
+@import 'tailwindcss' source(none);
+
+@source '../views';
+@source '../../app';
+
+@theme {
+    --color-forest: #1a2e1a;
+    --color-forest-light: #243524;
+    --color-sage: #4a6741;
+    --color-mint: #7db89e;
+    --color-mint-light: #a8d4be;
+    --color-cream: #f5f2eb;
+    --color-cream-dark: #e8e4d9;
+    --color-warm: #d4a574;
+    --color-warm-dark: #b8956a;
+
+    /* `both` keeps elements hidden during any animation delay without a separate opacity rule. */
+    --animate-fade-in-up: fade-in-up 0.8s ease both;
+
+    @keyframes fade-in-up {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+}
+
+/* Font stacks (including metric-matched fallbacks) come from the fonts option in vite.config.js via @fonts. */
+@theme inline {
+    --font-sans: var(--font-source-sans);
+    --font-display: var(--font-cormorant);
+    --font-handwriting: var(--font-caveat);
+}
+
+/* The small uppercase label above section headings. */
+@utility eyebrow {
+    font-size: var(--text-xs);
+    line-height: var(--text-xs--line-height);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+}
+
+@layer base {
+    html {
+        scroll-behavior: smooth;
+        /* Keeps in-page anchors (#waitlist, #refunds) clear of the sticky header. */
+        scroll-padding-top: 6rem;
+    }
+
+    :focus-visible {
+        outline: 2px solid currentColor;
+        outline-offset: 3px;
+    }
+}
+
+@layer components {
+    .legal-content h1 {
+        margin-bottom: 2rem;
+        font-family: var(--font-display);
+        font-size: clamp(3rem, 7vw, 4.5rem);
+        font-weight: 600;
+        line-height: 0.95;
+        color: var(--color-forest);
+    }
+
+    .legal-content h2 {
+        margin-top: 2.5rem;
+        margin-bottom: 0.75rem;
+        font-family: var(--font-display);
+        font-size: 2rem;
+        font-weight: 600;
+        color: var(--color-forest);
+    }
+
+    .legal-content p {
+        margin-bottom: 1rem;
+        line-height: 1.75;
+    }
+
+    .legal-content a {
+        color: var(--color-sage);
+        text-decoration: underline;
+        text-underline-offset: 0.2em;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
