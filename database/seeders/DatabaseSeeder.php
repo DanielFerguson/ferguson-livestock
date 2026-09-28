@@ -14,7 +14,7 @@ class DatabaseSeeder extends Seeder
         $this->call(ProductSeeder::class);
 
         if (app()->isLocal()) {
-            $this->call(DemoDropSeeder::class);
+            $this->call([AdminUserSeeder::class, DemoDropSeeder::class]);
         }
     }
 }

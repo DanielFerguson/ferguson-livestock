@@ -54,10 +54,10 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => self::SAGE,
             ])
-            // An authenticator app is required; recovery codes cover a lost phone.
+            // An authenticator app is required outside local dev; recovery codes cover a lost phone.
             ->multiFactorAuthentication([
                 AppAuthentication::make()->recoverable(),
-            ], isRequired: true)
+            ], isRequired: ! app()->isLocal())
             ->databaseNotifications()
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')

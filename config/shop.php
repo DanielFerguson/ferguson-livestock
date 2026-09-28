@@ -28,6 +28,9 @@ return [
     // The only account allowed into /admin. Pre-flight alerts go here too.
     'admin_email' => env('SHOP_ADMIN_EMAIL'),
 
+    // Password for the account AdminUserSeeder creates. Locally it falls back to "password".
+    'admin_password' => env('SHOP_ADMIN_PASSWORD'),
+
     // How often pages check live stock while a drop is open, in milliseconds. Tests poll faster.
     'drop_poll_ms' => (int) env('SHOP_DROP_POLL_MS', 2000),
 
