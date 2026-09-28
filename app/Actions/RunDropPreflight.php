@@ -106,23 +106,10 @@ final readonly class RunDropPreflight
     }
 
     /**
-     * Stripe must send payment events to this deployment, so staging checks its own address rather than
-     * the canonical site's.
-     *
      * @return list<string>
      */
     private function webhookProblems(): array
     {
-        $url = rtrim(config()->string('app.url'), '/').'/api/webhooks/stripe';
-
-        $endpoint = collect($this->payments->webhookEndpoints())->first(fn ($endpoint) => $endpoint->enabled && $endpoint->url === $url);
-
-        if ($endpoint === null) {
-            return ['Stripe isn’t set up to tell the site about payments. Add the webhook endpoint in Stripe.'];
-        }
-
-        $missing = array_values(array_diff(StripeWebhookEvents::REQUIRED, $endpoint->events));
-
-        return $missing === [] ? [] : ['The Stripe webhook doesn’t send '.implode(', ', $missing).'.'];
+        return StripeWebhookEvents::problems($this->payments->webhookEndpoints(), config()->string('app.url'));
     }
 }

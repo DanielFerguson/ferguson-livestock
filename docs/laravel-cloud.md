@@ -1,6 +1,6 @@
 # Laravel Cloud setup
 
-How the Laravel app is hosted. The `production` environment is only created at the switch-over (see the migration plan). Until then the live site is the Astro version's last Vercel deployment.
+How the Laravel app is hosted. The `production` environment is only created at the switch-over: follow `docs/switch-over.md`. Until then the live site is the Astro version's last Vercel deployment.
 
 ## Vercel during the migration
 
@@ -131,6 +131,8 @@ The app sends a broadcast one text at a time from the queue, and Twilio queues t
 Enable preview environments for pull requests into `main`. Give them the same variables as staging, and **turn off the WebSocket cluster Cloud creates by default** — the site doesn't use WebSockets.
 
 ## Checks after the first deploy
+
+`php artisan site:check https://<host> --staging` checks every page, redirect, header, the sitemap and the live stock feed (drop `--staging` for production). For a quick look by hand:
 
 ```sh
 curl -sI https://<staging-host>/ | grep -iE 'x-robots-tag|strict-transport|x-frame'
