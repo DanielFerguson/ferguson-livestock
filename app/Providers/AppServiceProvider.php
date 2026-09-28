@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Http\Requests\JoinWaitlistRequest;
 use App\Payments\PaymentGateway;
 use App\Payments\StripePaymentGateway;
+use App\Payments\StripeWebhookEvents;
 use App\Sms\SmsGateway;
 use App\Sms\TwilioSmsGateway;
 use App\Stock\DropSnapshot;
@@ -14,6 +15,7 @@ use App\Support\ResponsiveImages;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\DevCommands;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -75,6 +77,8 @@ class AppServiceProvider extends ServiceProvider
         View::composer(['pages.home', 'pages.faq'], fn (\Illuminate\View\View $view) => $view->with('faqs', $this->app->make(Faqs::class)->all()));
         View::composer(['components.announcement-bar', 'components.home.hero', 'pages.beef-boxes'], fn (\Illuminate\View\View $view) => $view->with('liveDrop', DropSnapshot::current()));
 
+        $this->registerStripeWebhookForwarding();
+
         RateLimiter::for('waitlist', fn (Request $request) => Limit::perMinutes(10, 5)
             ->by((string) $request->ip())
             ->response(fn () => redirect(JoinWaitlistRequest::formUrl(url()->previous()))
@@ -82,5 +86,24 @@ class AppServiceProvider extends ServiceProvider
                 ->withErrors([
                     'first_name' => 'You’ve tried a few times in a row. Please wait a few minutes and try again, or call us on '.config()->string('shop.phone.display').'.',
                 ], 'waitlist')));
+    }
+
+    /**
+     * Forward Stripe test-mode webhooks to the local app while `php artisan dev` runs.
+     */
+    protected function registerStripeWebhookForwarding(): void
+    {
+        $stripeSecret = config('services.stripe.secret');
+
+        if (! $this->app->isLocal() || ! is_string($stripeSecret) || ! str_starts_with($stripeSecret, 'sk_test_')) {
+            return;
+        }
+
+        DevCommands::register(sprintf(
+            'stripe listen --api-key %s --events %s --forward-to %s',
+            escapeshellarg($stripeSecret),
+            implode(',', StripeWebhookEvents::REQUIRED),
+            escapeshellarg(url('/api/webhooks/stripe')),
+        ), 'stripe')->purple();
     }
 }
