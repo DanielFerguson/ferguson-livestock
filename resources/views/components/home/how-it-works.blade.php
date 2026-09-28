@@ -34,7 +34,7 @@
         <div class="mt-12 text-center lg:mt-16">
             <x-button :href="route('order')" class="px-8">
                 View current availability
-                <x-icon name="arrow-right" />
+                <x-svg-icon name="arrow-right" />
             </x-button>
         </div>
     </div>

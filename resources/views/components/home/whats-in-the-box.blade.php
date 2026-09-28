@@ -19,10 +19,12 @@
                     <div class="bg-forest-light p-6">
                         <p class="font-display text-3xl font-semibold">{{ $box->name }}</p>
                         <p class="mt-1 text-sm text-cream/75">{{ $box->box?->bestFor }}</p>
-                        <p class="mt-5 text-2xl font-bold text-mint-light">
-                            {{ Money::format($box->price) }}
-                            <span class="text-sm font-medium text-cream/75">· {{ Money::perKg($box->box->perKgPrice ?? 0) }}</span>
-                        </p>
+                        @if ($box->price !== null)
+                            <p class="mt-5 text-2xl font-bold text-mint-light">
+                                {{ Money::format($box->price) }}
+                                <span class="text-sm font-medium text-cream/75">· {{ Money::perKg((int) $box->box?->perKgPrice) }}</span>
+                            </p>
+                        @endif
                     </div>
                 @endforeach
             </div>

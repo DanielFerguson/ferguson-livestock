@@ -21,6 +21,8 @@
         </include>
     </source>
     <php>
+        <!-- Filament's page tests are memory-hungry when the whole suite runs in one process. -->
+        <ini name="memory_limit" value="1G"/>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>

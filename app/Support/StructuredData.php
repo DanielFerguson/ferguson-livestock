@@ -110,27 +110,30 @@ final class StructuredData
         $pageUrl = self::url('/beef-boxes');
         $image = url(Vite::asset('resources/images/generated/beef-box-720.webp'));
 
-        return [
-            self::webPage('/beef-boxes', $title, $description),
-            [
-                '@context' => 'https://schema.org',
-                '@graph' => $catalogue->boxes()->map(fn (Product $box) => [
-                    '@type' => 'Product',
-                    '@id' => "{$pageUrl}#{$box->slug}",
-                    'name' => $box->name,
-                    'description' => $box->description,
-                    'image' => $image,
-                    'brand' => ['@type' => 'Brand', 'name' => config()->string('shop.name')],
-                    'offers' => [
-                        '@type' => 'Offer',
-                        'url' => self::url('/order'),
-                        'priceCurrency' => 'AUD',
-                        'price' => number_format($box->price / 100, 2, '.', ''),
-                        'seller' => ['@id' => self::businessId()],
-                    ],
-                ])->all(),
-            ],
-        ];
+        // Only boxes a drop has priced: an offer without a price isn't valid structured data.
+        $products = $catalogue->boxes()
+            ->filter(fn (CatalogueEntry $box): bool => $box->price !== null)
+            ->map(fn (CatalogueEntry $box): array => [
+                '@type' => 'Product',
+                '@id' => "{$pageUrl}#{$box->slug}",
+                'name' => $box->name,
+                'description' => $box->description,
+                'image' => $image,
+                'brand' => ['@type' => 'Brand', 'name' => config()->string('shop.name')],
+                'offers' => [
+                    '@type' => 'Offer',
+                    'url' => self::url('/order'),
+                    'priceCurrency' => 'AUD',
+                    'price' => number_format((int) $box->price / 100, 2, '.', ''),
+                    'seller' => ['@id' => self::businessId()],
+                ],
+            ])
+            ->values()
+            ->all();
+
+        $page = self::webPage('/beef-boxes', $title, $description);
+
+        return $products === [] ? [$page] : [$page, ['@context' => 'https://schema.org', '@graph' => $products]];
     }
 
     /**

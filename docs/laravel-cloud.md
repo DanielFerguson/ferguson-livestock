@@ -35,13 +35,41 @@ Environment variables to set yourself (Cloud injects the database, Valkey and qu
 ```dotenv
 APP_ENV=staging
 APP_DEBUG=false
+APP_URL=https://<staging-host>
 CACHE_STORE=redis
 SESSION_DRIVER=redis
+SHOP_ADMIN_EMAIL=<the admin's email>
+STRIPE_SECRET=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+MAIL_MAILER=resend
+RESEND_API_KEY=re_...
+MAIL_FROM_ADDRESS=orders@send.fergusonlivestock.com.au
 ```
 
 The response cache uses `CACHE_STORE`, so every replica shares the cached marketing pages. The deploy command clears it, so a deploy never serves stale pages.
 
+`APP_URL` must be the environment's own address: the drop pre-flight check looks for a Stripe webhook endpoint at `APP_URL/api/webhooks/stripe`. `SHOP_URL` stays the canonical www address everywhere.
+
+Resend sends from the verified `send.fergusonlivestock.com.au` subdomain. Until the domain is verified, pre-flight emails fail and the result is only shown in the admin.
+
 `APP_ENV=staging` matters: every non-production response is sent with `X-Robots-Tag: noindex, nofollow`, because staging pages carry the production canonical URLs.
+
+## First deploy of each environment
+
+Run these once from the environment's **Commands** tab:
+
+```sh
+php artisan db:seed --class=ProductSeeder --force
+php artisan make:filament-user --name="Daniel Ferguson" --email=<SHOP_ADMIN_EMAIL> --password=<generated password>
+```
+
+The command runner isn’t interactive, so the password goes on the command line: generate it in your password manager.
+
+The seeder adds the boxes, extras and delivery fee without prices; each drop sets its own. Re-running it doesn't overwrite edits made in the admin.
+
+Then sign in at `/admin`. Filament asks you to set up an authenticator app on first sign-in; keep the recovery codes somewhere safe. Only the `SHOP_ADMIN_EMAIL` account can sign in, even if other users exist.
+
+The scheduler must stay on: every minute it runs `drops:preflight`, which checks each published drop 10 minutes before it opens, then emails the admin and adds a notification in the admin.
 
 ## Preview environments
 
@@ -53,6 +81,7 @@ Enable preview environments for pull requests into `laravel-migration`. Give the
 curl -sI https://<staging-host>/ | grep -iE 'x-robots-tag|strict-transport|x-frame'
 curl -sI https://<staging-host>/our-story/ | grep -iE '^(HTTP|location)'
 curl -s https://<staging-host>/up
+curl -sI https://<staging-host>/admin/login | grep -i x-robots-tag
 ```
 
-Expect `noindex, nofollow`, the security headers, a `301` to `/our-story`, and a healthy `/up`.
+Expect `noindex, nofollow`, the security headers, a `301` to `/our-story`, a healthy `/up`, and `noindex` on the admin.

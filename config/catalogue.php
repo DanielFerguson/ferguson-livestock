@@ -5,9 +5,9 @@
 | Catalogue
 |--------------------------------------------------------------------------
 |
-| Product names, contents and display prices (in cents). This is the seed
-| for the products table once drops move into the database; until then the
-| marketing pages read it through App\Support\Catalogue. Prices must match
+| The products table is seeded from this file (database/seeders/ProductSeeder).
+| Prices here are only suggestions for new drops and the local demo drop:
+| the live prices are set on each drop in the admin. Keep them in line with
 | docs/content/business-facts.md.
 |
 */
@@ -40,6 +40,9 @@ return [
             'description' => 'A larger balanced mix of steaks, slow-cook cuts, roasts, sausages and mince.',
             'type' => 'box',
             'price' => 27500,
+            // Uses two units of the 5kg box's stock.
+            'stock_product' => 'beef-box-5kg',
+            'stock_units' => 2,
             'box' => [
                 'weight_kg' => 10,
                 'contents' => [
