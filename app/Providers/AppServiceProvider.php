@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Http\Requests\JoinWaitlistRequest;
+use App\Payments\PaymentGateway;
+use App\Payments\StripePaymentGateway;
 use App\Support\Catalogue;
 use App\Support\Faqs;
 use App\Support\ResponsiveImages;
@@ -26,12 +28,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(Catalogue::class, function (): Catalogue {
-            /** @var array<string, array{name: string, description: string, type: 'box'|'extra'|'delivery', price: int, box?: array{weight_kg: int, contents: list<string>, best_for: string, freezer_guidance: string}}> $products */
-            $products = config()->array('catalogue.products');
+        // Read fresh each time: the featured drop's prices change with the clock and admin edits,
+        // and the pages that use it are served from the response cache anyway.
+        $this->app->bind(Catalogue::class, fn (): Catalogue => Catalogue::fromDatabase());
 
-            return new Catalogue($products);
-        });
+        $this->app->singleton(PaymentGateway::class, fn (): PaymentGateway => StripePaymentGateway::fromConfig());
 
         $this->app->singleton(ResponsiveImages::class, function (): ResponsiveImages {
             /** @var array<string, array{source: string, widths: non-empty-list<int>, aspect?: string}> $variants */

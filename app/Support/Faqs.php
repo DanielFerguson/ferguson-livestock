@@ -14,9 +14,8 @@ final readonly class Faqs
      */
     public function all(): array
     {
-        $fiveKg = $this->catalogue->find('beef-box-5kg');
-        $tenKg = $this->catalogue->find('beef-box-10kg');
         $deliveryArea = config()->string('shop.delivery.area_name');
+        $deliveryFee = $this->catalogue->deliveryFee();
 
         return [
             [
@@ -25,13 +24,7 @@ final readonly class Faqs
             ],
             [
                 'question' => 'How much do the beef boxes cost?',
-                'answer' => sprintf(
-                    '5kg beef boxes are %s (%s), and 10kg beef boxes are %s (%s).',
-                    Money::format($fiveKg->price),
-                    Money::perKg($fiveKg->box->perKgPrice ?? 0),
-                    Money::format($tenKg->price),
-                    Money::perKg($tenKg->box->perKgPrice ?? 0),
-                ),
+                'answer' => $this->boxPrices(),
             ],
             [
                 'question' => 'What cuts are included?',
@@ -46,7 +39,7 @@ final readonly class Faqs
                 'answer' => sprintf(
                     'We personally deliver across the %s. Delivery is %s per order. %s is also available %s.',
                     $deliveryArea,
-                    Money::format($this->catalogue->deliveryFee()),
+                    $deliveryFee === null ? 'a flat fee' : Money::format($deliveryFee),
                     config()->string('shop.pickup.label'),
                     config()->string('shop.location.proximity'),
                 ),
@@ -64,5 +57,28 @@ final readonly class Faqs
                 'answer' => 'Join the wait list and we will text you when the next beef-box drop opens. If individual cuts remain after the boxes sell out, they stay available on the order page while stock lasts.',
             ],
         ];
+    }
+
+    /**
+     * Box prices from the featured drop, in the order the catalogue lists the boxes.
+     */
+    private function boxPrices(): string
+    {
+        $priced = $this->catalogue->boxes()->filter(fn (CatalogueEntry $box): bool => $box->price !== null && $box->box !== null);
+
+        if ($priced->isEmpty()) {
+            return 'Prices are set for each drop and shown on the order page before you pay.';
+        }
+
+        $prices = $priced->map(fn (CatalogueEntry $box): string => sprintf(
+            '%dkg beef boxes are %s (%s)',
+            $box->box->weightKg ?? 0,
+            Money::format((int) $box->price),
+            Money::perKg((int) $box->box?->perKgPrice),
+        ))->values()->all();
+
+        return count($prices) === 1
+            ? "{$prices[0]}."
+            : implode(', ', array_slice($prices, 0, -1)).', and '.end($prices).'.';
     }
 }

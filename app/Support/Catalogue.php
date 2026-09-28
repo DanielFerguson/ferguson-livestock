@@ -2,85 +2,86 @@
 
 namespace App\Support;
 
+use App\Enums\ProductType;
+use App\Models\Drop;
+use App\Models\Product;
 use Illuminate\Support\Collection;
-use InvalidArgumentException;
 
 /**
- * Product names, contents and display prices for the marketing pages.
- *
- * Backed by config/catalogue.php until drops and their prices move into the database.
- *
- * @phpstan-type BoxConfig array{weight_kg: int, contents: list<string>, best_for: string, freezer_guidance: string}
- * @phpstan-type ProductConfig array{name: string, description: string, type: 'box'|'extra'|'delivery', price: int, box?: BoxConfig}
+ * Products for the marketing pages, priced from the featured drop: the one open now, else the next
+ * scheduled one, else the most recent. Prices are null until a drop sets them, and the pages hide them.
  */
-final class Catalogue
+final readonly class Catalogue
 {
-    /** @var Collection<string, Product> */
-    private Collection $products;
-
     /**
-     * @param  array<string, ProductConfig>  $products
+     * @param  Collection<int, CatalogueEntry>  $entries
      */
-    public function __construct(array $products)
+    public function __construct(private Collection $entries) {}
+
+    public static function fromDatabase(): self
     {
-        $built = [];
+        /** @var Collection<int, int> $prices */
+        $prices = Drop::featured()?->items()->pluck('price', 'product_id') ?? collect();
 
-        foreach ($products as $slug => $product) {
-            $built[$slug] = new Product(
-                slug: $slug,
-                name: $product['name'],
-                description: $product['description'],
-                type: $product['type'],
-                price: $product['price'],
-                box: isset($product['box']) ? new BoxDetails(
-                    weightKg: $product['box']['weight_kg'],
-                    contents: $product['box']['contents'],
-                    bestFor: $product['box']['best_for'],
-                    freezerGuidance: $product['box']['freezer_guidance'],
-                    perKgPrice: intdiv($product['price'], $product['box']['weight_kg']),
-                ) : null,
+        return new self(Product::orderBy('sort')->orderBy('id')->get()->map(function (Product $product) use ($prices): CatalogueEntry {
+            $price = $prices->get($product->id);
+            $details = $product->box_details;
+
+            return new CatalogueEntry(
+                slug: $product->slug,
+                name: $product->name,
+                description: $product->description,
+                type: $product->type,
+                price: $price,
+                box: $details === null ? null : new BoxDetails(
+                    weightKg: $details['weight_kg'],
+                    contents: $details['contents'],
+                    bestFor: $details['best_for'],
+                    freezerGuidance: $details['freezer_guidance'],
+                    perKgPrice: $price === null ? null : intdiv($price, $details['weight_kg']),
+                ),
             );
-        }
-
-        $this->products = collect($built);
+        }));
     }
 
-    public function find(string $slug): Product
+    public function find(string $slug): ?CatalogueEntry
     {
-        return $this->products->get($slug) ?? throw new InvalidArgumentException("Unknown product [{$slug}].");
+        return $this->entries->firstWhere('slug', $slug);
     }
 
     /**
-     * @return Collection<int, Product>
+     * @return Collection<int, CatalogueEntry>
      */
     public function boxes(): Collection
     {
-        return $this->ofType('box');
+        return $this->ofType(ProductType::Box);
     }
 
     /**
-     * @return Collection<int, Product>
+     * @return Collection<int, CatalogueEntry>
      */
     public function extras(): Collection
     {
-        return $this->ofType('extra');
+        return $this->ofType(ProductType::Extra);
     }
 
-    public function deliveryFee(): int
+    public function deliveryFee(): ?int
     {
-        return $this->ofType('delivery')->firstOrFail()->price;
+        return $this->ofType(ProductType::Delivery)->first()?->price;
     }
 
-    public function startingBoxPrice(): int
+    public function startingBoxPrice(): ?int
     {
-        return (int) $this->boxes()->min(fn (Product $box) => $box->price);
+        $prices = array_filter($this->boxes()->map(fn (CatalogueEntry $box): ?int => $box->price)->all(), fn (?int $price): bool => $price !== null);
+
+        return $prices === [] ? null : min($prices);
     }
 
     /**
-     * @return Collection<int, Product>
+     * @return Collection<int, CatalogueEntry>
      */
-    private function ofType(string $type): Collection
+    private function ofType(ProductType $type): Collection
     {
-        return $this->products->filter(fn (Product $product) => $product->type === $type)->values();
+        return $this->entries->filter(fn (CatalogueEntry $entry): bool => $entry->type === $type)->values();
     }
 }

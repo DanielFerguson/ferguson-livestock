@@ -95,7 +95,7 @@
             </form>
 
             <p class="mt-5 flex items-center justify-center gap-2 text-sm text-gray-600">
-                <x-icon name="shield-check" class="h-4 w-4 text-sage" />
+                <x-svg-icon name="shield-check" class="h-4 w-4 text-sage" />
                 No spam, ever. Opt out any time.
             </p>
         </div>

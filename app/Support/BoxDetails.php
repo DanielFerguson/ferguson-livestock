@@ -12,6 +12,7 @@ final readonly class BoxDetails
         public array $contents,
         public string $bestFor,
         public string $freezerGuidance,
-        public int $perKgPrice,
+        /** In cents; null when the box has no price yet */
+        public ?int $perKgPrice,
     ) {}
 }

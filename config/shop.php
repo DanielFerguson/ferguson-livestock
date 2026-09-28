@@ -25,6 +25,9 @@ return [
 
     'email' => 'ferguson.livestock.mg@outlook.com',
 
+    // The only account allowed into /admin. Pre-flight alerts go here too.
+    'admin_email' => env('SHOP_ADMIN_EMAIL'),
+
     'phone' => [
         'international' => '+61427458706',
         'display' => '0427 458 706',

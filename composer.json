@@ -8,9 +8,12 @@
     "require": {
         "php": "^8.4",
         "aws/aws-sdk-php": "^3.398",
+        "filament/filament": "^5.9",
         "laravel/framework": "^13.33",
         "laravel/tinker": "^3.0",
-        "spatie/laravel-responsecache": "^8.4"
+        "resend/resend-php": "^1.16",
+        "spatie/laravel-responsecache": "^8.4",
+        "stripe/stripe-php": "^21.3"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -24,6 +27,7 @@
         "pestphp/pest": "^5.2",
         "pestphp/pest-plugin-browser": "^5.0",
         "pestphp/pest-plugin-laravel": "^5.0",
+        "pestphp/pest-plugin-livewire": "^5.0",
         "pestphp/pest-plugin-phpstan": "^5.2"
     },
     "autoload": {
@@ -57,7 +61,8 @@
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
-            "@php artisan package:discover --ansi"
+            "@php artisan package:discover --ansi",
+            "@php artisan filament:upgrade"
         ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force"

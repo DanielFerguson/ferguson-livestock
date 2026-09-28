@@ -4,7 +4,7 @@
 <div class="mx-auto w-full max-w-2xl">
     <div class="mb-8 text-center">
         <span class="mb-6 inline-flex h-20 w-20 items-center justify-center rounded-full bg-mint/20">
-            <x-icon name="check-circle" class="h-10 w-10 text-sage" />
+            <x-svg-icon name="check-circle" class="h-10 w-10 text-sage" />
         </span>
         <h1 class="mb-2 font-display text-4xl font-semibold text-forest md:text-5xl">{{ $heading }}</h1>
         <p class="text-lg text-gray-600">{{ $subheading }}</p>

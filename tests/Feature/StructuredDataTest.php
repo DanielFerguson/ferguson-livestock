@@ -3,6 +3,8 @@
 use App\Support\Catalogue;
 use App\Support\Faqs;
 use App\Support\StructuredData;
+use Database\Seeders\DemoDropSeeder;
+use Database\Seeders\ProductSeeder;
 
 it('describes the farm as one LocalBusiness node on the homepage', function () {
     $home = StructuredData::home('Title', 'Description');
@@ -35,7 +37,9 @@ it('describes a page with its canonical URL', function () {
     ]);
 });
 
-it('offers both boxes at their catalogue prices, sold by the business', function () {
+it('offers both boxes at the featured drop’s prices, sold by the business', function () {
+    $this->seed([ProductSeeder::class, DemoDropSeeder::class]);
+
     $schemas = StructuredData::beefBoxes('Title', 'Description', app(Catalogue::class));
 
     expect(data_get($schemas, '1.@graph.*.offers.price'))->toBe(['160.00', '275.00'])
@@ -55,10 +59,27 @@ it('marks up every frequently asked question', function () {
         ->and(data_get($schema, 'mainEntity.0.acceptedAnswer.text'))->toBe($faqs[0]['answer']);
 });
 
-it('prices the FAQ answers from the catalogue', function () {
+it('leaves product offers out until a drop sets prices', function () {
+    $this->seed(ProductSeeder::class);
+
+    expect(StructuredData::beefBoxes('Title', 'Description', app(Catalogue::class)))->toHaveCount(1);
+});
+
+it('prices the FAQ answers from the featured drop', function () {
+    $this->seed([ProductSeeder::class, DemoDropSeeder::class]);
+
     $answers = collect(app(Faqs::class)->all())->pluck('answer')->implode(' ');
 
     expect($answers)->toContain('$160')
         ->toContain('$275')
         ->toContain('Delivery is $15 per order');
+});
+
+it('explains how prices work before any drop sets them', function () {
+    $this->seed(ProductSeeder::class);
+
+    $answers = collect(app(Faqs::class)->all())->pluck('answer')->implode(' ');
+
+    expect($answers)->toContain('Prices are set for each drop and shown on the order page before you pay.')
+        ->toContain('Delivery is a flat fee per order');
 });

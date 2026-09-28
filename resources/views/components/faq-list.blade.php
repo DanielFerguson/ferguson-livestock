@@ -19,7 +19,7 @@
                 <details name="faq" class="group border border-forest/10 bg-white">
                     <summary class="flex min-h-12 cursor-pointer list-none items-center justify-between gap-4 px-6 py-5 text-lg font-semibold text-forest transition-colors hover:text-sage [&::-webkit-details-marker]:hidden">
                         {{ $faq['question'] }}
-                        <x-icon name="plus" class="h-6 w-6 text-sage transition-transform group-open:rotate-45" />
+                        <x-svg-icon name="plus" class="h-6 w-6 text-sage transition-transform group-open:rotate-45" />
                     </summary>
                     <p class="px-6 pb-6 leading-relaxed text-gray-700">{{ $faq['answer'] }}</p>
                 </details>

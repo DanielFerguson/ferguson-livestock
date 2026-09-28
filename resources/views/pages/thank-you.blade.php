@@ -20,19 +20,19 @@
             <x-slot:actions>
                 <div class="flex flex-col justify-center gap-3 sm:flex-row sm:flex-wrap">
                     <x-button :href="route('home')">
-                        <x-icon name="home" />
+                        <x-svg-icon name="home" />
                         Back to the homepage
                     </x-button>
                     <x-button href="sms:?&body={{ rawurlencode($shareText) }}" variant="outline">
-                        <x-icon name="message" />
+                        <x-svg-icon name="message" />
                         Text a friend
                     </x-button>
                     <x-button href="mailto:?subject={{ rawurlencode('Farm-fresh beef from Ferguson Livestock') }}&body={{ rawurlencode($shareText) }}" variant="outline">
-                        <x-icon name="mail" />
+                        <x-svg-icon name="mail" />
                         Email a friend
                     </x-button>
                     <x-button href="https://www.facebook.com/sharer/sharer.php?u={{ rawurlencode($siteUrl) }}" variant="outline" target="_blank" rel="noopener noreferrer">
-                        <x-icon name="facebook" />
+                        <x-svg-icon name="facebook" />
                         Share on Facebook
                     </x-button>
                 </div>

@@ -5,7 +5,7 @@
     $area = config()->string('shop.delivery.area_name');
     $title = 'Beef Delivery and Farm Pickup Ballarat | Ferguson Livestock';
     $description = "Personal Ferguson Livestock delivery across the {$area}, plus free farm pickup by arrangement in Snake Valley, and what to do if something isn’t right.";
-    $deliveryFee = Money::format($catalogue->deliveryFee());
+    $deliveryFee = $catalogue->deliveryFee();
 @endphp
 
 <x-layouts.app :title="$title" :description="$description" :structured-data="StructuredData::webPage('/delivery', $title, $description)">
@@ -28,7 +28,7 @@
         <div class="mx-auto grid max-w-5xl gap-8 px-6 md:grid-cols-2">
             <article class="border border-forest/10 bg-white p-8">
                 <p class="eyebrow mb-3 text-sage">Personal delivery</p>
-                <h2 class="font-display text-4xl font-semibold text-forest">{{ $deliveryFee }} flat fee</h2>
+                <h2 class="font-display text-4xl font-semibold text-forest">{{ $deliveryFee === null ? 'One flat fee' : Money::format($deliveryFee).' flat fee' }}</h2>
                 <p class="mt-4 leading-relaxed text-gray-700">We deliver across the {{ $area }} and confirm the delivery window with you directly. If nobody will be home, arrange a safe, chilled spot with us beforehand. If you’re close to Ballarat but unsure whether your postcode is covered, contact us before ordering.</p>
             </article>
             <article class="border border-forest/10 bg-white p-8">

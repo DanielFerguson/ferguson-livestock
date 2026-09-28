@@ -49,13 +49,17 @@
                             <p class="mt-1 text-gray-600">{{ $box->box?->bestFor }}</p>
                         </div>
                         <div class="mb-6 flex items-end gap-3 border-b border-forest/10 pb-6">
-                            <span class="font-display text-5xl font-semibold text-forest">{{ Money::format($box->price) }}</span>
-                            <span class="pb-1 text-sm font-semibold text-sage">{{ Money::perKg($box->box->perKgPrice ?? 0) }}</span>
+                            @if ($box->price !== null)
+                                <span class="font-display text-5xl font-semibold text-forest">{{ Money::format($box->price) }}</span>
+                                <span class="pb-1 text-sm font-semibold text-sage">{{ Money::perKg((int) $box->box?->perKgPrice) }}</span>
+                            @else
+                                <span class="font-display text-3xl font-semibold text-forest">Price set with each drop</span>
+                            @endif
                         </div>
                         <ul class="space-y-3 text-base leading-relaxed text-gray-700">
                             @foreach ($box->box->contents ?? [] as $item)
                                 <li class="flex gap-3">
-                                    <x-icon name="check" class="mt-0.5 text-sage" />
+                                    <x-svg-icon name="check" class="mt-0.5 text-sage" />
                                     <span>{{ $item }}</span>
                                 </li>
                             @endforeach
