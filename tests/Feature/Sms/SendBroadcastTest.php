@@ -37,6 +37,17 @@ it('only texts the chosen postcodes', function () {
     expect($sms->recipients())->toBe([$ballarat->phone]);
 });
 
+it('only texts the chosen subscribers, and not one of them who has opted out', function () {
+    $sms = FakeSmsGateway::swap();
+    $tester = Subscriber::factory()->create();
+    $optedOut = Subscriber::factory()->unsubscribed()->create();
+    Subscriber::factory()->create();
+
+    app(StartBroadcast::class)(SmsBroadcast::factory()->forSubscribers([$tester->id, $optedOut->id])->create());
+
+    expect($sms->recipients())->toBe([$tester->phone]);
+});
+
 it('never texts anyone twice when a broadcast is started again or its job runs twice', function () {
     $sms = FakeSmsGateway::swap();
     Subscriber::factory()->count(2)->create();

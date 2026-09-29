@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *
  * @property int $id
  * @property string $body
- * @property array{postcodes: list<string>} $audience
+ * @property array{postcodes: list<string>, subscribers?: list<int>} $audience
  * @property int|null $drop_id
  * @property CarbonImmutable|null $scheduled_for
  * @property CarbonImmutable|null $started_at
@@ -39,7 +39,7 @@ class SmsBroadcast extends Model
      * @var array<string, mixed>
      */
     protected $attributes = [
-        'audience' => '{"postcodes": []}',
+        'audience' => '{"postcodes": [], "subscribers": []}',
     ];
 
     /**
@@ -87,7 +87,17 @@ class SmsBroadcast extends Model
     }
 
     /**
-     * Who it would go to if it started now.
+     * The subscribers it goes to, when it's for chosen people such as testers. Empty means the postcodes decide.
+     *
+     * @return list<int>
+     */
+    public function subscriberIds(): array
+    {
+        return $this->audience['subscribers'] ?? [];
+    }
+
+    /**
+     * Who it would go to if it started now. Chosen subscribers who have opted out are still left out.
      *
      * @return Builder<Subscriber>
      */
@@ -95,7 +105,20 @@ class SmsBroadcast extends Model
     {
         return Subscriber::query()
             ->subscribed()
-            ->when($this->postcodes() !== [], fn (Builder $query) => $query->whereIn('postcode', $this->postcodes()));
+            ->when($this->subscriberIds() !== [], fn (Builder $query) => $query->whereKey($this->subscriberIds()))
+            ->when($this->subscriberIds() === [] && $this->postcodes() !== [], fn (Builder $query) => $query->whereIn('postcode', $this->postcodes()));
+    }
+
+    /**
+     * Who it goes to, in a few words.
+     */
+    public function audienceLabel(): string
+    {
+        return match (true) {
+            $this->subscriberIds() !== [] => count($this->subscriberIds()).' chosen '.str('subscriber')->plural(count($this->subscriberIds())),
+            $this->postcodes() !== [] => 'Postcodes '.implode(', ', $this->postcodes()),
+            default => 'Everyone subscribed',
+        };
     }
 
     /**

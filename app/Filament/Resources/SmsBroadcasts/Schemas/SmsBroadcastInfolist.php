@@ -42,9 +42,7 @@ class SmsBroadcastInfolist
                             ->badge(),
                         TextEntry::make('audience')
                             ->label('To')
-                            ->state(fn (SmsBroadcast $record): string => $record->postcodes() === []
-                                ? 'Everyone subscribed'
-                                : 'Postcodes '.implode(', ', $record->postcodes())),
+                            ->state(fn (SmsBroadcast $record): string => $record->audienceLabel()),
                         TextEntry::make('when')
                             ->label(fn (SmsBroadcast $record): string => $record->started_at !== null ? 'Started' : 'Scheduled for')
                             ->state(fn (SmsBroadcast $record) => $record->started_at ?? $record->scheduled_for)

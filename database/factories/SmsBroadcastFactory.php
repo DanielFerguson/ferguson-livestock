@@ -34,6 +34,14 @@ class SmsBroadcastFactory extends Factory
         return $this->state(fn () => ['audience' => ['postcodes' => $postcodes]]);
     }
 
+    /**
+     * @param  list<int>  $subscriberIds
+     */
+    public function forSubscribers(array $subscriberIds): static
+    {
+        return $this->state(fn () => ['audience' => ['postcodes' => [], 'subscribers' => $subscriberIds]]);
+    }
+
     public function scheduledFor(mixed $moment): static
     {
         return $this->state(fn () => ['scheduled_for' => $moment]);

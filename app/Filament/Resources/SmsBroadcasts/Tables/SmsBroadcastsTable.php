@@ -21,7 +21,7 @@ class SmsBroadcastsTable
                     ->badge(),
                 TextColumn::make('audience')
                     ->label('To')
-                    ->state(fn (SmsBroadcast $record): string => $record->postcodes() === [] ? 'Everyone' : implode(', ', $record->postcodes())),
+                    ->state(fn (SmsBroadcast $record): string => $record->audienceLabel()),
                 TextColumn::make('when')
                     ->state(fn (SmsBroadcast $record) => $record->started_at ?? $record->scheduled_for)
                     ->dateTime('D j M Y, g:ia', config()->string('shop.timezone'))

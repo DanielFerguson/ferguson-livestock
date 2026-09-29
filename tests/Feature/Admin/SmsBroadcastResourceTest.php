@@ -14,6 +14,7 @@ use App\Models\SmsMessage;
 use App\Models\Subscriber;
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Filament\Forms\Components\Select;
 use Tests\Fakes\FakeSmsGateway;
 
 use function Pest\Livewire\livewire;
@@ -89,6 +90,53 @@ it('goes back to everyone when postcodes are no longer wanted', function () {
         ->assertHasNoFormErrors();
 
     expect($broadcast->refresh()->postcodes())->toBe([]);
+});
+
+it('goes only to the chosen subscribers', function () {
+    $tester = Subscriber::factory()->create(['first_name' => 'Daniel']);
+    Subscriber::factory()->create();
+
+    livewire(CreateSmsBroadcast::class)
+        ->fillForm(['body' => 'Hi', 'audience_scope' => 'subscribers', 'audience' => ['subscribers' => [$tester->id]]])
+        ->assertSee('1 subscriber')
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    $broadcast = SmsBroadcast::sole();
+    expect($broadcast->subscriberIds())->toBe([$tester->id])
+        ->and($broadcast->postcodes())->toBe([])
+        ->and($broadcast->audienceLabel())->toBe('1 chosen subscriber');
+});
+
+it('asks which subscribers', function () {
+    livewire(CreateSmsBroadcast::class)
+        ->fillForm(['body' => 'Hi', 'audience_scope' => 'subscribers'])
+        ->call('create')
+        ->assertHasFormErrors(['audience.subscribers' => 'required']);
+});
+
+it('goes back to everyone when chosen subscribers are no longer wanted', function () {
+    $broadcast = SmsBroadcast::factory()->forSubscribers([Subscriber::factory()->create()->id])->create();
+
+    livewire(EditSmsBroadcast::class, ['record' => $broadcast->id])
+        ->assertFormSet(['audience_scope' => 'subscribers'])
+        ->fillForm(['audience_scope' => 'everyone'])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect($broadcast->refresh()->subscriberIds())->toBe([]);
+});
+
+it('finds subscribers to choose by name or mobile number, leaving out anyone who has opted out', function () {
+    $daniel = Subscriber::factory()->create(['first_name' => 'Daniel', 'phone' => '+61412345678']);
+    Subscriber::factory()->unsubscribed()->create(['first_name' => 'Danielle', 'phone' => '+61411111111']);
+    Subscriber::factory()->create(['first_name' => 'Sam', 'phone' => '+61422222222']);
+
+    livewire(CreateSmsBroadcast::class)
+        ->fillForm(['audience_scope' => 'subscribers'])
+        ->assertFormFieldExists('audience.subscribers', fn (Select $field): bool => $field->getSearchResults('dan') === [$daniel->id => 'Daniel (0412 345 678)']
+            && array_keys($field->getSearchResults('0412 345')) === [$daniel->id]
+            && $field->getSearchResults('nobody') === []);
 });
 
 it('texts a test to the admin without recording it', function () {
