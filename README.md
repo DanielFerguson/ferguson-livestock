@@ -6,7 +6,7 @@ The public website and stock-aware ordering experience for Ferguson Livestock, a
 
 ![Murray Grey cattle at Ferguson Livestock](resources/images/cows-1.webp)
 
-> **Migration in progress:** `main` holds the Laravel rebuild. The live site is still the Astro version, served from its last Vercel deployment, until the switch-over. Drops, the admin, wait-list texts, checkout and the live order page are built; what's left is the switch-over.
+> **Live:** this Laravel app serves [fergusonlivestock.com.au](https://www.fergusonlivestock.com.au) from Laravel Cloud. It replaced the earlier Astro and Vercel site, and every existing URL was kept.
 
 ## About the project
 
