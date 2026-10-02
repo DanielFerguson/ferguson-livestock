@@ -15,6 +15,7 @@ use App\Exceptions\TooManyCheckoutAttempts;
 use App\Models\Drop;
 use App\Models\DropItem;
 use App\Stock\DropSnapshot;
+use App\Support\Turnstile;
 use Carbon\CarbonImmutable;
 use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Contracts\View\View;
@@ -65,10 +66,23 @@ class OrderForm extends Component
         $this->extras = $this->itemsOfType($this->drop(), ProductType::Extra)->mapWithKeys(fn (DropItem $item): array => [$item->id => 0])->all();
     }
 
-    public function checkout(StartCheckout $start): void
+    /**
+     * @param  string  $turnstileToken  The bot check's token, read from the form in the browser.
+     */
+    public function checkout(StartCheckout $start, Turnstile $turnstile, string $turnstileToken = ''): void
     {
         $this->notices = [];
         $this->problem = null;
+
+        // A token only works once, so the widget fetches a fresh one for the next try.
+        $this->dispatch('turnstile-reset');
+
+        if (! $turnstile->passes($turnstileToken, request()->ip())) {
+            $this->problem = Turnstile::FAILED_MESSAGE;
+
+            return;
+        }
+
         $drop = $this->drop();
         $deliveryMethod = DeliveryMethod::tryFrom($this->deliveryMethod);
 

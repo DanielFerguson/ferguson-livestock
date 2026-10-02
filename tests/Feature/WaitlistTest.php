@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Subscriber;
+use App\Support\Turnstile;
 
 /**
  * @param  array<mixed>  $overrides
@@ -108,4 +109,39 @@ it('slows down repeated sign-ups with a friendly message', function () {
         ->assertSessionHasErrorsIn('waitlist', 'first_name');
 
     expect(Subscriber::count())->toBe(5);
+});
+
+it('shows Cloudflare’s bot check on the form once Turnstile is set up', function () {
+    fakeTurnstile(genuine: true);
+
+    $this->get('/order')->assertOk()->assertSee('data-sitekey="test-site-key"', false);
+});
+
+it('turns away sign-ups that fail Cloudflare’s bot check', function () {
+    fakeTurnstile(genuine: false);
+
+    $this->from('/')
+        ->post('/waitlist', waitlistForm(['cf-turnstile-response' => 'bot-token']))
+        ->assertRedirect('/#waitlist')
+        ->assertSessionHasErrorsIn('waitlist', ['cf-turnstile-response' => Turnstile::FAILED_MESSAGE]);
+
+    expect(Subscriber::count())->toBe(0);
+});
+
+it('turns away sign-ups without a bot check token once Turnstile is set up', function () {
+    fakeTurnstile(genuine: true);
+
+    $this->from('/')
+        ->post('/waitlist', waitlistForm())
+        ->assertSessionHasErrorsIn('waitlist', ['cf-turnstile-response' => Turnstile::FAILED_MESSAGE]);
+
+    expect(Subscriber::count())->toBe(0);
+});
+
+it('signs up visitors who pass Cloudflare’s bot check', function () {
+    fakeTurnstile(genuine: true);
+
+    $this->post('/waitlist', waitlistForm(['cf-turnstile-response' => 'person-token']))->assertRedirect('/thank-you');
+
+    expect(Subscriber::count())->toBe(1);
 });

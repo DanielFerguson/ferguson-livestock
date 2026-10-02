@@ -25,6 +25,8 @@
     </ul>
 
     <div class="mt-6">
+        {{-- wire:ignore keeps Livewire from wiping the widget when the form re-renders. --}}
+        <x-turnstile id="order-turnstile" class="mb-4" wire:ignore />
         <x-button class="w-full sm:w-auto" x-bind:disabled="! open" wire:loading.attr="disabled">
             <span x-show="open">Continue to payment</span>
             <span x-show="! open" @if ($status->isOpen()) hidden @endif>Orders open in <span data-drop-countdown></span></span>

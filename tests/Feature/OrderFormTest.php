@@ -5,6 +5,7 @@ use App\Livewire\OrderForm;
 use App\Models\Drop;
 use App\Models\DropItem;
 use App\Models\Order;
+use App\Support\Turnstile;
 use Tests\Fakes\FakePaymentGateway;
 use Tests\Fixtures\StockedDrop;
 
@@ -32,6 +33,34 @@ it('sends the customer to Stripe with what they chose', function () {
 
     expect(Order::sole()->status)->toBe(OrderStatus::Pending)
         ->and(Order::sole()->total)->toBe(16000 + 2 * 1200 + 1500);
+});
+
+it('won’t start checkout when Cloudflare’s bot check fails', function () {
+    FakePaymentGateway::swap();
+    fakeTurnstile(genuine: false);
+    $shop = StockedDrop::create();
+
+    $form = livewire(OrderForm::class, ['drop' => $shop->drop])
+        ->set('box', (string) $shop->box->id)
+        ->set('deliveryMethod', 'pickup')
+        ->call('checkout', 'bot-token');
+
+    $form->assertSet('problem', Turnstile::FAILED_MESSAGE)->assertNoRedirect();
+    $form->assertDispatched('turnstile-reset');
+
+    expect(Order::count())->toBe(0);
+});
+
+it('starts checkout when Cloudflare’s bot check passes', function () {
+    FakePaymentGateway::swap();
+    fakeTurnstile(genuine: true);
+    $shop = StockedDrop::create();
+
+    livewire(OrderForm::class, ['drop' => $shop->drop])
+        ->set('box', (string) $shop->box->id)
+        ->set('deliveryMethod', 'pickup')
+        ->call('checkout', 'person-token')
+        ->assertRedirect('https://checkout.stripe.test/cs_test_1');
 });
 
 it('says what to fix when the order can’t be taken', function () {

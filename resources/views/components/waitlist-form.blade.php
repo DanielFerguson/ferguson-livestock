@@ -1,4 +1,4 @@
-{{-- Posts without JavaScript; validation errors come back to #waitlist with what was typed kept. --}}
+{{-- A plain form post; validation errors come back to #waitlist with what was typed kept. Only the Turnstile check needs JavaScript. --}}
 @php
     $errorBag = $errors->getBag('waitlist');
 
@@ -88,6 +88,13 @@
                     </div>
                     @if ($errorBag->has('sms_consent'))
                         <p id="waitlist-sms_consent-error" class="mt-1.5 text-sm font-semibold text-red-800">{{ $errorBag->first('sms_consent') }}</p>
+                    @endif
+                </div>
+
+                <div>
+                    <x-turnstile />
+                    @if ($errorBag->has(\App\Support\Turnstile::FIELD))
+                        <p class="mt-1.5 text-sm font-semibold text-red-800">{{ $errorBag->first(\App\Support\Turnstile::FIELD) }}</p>
                     @endif
                 </div>
 

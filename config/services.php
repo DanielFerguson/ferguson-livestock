@@ -28,6 +28,12 @@ return [
         'segment_cost' => (int) env('TWILIO_SEGMENT_COST', 8),
     ],
 
+    // Cloudflare's bot check on the public forms. Both keys must be set for the check to run.
+    'turnstile' => [
+        'site_key' => env('TURNSTILE_SITE_KEY'),
+        'secret_key' => env('TURNSTILE_SECRET_KEY'),
+    ],
+
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],

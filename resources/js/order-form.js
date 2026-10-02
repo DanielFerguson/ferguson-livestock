@@ -57,6 +57,15 @@ document.addEventListener('alpine:init', () => {
             return items + (this.$wire.deliveryMethod === 'delivery' ? deliveryFee : 0);
         },
 
+        /** The Turnstile token Cloudflare put in the form, or '' when the check is off or hasn't finished. */
+        turnstileToken() {
+            return this.$root.querySelector('[name="cf-turnstile-response"]')?.value ?? '';
+        },
+
+        resetTurnstile() {
+            if (window.turnstile && document.getElementById('order-turnstile')) window.turnstile.reset('#order-turnstile');
+        },
+
         /** Take in a live snapshot. Same wording as the server uses when checkout finds too little left. */
         apply(status) {
             this.open = status.state === 'live' || status.state === 'sold_out';

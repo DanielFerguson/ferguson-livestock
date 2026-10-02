@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Support\AustralianMobile;
+use App\Support\Turnstile;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -31,6 +32,11 @@ class JoinWaitlistRequest extends FormRequest
             'sms_consent' => ['accepted'],
             // A hidden field only bots fill in; the controller discards those sign-ups.
             'website' => ['nullable', 'string'],
+            Turnstile::FIELD => Turnstile::isEnabled() ? ['required', function (string $attribute, mixed $value, Closure $fail): void {
+                if (! app(Turnstile::class)->passes($value, $this->ip())) {
+                    $fail(Turnstile::FAILED_MESSAGE);
+                }
+            }] : [],
         ];
     }
 
@@ -48,6 +54,7 @@ class JoinWaitlistRequest extends FormRequest
             'postcode.required' => 'Please enter your four-digit postcode.',
             'postcode.digits' => 'Please enter your four-digit postcode.',
             'sms_consent.accepted' => 'Please tick the box so we can text you when the next drop opens.',
+            Turnstile::FIELD.'.required' => Turnstile::FAILED_MESSAGE,
         ];
     }
 
