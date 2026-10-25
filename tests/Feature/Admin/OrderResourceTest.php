@@ -77,6 +77,15 @@ it('downloads a drop’s delivery run, sorted by suburb, with pickups last', fun
         ->and($csv)->toContain('2 × ');
 });
 
+it('quotes formula-like phone numbers and postcodes in the delivery run', function () {
+    $drop = Drop::factory()->open()->create();
+    paidOrder($drop, 'Ballarat', '=HYPERLINK("https://x.test")', ['phone' => '+1=2+3']);
+
+    $row = str_getcsv(explode("\n", trim(DeliveryRun::forDrop($drop)->toCsv()))[1], escape: '');
+
+    expect([$row[2], $row[8]])->toBe(["'+1=2+3", "'=HYPERLINK(\"https://x.test\")"]);
+});
+
 it('prints the delivery run by suburb, with pickups separate', function () {
     $drop = Drop::factory()->open()->create(['name' => 'October drop']);
     paidOrder($drop, 'Creswick', '3363', ['customer_name' => 'Cam']);

@@ -4,6 +4,7 @@ namespace App\Stock;
 
 use App\Enums\DeliveryMethod;
 use App\Enums\OrderStatus;
+use App\Enums\ProductType;
 use App\Exceptions\DropNotOpen;
 use App\Exceptions\InsufficientStock;
 use App\Models\Drop;
@@ -127,6 +128,12 @@ final class StockLedger
                 $item->product->stock_product_id !== null => $drop->items->firstWhere('product_id', $item->product->stock_product_id),
                 default => null,
             };
+
+            // Only the delivery fee goes without stock. Anything else whose stock is missing from the drop, like a
+            // 10kg box whose 5kg boxes aren't in it, is sold out, as the order page already shows it.
+            if (! $stock instanceof DropItem && $item->product->type !== ProductType::Delivery) {
+                throw new InsufficientStock([$item->id => 0]);
+            }
 
             $lines[] = new StockLine($item, $quantity, $stock instanceof DropItem ? $stock : null, $stock === null ? 0 : $item->product->stock_units);
         }

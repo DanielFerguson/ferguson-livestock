@@ -101,3 +101,11 @@ it('never lets stock go below zero or above the quantity, whatever the code does
     expect(fn () => DropItem::whereKey($shop->box->id)->update(['available' => $available]))
         ->toThrow(QueryException::class);
 })->with([-1, 6]);
+
+it('treats a box as sold out when the stock it’s packed from isn’t in the drop', function () {
+    $shop = StockedDrop::create();
+    $shop->box->delete();
+
+    expect(shortfall(fn () => reserve($shop, [$shop->largeBox->id => 1])))->toBe([$shop->largeBox->id => 0])
+        ->and(Order::count())->toBe(0);
+});

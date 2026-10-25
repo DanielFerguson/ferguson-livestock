@@ -74,13 +74,13 @@ final readonly class DeliveryRun
             fputcsv($file, [
                 $order->reference(),
                 SpreadsheetCell::safe($order->customer_name),
-                $order->phone === null ? null : AustralianMobile::readable($order->phone),
+                SpreadsheetCell::safe($order->phone === null ? null : AustralianMobile::readable($order->phone)),
                 SpreadsheetCell::safe($order->email),
                 $order->delivery_method->getLabel(),
                 $order->delivery_day?->format('D j M'),
                 SpreadsheetCell::safe(trim(($order->shipping_address['line1'] ?? '').' '.($order->shipping_address['line2'] ?? ''))),
                 SpreadsheetCell::safe($order->shipping_address['city'] ?? null),
-                $order->shipping_address['postal_code'] ?? null,
+                SpreadsheetCell::safe($order->shipping_address['postal_code'] ?? null),
                 self::items($order),
                 Money::format($order->total),
             ], escape: '');

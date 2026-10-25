@@ -3,6 +3,7 @@
 use App\Checkout\CheckoutRequest;
 use App\Checkout\StartCheckout;
 use App\Enums\DeliveryMethod;
+use App\Enums\OrderStatus;
 use App\Exceptions\DropNotOpen;
 use App\Exceptions\InvalidCheckout;
 use App\Exceptions\TooManyCheckoutAttempts;
@@ -19,7 +20,7 @@ beforeEach(fn () => FakePaymentGateway::swap());
  */
 function attempt(StockedDrop $shop, Closure $cart, DeliveryMethod $method = DeliveryMethod::Pickup, ?string $day = null, string $visitor = 'visitor-a', string $ip = '192.0.2.1'): string
 {
-    return app(StartCheckout::class)(new CheckoutRequest($shop->drop, $cart($shop), $method, $day === null ? null : CarbonImmutable::parse($day), $visitor, $ip));
+    return app(StartCheckout::class)(new CheckoutRequest($shop->drop->id, $cart($shop), $method, $day === null ? null : CarbonImmutable::parse($day), $visitor, $ip));
 }
 
 it('explains what’s wrong with an order it can’t take', function (Closure $cart, DeliveryMethod $method, ?string $day, string $problem) {
@@ -59,13 +60,20 @@ it('limits each visitor to five tries every ten minutes', function () {
     expect(fn () => attempt($shop, $empty))->toThrow(InvalidCheckout::class);
 });
 
-it('limits one address to thirty tries every ten minutes, however many visitors it has', function () {
-    $shop = StockedDrop::create();
-    $empty = fn (StockedDrop $shop) => [];
+it('limits one address to thirty tries for as long as a hold lasts, however many visitors it has', function () {
+    $shop = StockedDrop::create(mince: 100);
+    $oneMince = fn (StockedDrop $shop) => [$shop->mince->id => 1];
 
     foreach (range(1, 30) as $try) {
-        expect(fn () => attempt($shop, $empty, visitor: "visitor-{$try}"))->toThrow(InvalidCheckout::class);
+        attempt($shop, $oneMince, visitor: "visitor-{$try}");
     }
 
-    expect(fn () => attempt($shop, $empty, visitor: 'visitor-31'))->toThrow(TooManyCheckoutAttempts::class);
+    $this->travel(11)->minutes();
+    expect(fn () => attempt($shop, $oneMince, visitor: 'visitor-31'))->toThrow(TooManyCheckoutAttempts::class)
+        ->and(Order::query()->where('status', OrderStatus::Pending)->count())->toBe(30);
+
+    $this->travel(25)->minutes();
+    attempt($shop, $oneMince, visitor: 'visitor-32');
+
+    expect(Order::query()->where('status', OrderStatus::Pending)->count())->toBe(31);
 });

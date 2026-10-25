@@ -32,6 +32,9 @@ Route::view('/thank-you', 'pages.thank-you')->name('thank-you');
 // Not cached: the form holds each visitor's choices.
 Route::get('/order', OrderPageController::class)->name('order');
 
-// Stripe sends customers back here. Neither page is cached: both depend on the order.
-Route::get('/checkout/cancel', CancelCheckoutController::class)->name('checkout.cancel');
-Route::get('/order-confirmed', OrderConfirmedController::class)->name('order-confirmed');
+// Stripe sends customers back here. Neither page is cached: both depend on the order. Both can ask Stripe
+// about the order, so they're throttled to keep the shop's Stripe rate limit for checkouts.
+Route::middleware('throttle:checkout-return')->group(function (): void {
+    Route::get('/checkout/cancel', CancelCheckoutController::class)->name('checkout.cancel');
+    Route::get('/order-confirmed', OrderConfirmedController::class)->name('order-confirmed');
+});

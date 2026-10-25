@@ -6,10 +6,12 @@ use App\Enums\DeliveryMethod;
 use App\Enums\OrderStatus;
 use App\Enums\ProductType;
 use App\Exceptions\DropNotOpen;
+use App\Exceptions\FailedBotCheck;
 use App\Exceptions\InsufficientStock;
 use App\Exceptions\InvalidCheckout;
 use App\Exceptions\PaymentProviderUnavailable;
 use App\Exceptions\TooManyCheckoutAttempts;
+use App\Jobs\SettleOrderWhenPaymentPageCloses;
 use App\Models\Drop;
 use App\Models\DropItem;
 use App\Models\Order;
@@ -17,6 +19,7 @@ use App\Models\OrderItem;
 use App\Payments\NewCheckoutSession;
 use App\Payments\PaymentGateway;
 use App\Stock\StockLedger;
+use App\Support\Turnstile;
 use Illuminate\Support\Facades\RateLimiter;
 
 /**
@@ -34,23 +37,34 @@ final readonly class StartCheckout
 
     private const int TRIES_PER_VISITOR = 5;
 
+    private const int VISITOR_WINDOW_SECONDS = 600;
+
     /**
      * A looser ceiling for scripts that throw their cookies away between tries.
      */
     private const int TRIES_PER_IP_ADDRESS = 30;
 
-    private const int TRY_WINDOW_SECONDS = 600;
+    /**
+     * Longer than a hold lasts (the payment page's 31 minutes plus the sweep's grace period), so one address can't
+     * keep more than its tries' worth of stock on hold by waiting for the window to reset.
+     */
+    private const int IP_ADDRESS_WINDOW_SECONDS = 35 * 60;
 
     public function __construct(
         private StockLedger $stock,
         private PaymentGateway $payments,
         private OrderPayments $orders,
+        private Turnstile $botCheck,
     ) {}
 
     /**
+     * Every try is counted before anything else happens, so a script that keeps calling this (one request can
+     * carry thousands of calls) costs a cache lookup each, not a call to Cloudflare or a database query.
+     *
      * @return string the URL of Stripe's payment page
      *
      * @throws TooManyCheckoutAttempts
+     * @throws FailedBotCheck
      * @throws InvalidCheckout
      * @throws DropNotOpen
      * @throws InsufficientStock
@@ -62,13 +76,20 @@ final readonly class StartCheckout
 
         $this->limitTries($fingerprint, $request->ip);
 
-        $drop = Drop::query()->with('items.product')->findOrFail($request->drop->id);
+        if (! $this->botCheck->passes($request->botCheckToken, $request->ip)) {
+            throw new FailedBotCheck;
+        }
+
+        $drop = Drop::query()->with('items.product')->findOrFail($request->dropId);
         $quantities = $this->validated($drop, $request);
 
         $this->letGoOfEarlierCheckouts($fingerprint);
 
         $deliveryDay = $request->deliveryMethod === DeliveryMethod::Delivery ? $request->deliveryDay : null;
         $order = $this->stock->reserve($drop, $quantities, $request->deliveryMethod, $deliveryDay, $fingerprint, now()->addMinutes(self::PAYMENT_PAGE_MINUTES)->toImmutable());
+
+        // Queued before Stripe is called, so the stock comes back even if this request stops part-way.
+        SettleOrderWhenPaymentPageCloses::dispatch($order->id)->delay(SettleClosedCheckout::dueAt($order));
 
         try {
             $session = $this->payments->createCheckoutSession($this->paymentPage($order));
@@ -86,18 +107,18 @@ final readonly class StartCheckout
     private function limitTries(string $fingerprint, string $ip): void
     {
         $limits = [
-            "checkout:visitor:{$fingerprint}:{$ip}" => self::TRIES_PER_VISITOR,
-            "checkout:ip:{$ip}" => self::TRIES_PER_IP_ADDRESS,
+            "checkout:visitor:{$fingerprint}:{$ip}" => [self::TRIES_PER_VISITOR, self::VISITOR_WINDOW_SECONDS],
+            "checkout:ip:{$ip}" => [self::TRIES_PER_IP_ADDRESS, self::IP_ADDRESS_WINDOW_SECONDS],
         ];
 
-        foreach ($limits as $key => $tries) {
+        foreach ($limits as $key => [$tries]) {
             if (RateLimiter::tooManyAttempts($key, $tries)) {
                 throw new TooManyCheckoutAttempts(RateLimiter::availableIn($key));
             }
         }
 
-        foreach (array_keys($limits) as $key) {
-            RateLimiter::hit($key, self::TRY_WINDOW_SECONDS);
+        foreach ($limits as $key => [, $window]) {
+            RateLimiter::hit($key, $window);
         }
     }
 
@@ -119,7 +140,8 @@ final readonly class StartCheckout
         foreach ($quantities as $dropItemId => $quantity) {
             $item = $drop->items->firstWhere('id', $dropItemId);
 
-            if (! $item instanceof DropItem || $item->product->type === ProductType::Delivery) {
+            // firstWhere() matches loosely, so "07" would find item 7 and slip past its limit under a second key.
+            if (! $item instanceof DropItem || $item->id !== $dropItemId || $item->product->type === ProductType::Delivery) {
                 throw new InvalidCheckout('Something in your order isn’t part of this drop.');
             }
 

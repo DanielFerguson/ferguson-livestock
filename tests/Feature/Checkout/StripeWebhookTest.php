@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\StripeEvent;
 use App\Payments\CheckoutSession;
 use App\Stock\StockLedger;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Testing\TestResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -127,6 +128,35 @@ it('acknowledges events it has nothing to do with', function (string $type, arra
     'another shop’s session' => ['checkout.session.completed', ['id' => 'cs_elsewhere', 'object' => 'checkout.session', 'status' => 'complete', 'payment_status' => 'paid']],
     'an event it doesn’t use' => ['customer.created', ['id' => 'cus_1', 'object' => 'customer']],
 ]);
+
+it('ignores a session the shop didn’t start, even when it names one of the shop’s orders', function (string $field) {
+    Mail::fake();
+    $shop = StockedDrop::create(boxes: 5);
+    $order = heldOrder($shop);
+    $foreign = sessionObject($order, ['id' => 'cs_payment_link', 'metadata' => []]);
+    Arr::set($foreign, $field, $order->public_id);
+
+    sendStripeEvent('checkout.session.completed', $foreign)->assertOk();
+
+    expect($order->refresh()->status)->toBe(OrderStatus::Pending)
+        ->and($order->stripe_payment_intent_id)->toBeNull()
+        ->and($shop->box->refresh()->available)->toBe(4)
+        ->and(StripeEvent::sole()->processed_at)->not->toBeNull();
+    Mail::assertNothingQueued();
+})->with([
+    'by client_reference_id' => 'client_reference_id',
+    'by order_id metadata' => 'metadata.order_id',
+]);
+
+it('still finds an order by its ID when its payment page was never recorded against it', function () {
+    Mail::fake();
+    $order = heldOrder(StockedDrop::create());
+    $order->update(['stripe_checkout_session_id' => null]);
+
+    sendStripeEvent('checkout.session.completed', [...sessionObject($order), 'id' => 'cs_unrecorded'])->assertOk();
+
+    expect($order->refresh()->status)->toBe(OrderStatus::Paid);
+});
 
 it('refuses events Stripe didn’t sign', function (?string $signature) {
     $order = heldOrder(StockedDrop::create());

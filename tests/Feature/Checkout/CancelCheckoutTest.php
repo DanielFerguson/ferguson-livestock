@@ -14,7 +14,7 @@ use Tests\Fixtures\StockedDrop;
  */
 function atPaymentPage(StockedDrop $shop): Order
 {
-    app(StartCheckout::class)(new CheckoutRequest($shop->drop, [$shop->box->id => 1], DeliveryMethod::Pickup, null, 'visitor-a', '192.0.2.1'));
+    app(StartCheckout::class)(new CheckoutRequest($shop->drop->id, [$shop->box->id => 1], DeliveryMethod::Pickup, null, 'visitor-a', '192.0.2.1'));
 
     return Order::sole();
 }
@@ -53,6 +53,30 @@ it('ignores links that aren’t for one of its checkouts', function (?string $se
 
     expect($order->refresh()->status)->toBe(OrderStatus::Pending);
 })->with(['cs_test_someone_else', 'not-a-session', null]);
+
+it('answers a cancel link for a settled order without asking Stripe again', function (Closure $settle, string $redirect, ?string $notice) {
+    Mail::fake();
+    $stripe = FakePaymentGateway::swap();
+    $order = atPaymentPage(StockedDrop::create());
+    $settle($stripe);
+    $this->get(route('checkout.cancel', ['session_id' => 'cs_test_1']));
+    $stripe->goOffline();
+
+    $response = $this->get(route('checkout.cancel', ['session_id' => 'cs_test_1']))->assertRedirect(route($redirect, $redirect === 'order' ? [] : ['session_id' => 'cs_test_1']));
+
+    $notice === null ? $response->assertSessionMissing('checkout.notice') : $response->assertSessionHas('checkout.notice', $notice);
+})->with([
+    'cancelled earlier' => [fn (FakePaymentGateway $stripe) => null, 'order', 'Your order was cancelled and nothing was charged.'],
+    'paid' => [fn (FakePaymentGateway $stripe) => $stripe->completeSession('cs_test_1'), 'order-confirmed', null],
+]);
+
+it('slows down repeated visits to the checkout return pages', function (string $route) {
+    foreach (range(1, 20) as $visit) {
+        $this->get(route($route, ['session_id' => 'cs_test_unknown']))->assertRedirect(route('order'));
+    }
+
+    $this->get(route($route, ['session_id' => 'cs_test_unknown']))->assertTooManyRequests();
+})->with(['checkout.cancel', 'order-confirmed']);
 
 it('ignores stray cancel links without calling Stripe', function () {
     config(['services.stripe.secret' => null]);

@@ -43,10 +43,24 @@ class Subscriber extends Model
     public const string KLAVIYO_CONSENT_WORDING = 'Agreed to Ferguson Livestock text messages on a Klaviyo sign-up form. Klaviyo recorded the date; its export doesn’t include the form’s wording.';
 
     /**
-     * Record a wait-list sign-up. Signing up again refreshes the details and consent, and undoes an earlier opt-out.
+     * Stored when someone who opted out texts the shop's number asking to start again.
+     */
+    public const string TEXT_REPLY_CONSENT_WORDING = 'Texted the shop’s number asking to receive Ferguson Livestock text messages about beef drops again.';
+
+    /**
+     * Record a wait-list sign-up. Signing up again refreshes a subscriber's details and consent.
+     *
+     * It never undoes an opt-out, because the form can't prove who owns the number: anyone could type in someone
+     * else's. People who opted out start again by texting START from their own phone (see optBackIn()).
      */
     public static function recordSignUp(string $firstName, string $phone, string $postcode, ?string $ip): self
     {
+        $existing = self::firstWhere('phone', $phone);
+
+        if ($existing !== null && ! $existing->isSubscribed()) {
+            return $existing;
+        }
+
         return self::updateOrCreate(['phone' => $phone], [
             'first_name' => $firstName,
             'postcode' => $postcode,
@@ -54,7 +68,6 @@ class Subscriber extends Model
             'consent_source' => 'website wait list',
             'consent_wording' => self::CONSENT_WORDING,
             'consent_ip' => $ip,
-            'unsubscribed_at' => null,
         ]);
     }
 
@@ -78,6 +91,25 @@ class Subscriber extends Model
     {
         $this->unsubscribed_at ??= now();
         $this->save();
+    }
+
+    /**
+     * Start texting them again after an opt-out. Only for a request from their own phone, which proves they own the
+     * number. Their reply is kept with their messages as the evidence.
+     */
+    public function optBackIn(): void
+    {
+        if ($this->isSubscribed()) {
+            return;
+        }
+
+        $this->fill([
+            'consented_at' => now(),
+            'consent_source' => 'text reply',
+            'consent_wording' => self::TEXT_REPLY_CONSENT_WORDING,
+            'consent_ip' => null,
+            'unsubscribed_at' => null,
+        ])->save();
     }
 
     /**

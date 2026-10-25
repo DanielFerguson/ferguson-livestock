@@ -6,6 +6,8 @@ use App\Models\Drop;
 use App\Models\DropItem;
 use App\Models\Order;
 use App\Support\Turnstile;
+use Illuminate\Support\Facades\Http;
+use Livewire\Exceptions\MethodNotFoundException;
 use Tests\Fakes\FakePaymentGateway;
 use Tests\Fixtures\StockedDrop;
 
@@ -62,6 +64,46 @@ it('starts checkout when Cloudflare’s bot check passes', function () {
         ->call('checkout', 'person-token')
         ->assertRedirect('https://checkout.stripe.test/cs_test_1');
 });
+
+it('counts a failed bot check as a try, and stops asking Cloudflare once the tries run out', function () {
+    FakePaymentGateway::swap();
+    fakeTurnstile(genuine: false);
+    $shop = StockedDrop::create();
+
+    $form = livewire(OrderForm::class, ['drop' => $shop->drop])
+        ->set('box', (string) $shop->box->id)
+        ->set('deliveryMethod', 'pickup');
+
+    foreach (range(1, 5) as $try) {
+        $form->call('checkout', 'bot-token')->assertSet('problem', Turnstile::FAILED_MESSAGE);
+    }
+
+    $form->call('checkout', 'bot-token');
+
+    expect($form->get('problem'))->toStartWith('That’s a lot of tries in a short time.');
+    Http::assertSentCount(5);
+});
+
+it('refuses an extra sent under another spelling of its ID', function () {
+    FakePaymentGateway::swap();
+    $shop = StockedDrop::create(mince: 30);
+
+    livewire(OrderForm::class, ['drop' => $shop->drop])
+        ->set("extras.{$shop->mince->id}", 10)
+        ->set("extras.0{$shop->mince->id}", 10)
+        ->set('deliveryMethod', 'pickup')
+        ->call('checkout')
+        ->assertSet('problem', 'Something in your order isn’t part of this drop.')
+        ->assertNoRedirect();
+
+    expect(Order::count())->toBe(0);
+});
+
+it('only lets the browser call checkout', function () {
+    $shop = StockedDrop::create();
+
+    livewire(OrderForm::class, ['drop' => $shop->drop])->call('isTakingOrders');
+})->throws(MethodNotFoundException::class);
 
 it('says what to fix when the order can’t be taken', function () {
     FakePaymentGateway::swap();

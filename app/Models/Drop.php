@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\DropStatus;
+use App\Jobs\RunDropPreflightWhenDue;
 use App\Models\Concerns\ClearsResponseCache;
 use Carbon\CarbonImmutable;
 use Database\Factories\DropFactory;
@@ -40,6 +41,19 @@ class Drop extends Model
 
     /** @use HasFactory<DropFactory> */
     use HasFactory;
+
+    /**
+     * Publishing a drop, or moving it, to open within the hour times its pre-flight check straight away; later
+     * ones are timed by the hourly drops:preflight.
+     */
+    protected static function booted(): void
+    {
+        static::saved(function (Drop $drop): void {
+            if ($drop->wasRecentlyCreated || $drop->wasChanged(['opens_at', 'published_at'])) {
+                RunDropPreflightWhenDue::timeFor($drop);
+            }
+        });
+    }
 
     /**
      * @return HasMany<DropItem, $this>

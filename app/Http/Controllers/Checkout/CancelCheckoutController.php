@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Checkout;
 
 use App\Checkout\OrderPayments;
+use App\Enums\OrderStatus;
 use App\Exceptions\PaymentProviderUnavailable;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
@@ -16,6 +17,8 @@ use Illuminate\Http\Request;
  */
 class CancelCheckoutController extends Controller
 {
+    private const string CANCELLED = 'Your order was cancelled and nothing was charged.';
+
     public function __invoke(Request $request, OrderPayments $orders): RedirectResponse
     {
         $sessionId = $request->string('session_id')->value();
@@ -25,6 +28,14 @@ class CancelCheckoutController extends Controller
 
         if ($order === null) {
             return to_route('order');
+        }
+
+        // Only an open payment page needs closing at Stripe. A settled order is answered from what the shop
+        // already knows, so replaying an old link can't spend the shop's Stripe rate limit.
+        if ($order->status !== OrderStatus::Pending) {
+            return in_array($order->status, [OrderStatus::Expired, OrderStatus::Failed], true)
+                ? to_route('order')->with('checkout.notice', self::CANCELLED)
+                : to_route('order-confirmed', ['session_id' => $sessionId]);
         }
 
         try {
@@ -40,6 +51,6 @@ class CancelCheckoutController extends Controller
             return to_route('order-confirmed', ['session_id' => $sessionId]);
         }
 
-        return to_route('order')->with('checkout.notice', 'Your order was cancelled and nothing was charged.');
+        return to_route('order')->with('checkout.notice', self::CANCELLED);
     }
 }

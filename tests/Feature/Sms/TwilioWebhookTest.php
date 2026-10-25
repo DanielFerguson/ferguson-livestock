@@ -108,6 +108,38 @@ it('opts someone out when they reply asking to stop', function () {
     expect($subscriber->refresh()->isSubscribed())->toBeFalse();
 });
 
+it('accepts a signed reply with spaces at either end, as Twilio signs it', function () {
+    $subscriber = Subscriber::factory()->create();
+
+    postFromTwilio('webhooks.twilio.inbound', ['MessageSid' => 'SMreply1', 'From' => $subscriber->phone, 'To' => '+61400000000', 'Body' => "Stop please \n"])
+        ->assertOk();
+
+    expect($subscriber->refresh()->isSubscribed())->toBeFalse()
+        ->and(SmsMessage::sole()->body)->toBe("Stop please \n");
+});
+
+it('starts texting someone again when they reply START from their phone', function (string $body) {
+    $subscriber = Subscriber::factory()->unsubscribed()->create(['consent_ip' => '198.51.100.1']);
+
+    $this->freezeSecond();
+    postFromTwilio('webhooks.twilio.inbound', ['MessageSid' => 'SMreply1', 'From' => $subscriber->phone, 'To' => '+61400000000', 'Body' => $body])->assertOk();
+
+    $subscriber->refresh();
+    expect($subscriber->isSubscribed())->toBeTrue()
+        ->and($subscriber->consented_at->equalTo(now()))->toBeTrue()
+        ->and($subscriber->consent_source)->toBe('text reply')
+        ->and($subscriber->consent_wording)->toBe(Subscriber::TEXT_REPLY_CONSENT_WORDING)
+        ->and($subscriber->consent_ip)->toBeNull();
+})->with(['START', 'start', 'Unstop!']);
+
+it('keeps someone opted out when a reply only mentions starting', function (string $body) {
+    $subscriber = Subscriber::factory()->unsubscribed()->create();
+
+    postFromTwilio('webhooks.twilio.inbound', ['MessageSid' => 'SMreply1', 'From' => $subscriber->phone, 'To' => '+61400000000', 'Body' => $body])->assertOk();
+
+    expect($subscriber->refresh()->isSubscribed())->toBeFalse();
+})->with(['Yes', 'When does the next drop start?']);
+
 it('keeps replies from numbers that aren’t subscribers', function () {
     postFromTwilio('webhooks.twilio.inbound', ['MessageSid' => 'SMreply1', 'From' => '+61499999999', 'To' => '+61400000000', 'Body' => 'Who is this?']);
 

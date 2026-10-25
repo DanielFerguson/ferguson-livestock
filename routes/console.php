@@ -2,7 +2,8 @@
 
 use Illuminate\Support\Facades\Schedule;
 
-// Laravel Cloud runs the scheduler every minute on one replica.
-Schedule::command('drops:preflight')->everyMinute()->onOneServer()->withoutOverlapping();
-Schedule::command('sms:send-scheduled')->everyMinute()->onOneServer()->withoutOverlapping();
-Schedule::command('orders:sweep')->everyMinute()->onOneServer()->withoutOverlapping();
+// Laravel Cloud wakes the app for every scheduled run, so these run hourly and the app, database and cache can
+// sleep in between. Delayed jobs on the queue do the exact timing; these catch anything a job missed.
+Schedule::command('drops:preflight')->hourly()->onOneServer()->withoutOverlapping();
+Schedule::command('sms:send-scheduled')->hourly()->onOneServer()->withoutOverlapping();
+Schedule::command('orders:sweep')->hourly()->onOneServer()->withoutOverlapping();

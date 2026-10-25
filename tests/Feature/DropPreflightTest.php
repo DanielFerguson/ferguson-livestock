@@ -9,10 +9,13 @@ use App\Payments\StripeWebhookEvents;
 use Tests\Fakes\FakePaymentGateway;
 
 /**
- * A drop that should pass: a box, the delivery fee, a delivery day and matching Stripe prices.
+ * A drop that should pass: a box, the delivery fee, a delivery day and matching Stripe prices, in an environment
+ * with the Stripe webhook registered and Cloudflare's bot check set up.
  */
 function readyDrop(FakePaymentGateway $stripe): Drop
 {
+    config(['services.turnstile.site_key' => 'test-site-key', 'services.turnstile.secret_key' => 'test-secret-key']);
+
     $drop = Drop::factory()->create([
         'opens_at' => now()->addMinutes(5),
         'delivery_days' => [now()->addDays(3)->toDateString()],
@@ -44,6 +47,24 @@ it('passes a drop that is ready to open, and records when it checked', function 
         ->and($report['problems'])->toBe([])
         ->and($drop->refresh()->preflight_ran_at?->equalTo(now()))->toBeTrue()
         ->and($drop->preflight_report['passed'] ?? null)->toBeTrue();
+});
+
+it('warns when Cloudflare’s bot check is off outside local development', function (string $missingKey) {
+    $drop = readyDrop($this->stripe);
+    config(["services.turnstile.{$missingKey}" => null]);
+
+    $report = app(RunDropPreflight::class)($drop);
+
+    expect($report['passed'])->toBeFalse()
+        ->and($report['problems'])->toBe(['Cloudflare’s bot check is off, so the order and wait-list forms accept anything. Set TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY in this environment.']);
+})->with(['site_key', 'secret_key']);
+
+it('doesn’t need the bot check when developing locally', function () {
+    $drop = readyDrop($this->stripe);
+    config(['services.turnstile.site_key' => null, 'services.turnstile.secret_key' => null]);
+    $this->app->detectEnvironment(fn () => 'local');
+
+    expect(app(RunDropPreflight::class)($drop)['passed'])->toBeTrue();
 });
 
 it('names the item when its Stripe price is wrong', function () {

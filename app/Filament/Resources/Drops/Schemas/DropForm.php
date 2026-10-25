@@ -62,7 +62,7 @@ class DropForm
                             ->helperText('Shows “Next drop: {date}” with a link to the wait list. The time, products and prices stay hidden until you publish.')
                             ->visible(fn (Get $get): bool => ! $get('published_at'))
                             ->formatStateUsing(fn (mixed $state): bool => $state !== false && filled($state))
-                            ->dehydrateStateUsing(fn (bool $state, ?Drop $record): ?CarbonImmutable => $state ? ($record?->announced_at ?? now()) : null)
+                            ->dehydrateStateUsing(fn (bool $state, ?Drop $record): ?CarbonImmutable => $state ? ($record->announced_at ?? now()) : null)
                             ->columnSpanFull(),
                         Repeater::make('delivery_days')
                             ->label('Delivery days')

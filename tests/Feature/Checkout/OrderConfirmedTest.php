@@ -19,7 +19,7 @@ beforeEach(fn () => Mail::fake());
 function paidFor(StockedDrop $shop, array $quantities, bool $delivery, FakePaymentGateway $stripe, string $name = 'Sam Buyer', string $paymentStatus = 'paid'): Order
 {
     app(StartCheckout::class)(new CheckoutRequest(
-        $shop->drop, $quantities, $delivery ? DeliveryMethod::Delivery : DeliveryMethod::Pickup,
+        $shop->drop->id, $quantities, $delivery ? DeliveryMethod::Delivery : DeliveryMethod::Pickup,
         $delivery ? CarbonImmutable::parse($shop->drop->delivery_days[0]) : null, 'visitor-a', '192.0.2.1',
     ));
     $stripe->completeSession('cs_test_1', $paymentStatus, $name);
@@ -63,7 +63,7 @@ it('says when a bank payment is still clearing', function () {
 it('tells the customer not to pay again when Stripe can’t confirm the payment yet', function () {
     $stripe = FakePaymentGateway::swap();
     $shop = StockedDrop::create();
-    app(StartCheckout::class)(new CheckoutRequest($shop->drop, [$shop->mince->id => 1], DeliveryMethod::Pickup, null, 'visitor-a', '192.0.2.1'));
+    app(StartCheckout::class)(new CheckoutRequest($shop->drop->id, [$shop->mince->id => 1], DeliveryMethod::Pickup, null, 'visitor-a', '192.0.2.1'));
     $stripe->goOffline();
 
     $this->get(route('order-confirmed', ['session_id' => 'cs_test_1']))
@@ -95,7 +95,7 @@ it('escapes the name Stripe collected', function () {
 it('sends anyone without a paid order to the order page', function (?string $sessionId) {
     $stripe = FakePaymentGateway::swap();
     $shop = StockedDrop::create();
-    app(StartCheckout::class)(new CheckoutRequest($shop->drop, [$shop->mince->id => 1], DeliveryMethod::Pickup, null, 'visitor-a', '192.0.2.1'));
+    app(StartCheckout::class)(new CheckoutRequest($shop->drop->id, [$shop->mince->id => 1], DeliveryMethod::Pickup, null, 'visitor-a', '192.0.2.1'));
     $stripe->timeOutSession('cs_test_1');
 
     $this->get(route('order-confirmed', array_filter(['session_id' => $sessionId])))->assertRedirect(route('order'));

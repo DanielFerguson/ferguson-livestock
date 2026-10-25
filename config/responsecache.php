@@ -1,8 +1,8 @@
 <?php
 
 use App\Http\ResponseCache\MarketingPagesProfile;
+use App\Http\ResponseCache\OriginHasher;
 use App\Http\ResponseCache\StripCookies;
-use Spatie\ResponseCache\Hasher\DefaultHasher;
 use Spatie\ResponseCache\Replacers\CsrfTokenReplacer;
 use Spatie\ResponseCache\Serializers\JsonSerializer;
 
@@ -35,7 +35,9 @@ return [
          *
          * You may use a string or an array here.
          */
-        'tag' => env('RESPONSE_CACHE_TAG', ''),
+        // Without a tag, clearing empties the whole store. On Laravel Cloud that's the Valkey database holding
+        // sessions and queued jobs too, so every admin edit or deploy would log everyone out and drop jobs.
+        'tag' => env('RESPONSE_CACHE_TAG', 'responsecache'),
     ],
 
     'bypass' => [
@@ -88,6 +90,9 @@ return [
      * These query parameters will be ignored when generating
      * the cache key. This is useful for ignoring tracking
      * parameters like UTM tags, gclid and also fbclid.
+     *
+     * Not used here: OriginHasher leaves the whole query
+     * string out of the key.
      */
     'ignored_query_parameters' => [
         'utm_source',
@@ -110,7 +115,7 @@ return [
      * This class is responsible for generating a hash for
      * a request. Used for looking up cached responses.
      */
-    'hasher' => DefaultHasher::class,
+    'hasher' => OriginHasher::class,
 
     /*
      * This class is responsible for serializing responses.
