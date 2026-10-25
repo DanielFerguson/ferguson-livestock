@@ -1,6 +1,8 @@
 # Switch-over runbook
 
-Moving fergusonlivestock.com.au from the Astro site on Vercel to the Laravel app on Laravel Cloud. The main address has no www, and www redirects to it. Do it between drops, when nobody is part-way through a checkout. `docs/laravel-cloud.md` has the detail behind each step.
+Moving fergusonlivestock.com.au from the old Astro site to the Laravel app on Laravel Cloud. The main address has no www, and www redirects to it. Do it between drops, when nobody is part-way through a checkout. `docs/laravel-cloud.md` has the detail behind each step.
+
+The switch-over is done. The old site's hosting and stock database were deleted on 25 October 2026, so there's no rolling back to it. The steps stay here as a record, and for setting up another environment the same way.
 
 ## 1. In the weeks before
 
@@ -11,7 +13,7 @@ Moving fergusonlivestock.com.au from the Astro site on Vercel to the Laravel app
 
 ## 2. Two days before
 
-- Lower the DNS TTLs for `www` and the apex to 60 seconds, so the switch and any rollback take effect quickly.
+- Lower the DNS TTLs for `www` and the apex to 60 seconds, so the switch takes effect quickly.
 - Check there's no drop open or scheduled to open during the switch window.
 
 ## 3. Create the production environment
@@ -81,7 +83,6 @@ In the production environment's Domains settings, add `fergusonlivestock.com.au`
 3. Point DNS for `www` and the apex at Laravel Cloud, using the records its Domains page shows.
 4. In Stripe's live mode, **enable** the new webhook endpoint and **disable** the old site's. Both use the same address, and Laravel only accepts events signed with the new endpoint's secret, so the old endpoint must not stay on.
 5. In Twilio, change the number's **A message comes in** webhook from the staging address to `https://fergusonlivestock.com.au/api/webhooks/twilio/inbound`. Until you do, customers' STOP and START replies go to staging and production never records them.
-6. In Vercel, disconnect the project's Git integration, but keep the project and its last deployment for rollback. Turn on its **Deployment Protection** too. Its checkout has no server-side check that a drop is open, so while it's reachable at a `*.vercel.app` address it can still start live Stripe checkouts for the old Upstash stock, outside Laravel's records.
 
 ## 8. Check it
 
@@ -91,19 +92,7 @@ In the production environment's Domains settings, add `fergusonlivestock.com.au`
 4. Create the first real drop with the live prices. Confirm its pre-flight check passes and the pre-flight email arrives.
 5. Send yourself a test broadcast and reply to it from your phone. The reply should appear under the admin's replies, which shows the Twilio webhook reaches production. Then announce the drop.
 
-## 9. Rollback (until the first drop on Laravel)
-
-If something is badly wrong:
-
-1. Point DNS back at Vercel's still-running deployment, and turn its Deployment Protection off again.
-2. In Stripe's live mode, re-enable the old endpoint and disable the new one.
-3. Reconnect Vercel's Git integration only if the old site needs a change: its code is at commit `0dce200`.
-
-The old site's Upstash stock is untouched until the first Laravel drop, so rolling back before then needs nothing else. After a drop has run on Laravel, rolling back also means setting the Upstash stock by hand to match what Postgres shows.
-
-## 10. After the first Laravel drop
+## 9. After the first Laravel drop
 
 - Cancel Klaviyo once the first broadcast from the admin has gone out.
-- Delete the Upstash database and the Vercel project, then remove `vercel.json` from the repository.
 - Raise the DNS TTLs back to their usual value.
-- Update the README's "Migration in progress" note.

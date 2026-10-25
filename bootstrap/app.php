@@ -25,8 +25,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trimStrings(except: [$fromTwilio]);
         $middleware->convertEmptyStringsToNull(except: [$fromTwilio]);
 
-        $middleware->prepend(RemoveTrailingSlash::class);
-        $middleware->append([SecurityHeaders::class, PreventIndexingOutsideProduction::class]);
+        // RemoveTrailingSlash comes after the proxy headers are read, so its redirect keeps the visitor on https.
+        $middleware->append([SecurityHeaders::class, PreventIndexingOutsideProduction::class, RemoveTrailingSlash::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

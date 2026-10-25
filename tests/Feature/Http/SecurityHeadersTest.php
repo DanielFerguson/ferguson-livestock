@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-it('sends the security headers carried over from vercel.json', function (string $uri) {
+it('sends the security headers on every response', function (string $uri) {
     $this->get($uri)
         ->assertHeader('X-Content-Type-Options', 'nosniff')
         ->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
@@ -14,7 +14,7 @@ it('sends the security headers carried over from vercel.json', function (string 
     'the health check' => '/up',
 ]);
 
-it('sends the HSTS header that Vercel sent', function () {
+it('tells browsers to use https for the next two years', function () {
     $this->get('/')->assertHeader('Strict-Transport-Security', 'max-age=63072000');
 });
 
