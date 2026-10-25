@@ -8,6 +8,7 @@ use App\Models\DropItem;
 use App\Payments\PaymentGateway;
 use App\Payments\PriceCheck;
 use App\Payments\StripeWebhookEvents;
+use App\Support\Turnstile;
 use Carbon\CarbonImmutable;
 use Throwable;
 
@@ -25,7 +26,7 @@ final readonly class RunDropPreflight
     {
         $drop->loadMissing('items.product');
 
-        $problems = [...$this->stockProblems($drop), ...$this->deliveryProblems($drop)];
+        $problems = [...$this->stockProblems($drop), ...$this->deliveryProblems($drop), ...$this->botCheckProblems()];
 
         try {
             $problems = [...$problems, ...$this->priceProblems($drop), ...$this->webhookProblems()];
@@ -103,6 +104,20 @@ final readonly class RunDropPreflight
         }
 
         return $problems;
+    }
+
+    /**
+     * Without both Turnstile keys the bot check quietly lets everyone through, which is only right while developing.
+     *
+     * @return list<string>
+     */
+    private function botCheckProblems(): array
+    {
+        if (app()->isLocal() || Turnstile::isEnabled()) {
+            return [];
+        }
+
+        return ['Cloudflare’s bot check is off, so the order and wait-list forms accept anything. Set TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY in this environment.'];
     }
 
     /**

@@ -35,6 +35,7 @@ Confirm each setting by eye in the environment's settings (the values are secret
 | `STRIPE_WEBHOOK_SECRET` | the signing secret of the **live** endpoint created in section 5 |
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` | the live Twilio account's, not its test credentials |
 | `TWILIO_FROM_NUMBER` | the 04xx number, written `+614…` |
+| `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | both present, from the Turnstile widget that lists the www and apex hostnames |
 | `SHOP_ADMIN_EMAIL`, `SHOP_ADMIN_PHONE` | your email and mobile |
 
 Deploy, then run once from the environment's Commands tab:
@@ -52,14 +53,14 @@ With staging's Stripe webhook endpoint pointed at the staging address:
 
 1. `php artisan site:check https://<staging-host> --staging` passes.
 2. Set up a drop that opens in a few minutes with test-mode prices, and confirm the pre-flight email arrives and says it's ready.
-3. When it opens, place an order with one of Stripe's test cards. Check the confirmation page, both emails (to you and to the farm), and the order in the admin.
+3. When it opens, place an order with one of Stripe's test cards. Check the confirmation page, both emails, and the order in the admin. On staging both emails arrive at the farm's address, whatever email you typed at Stripe.
 4. Try a card Stripe's test docs list as declined, and confirm nothing is held afterwards.
 5. Start a checkout and press Stripe's back link. The order page should say it was cancelled, with the stock back on sale.
 6. Start a checkout and leave it. Force the payment page to close with the Stripe CLI (`stripe checkout sessions expire <session id>`) and confirm the stock comes back within a minute.
 7. If a bank debit payment method is turned on, place an order with it and confirm the order shows "Payment clearing" until Stripe settles it.
 8. Refund an order in Stripe and confirm the admin shows the refund (stock doesn't come back; that's intended).
 9. Run the load test (`scripts/load/drop-day.js`, see `docs/laravel-cloud.md`) and a Lighthouse mobile check on `/`, `/beef-boxes` and `/order`.
-10. Join the wait list from your phone and check the admin records your phone's IP address (see "Drop day" in `docs/laravel-cloud.md`).
+10. Join the wait list from your phone and check the admin records your phone's IP address, and not an address sent in a made-up `X-Forwarded-For` header (both checks are under "Drop day" in `docs/laravel-cloud.md`).
 
 ## 5. Stripe live mode
 
@@ -79,7 +80,8 @@ In the production environment's Domains settings, add `www.fergusonlivestock.com
 2. Deploy `main` to production and run `php artisan site:check https://<production Cloud host>`. Only the canonical and apex checks may fail at this point, because the Cloud host isn't the www address yet.
 3. Point DNS for `www` and the apex at Laravel Cloud, using the records its Domains page shows.
 4. In Stripe's live mode, **enable** the new webhook endpoint and **disable** the old site's. Both use the same address, and Laravel only accepts events signed with the new endpoint's secret, so the old endpoint must not stay on.
-5. In Vercel, disconnect the project's Git integration, but keep the project and its last deployment for rollback.
+5. In Twilio, change the number's **A message comes in** webhook from the staging address to `https://www.fergusonlivestock.com.au/api/webhooks/twilio/inbound`. Until you do, customers' STOP and START replies go to staging and production never records them.
+6. In Vercel, disconnect the project's Git integration, but keep the project and its last deployment for rollback. Turn on its **Deployment Protection** too. Its checkout has no server-side check that a drop is open, so while it's reachable at a `*.vercel.app` address it can still start live Stripe checkouts for the old Upstash stock, outside Laravel's records.
 
 ## 8. Check it
 
@@ -87,13 +89,13 @@ In the production environment's Domains settings, add `www.fergusonlivestock.com
 2. In Google Search Console, submit `https://www.fergusonlivestock.com.au/sitemap-index.xml` again.
 3. Import the Klaviyo export in the admin (Subscribers → Import from Klaviyo) while production has one replica, and check the count matches Klaviyo's.
 4. Create the first real drop with the live prices. Confirm its pre-flight check passes and the pre-flight email arrives.
-5. Send yourself a test broadcast, then announce the drop.
+5. Send yourself a test broadcast and reply to it from your phone. The reply should appear under the admin's replies, which shows the Twilio webhook reaches production. Then announce the drop.
 
 ## 9. Rollback (until the first drop on Laravel)
 
 If something is badly wrong:
 
-1. Point DNS back at Vercel's still-running deployment.
+1. Point DNS back at Vercel's still-running deployment, and turn its Deployment Protection off again.
 2. In Stripe's live mode, re-enable the old endpoint and disable the new one.
 3. Reconnect Vercel's Git integration only if the old site needs a change: its code is at commit `0dce200`.
 

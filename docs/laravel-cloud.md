@@ -48,7 +48,11 @@ SHOP_ADMIN_PHONE=+614...
 TWILIO_ACCOUNT_SID=AC...
 TWILIO_AUTH_TOKEN=...
 TWILIO_FROM_NUMBER=+614...
+TURNSTILE_SITE_KEY=0x...
+TURNSTILE_SECRET_KEY=0x...
 ```
+
+The Turnstile keys turn on Cloudflare's bot check on the order and wait-list forms. Without both, the check quietly lets everyone through, and each drop's pre-flight check reports it. Create the widget in Cloudflare's Turnstile settings and add every hostname that serves the forms (www, the apex, and the staging host).
 
 The response cache uses `CACHE_STORE`, so every replica shares the cached marketing pages. The deploy command clears it, so a deploy never serves stale pages.
 
@@ -98,6 +102,8 @@ Checkout sends customers to Stripe's payment page for 31 minutes (Stripe's minim
 
 Emails go through Resend when an order is paid: a confirmation to the customer (replies go to the farm's address) and a new-order email to the farm.
 
+Outside production, every email goes to the farm's address (`email` in `config/shop.php`) instead of whoever it was written to. Staging takes free test-mode orders, so without this anyone who found it could send "your order is paid" emails from the shop's domain to any address.
+
 ## Drop day
 
 Every page polls `/api/drop` for live stock: every couple of seconds while a drop is live or about to open, every 30 seconds while one is scheduled, and not at all otherwise or in background tabs. The feed is built at most once a second and rebuilt straight after any stock change, and it may be cached by Cloudflare for a second too. `SHOP_DROP_POLL_MS` changes the polling interval (default 2000).
@@ -109,7 +115,12 @@ Before each drop:
 
 **Load test (staging):** `k6 run -e BASE_URL=https://<staging-host> scripts/load/drop-day.js` runs 500 visitors polling the feed for five minutes, with some loading the order page. It fails if more than 1% of requests fail or the feed's 95th percentile goes over 300 ms. It doesn't start checkouts (see the script's notes).
 
-**Check visitors' IP addresses once:** checkout limits tries per IP address, so the app must see each visitor's own address, not a proxy's. After deploying staging, join the wait list from your phone, then check the subscriber's IP address in the admin matches your phone's. If it shows the same address for everyone, tell Laravel which proxies to trust before the first drop.
+**Check visitors' IP addresses once:** checkout limits tries per IP address, so the app must see each visitor's own address, not a proxy's, and not one the visitor made up.
+
+1. After deploying staging, join the wait list from your phone, then check the subscriber's IP address in the admin matches your phone's. If it shows the same address for everyone, the app trusts too few proxies.
+2. Join again from a browser with an extension that adds the header `X-Forwarded-For: 198.51.100.23` (a documentation address nobody uses). If the admin now shows `198.51.100.23`, the app trusts addresses a visitor can invent, and every per-address limit can be dodged.
+
+Either way, fix `trustProxies` in `bootstrap/app.php` before the first drop, then turn on the skipped test in `tests/Feature/WaitlistTest.php` ("records the address that connected").
 
 ## Twilio (wait-list texts)
 
@@ -118,9 +129,13 @@ Texts go out from one Australian 04xx number, so people can reply. In the Twilio
 1. Under the number's **Messaging configuration**, set **A message comes in** to a webhook, `https://<host>/api/webhooks/twilio/inbound`, method **POST**. Delivery reports need no setup: each text asks Twilio to report to `/api/webhooks/twilio/status`.
 2. Keep Twilio's **Advanced Opt-Out** on. It blocks anyone who replies STOP, as a safety net behind the app's own opt-outs.
 
-Both webhooks check Twilio's signature against `TWILIO_AUTH_TOKEN` and the URL Twilio called, so `APP_URL` must be the address in the console. Unsigned requests get a 403.
+Both webhooks check Twilio's signature against `TWILIO_AUTH_TOKEN` and the address Twilio called, so the console must use the environment's own address (the same as `APP_URL`). Unsigned requests get a 403.
 
 Twilio's test credentials don't send texts or call webhooks, so staging uses the real account. Keep staging's subscriber list to your own number, and use **Send a test to me** (which texts `SHOP_ADMIN_PHONE`) before sending a broadcast.
+
+There's one number, so replies go to whichever environment its incoming-message webhook points at. Point it at production from the switch-over on (see section 7 of `docs/switch-over.md`): otherwise customers' STOP and START replies reach staging, and production never records their opt-out or opt-in.
+
+`TWILIO_AUTH_TOKEN` is also the key both environments use to check Twilio's signatures, so anyone who reads it can forge replies to production. Keep it out of anywhere less trusted than staging, such as preview environments.
 
 The app sends a broadcast one text at a time from the queue, and Twilio queues them and sends them at the number's rate. A big list can take several minutes to go out, so schedule a drop announcement a few minutes before the drop opens.
 
@@ -128,7 +143,21 @@ The app sends a broadcast one text at a time from the queue, and Twilio queues t
 
 ## Preview environments
 
-Enable preview environments for pull requests into `main`. Give them the same variables as staging, and **turn off the WebSocket cluster Cloud creates by default** — the site doesn't use WebSockets.
+The repository is public, so anyone can open a pull request, and a preview environment builds and runs that pull request's code with whatever variables it's given. Don't give previews staging's live credentials. A pull request's code could read them and send texts or email from the shop's accounts, or forge Twilio replies to production.
+
+If you enable previews for pull requests into `main`, give them their own variables:
+
+```dotenv
+APP_ENV=staging
+APP_DEBUG=false
+CACHE_STORE=redis
+SESSION_DRIVER=redis
+SHOP_ADMIN_EMAIL=<the admin's email>
+STRIPE_SECRET=sk_test_...
+MAIL_MAILER=log
+```
+
+That's no `RESEND_API_KEY`, no `TWILIO_*` and no live keys of any kind. Mail is written to the log, texts can't be sent, and the Twilio webhooks refuse every request. If Cloud lets you, only create previews for branches pushed to this repository, not forks. **Turn off the WebSocket cluster Cloud creates by default**: the site doesn't use WebSockets.
 
 ## Checks after the first deploy
 
