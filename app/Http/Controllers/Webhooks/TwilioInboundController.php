@@ -7,12 +7,14 @@ use App\Enums\SmsStatus;
 use App\Http\Controllers\Controller;
 use App\Models\SmsMessage;
 use App\Models\Subscriber;
+use App\Sms\OptInKeywords;
 use App\Sms\OptOutKeywords;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 /**
- * Replies to the shop's number arrive here. Replies asking to stop opt the sender out straight away.
+ * Replies to the shop's number arrive here. Replies asking to stop opt the sender out straight away, and START
+ * opts someone back in.
  */
 class TwilioInboundController extends Controller
 {
@@ -35,6 +37,8 @@ class TwilioInboundController extends Controller
 
         if (OptOutKeywords::matches($body)) {
             $subscriber?->optOut();
+        } elseif (OptInKeywords::matches($body)) {
+            $subscriber?->optBackIn();
         }
 
         // An empty TwiML response: no automatic reply. Twilio answers STOP itself.

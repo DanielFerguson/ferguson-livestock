@@ -39,6 +39,11 @@ final readonly class HandleStripeEvent
         };
     }
 
+    /**
+     * The order whose payment page this session is. The order's ID in the session is only a fallback for an order
+     * whose payment page was never recorded against it: an order that has one belongs to that session alone, so
+     * another session naming it, such as one opened from an old Payment Link, can't mark it paid.
+     */
     private function orderFor(CheckoutSession $session): ?Order
     {
         if ($session->id === '') {
@@ -46,7 +51,10 @@ final readonly class HandleStripeEvent
         }
 
         return Order::query()->where('stripe_checkout_session_id', $session->id)->first()
-            ?? ($session->orderPublicId === null ? null : Order::query()->where('public_id', $session->orderPublicId)->first());
+            ?? ($session->orderPublicId === null ? null : Order::query()
+                ->where('public_id', $session->orderPublicId)
+                ->whereNull('stripe_checkout_session_id')
+                ->first());
     }
 
     /**

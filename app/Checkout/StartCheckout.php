@@ -34,12 +34,18 @@ final readonly class StartCheckout
 
     private const int TRIES_PER_VISITOR = 5;
 
+    private const int VISITOR_WINDOW_SECONDS = 600;
+
     /**
      * A looser ceiling for scripts that throw their cookies away between tries.
      */
     private const int TRIES_PER_IP_ADDRESS = 30;
 
-    private const int TRY_WINDOW_SECONDS = 600;
+    /**
+     * Longer than a hold lasts (the payment page's 31 minutes plus the sweep's grace period), so one address can't
+     * keep more than its tries' worth of stock on hold by waiting for the window to reset.
+     */
+    private const int IP_ADDRESS_WINDOW_SECONDS = 35 * 60;
 
     public function __construct(
         private StockLedger $stock,
@@ -86,18 +92,18 @@ final readonly class StartCheckout
     private function limitTries(string $fingerprint, string $ip): void
     {
         $limits = [
-            "checkout:visitor:{$fingerprint}:{$ip}" => self::TRIES_PER_VISITOR,
-            "checkout:ip:{$ip}" => self::TRIES_PER_IP_ADDRESS,
+            "checkout:visitor:{$fingerprint}:{$ip}" => [self::TRIES_PER_VISITOR, self::VISITOR_WINDOW_SECONDS],
+            "checkout:ip:{$ip}" => [self::TRIES_PER_IP_ADDRESS, self::IP_ADDRESS_WINDOW_SECONDS],
         ];
 
-        foreach ($limits as $key => $tries) {
+        foreach ($limits as $key => [$tries]) {
             if (RateLimiter::tooManyAttempts($key, $tries)) {
                 throw new TooManyCheckoutAttempts(RateLimiter::availableIn($key));
             }
         }
 
-        foreach (array_keys($limits) as $key) {
-            RateLimiter::hit($key, self::TRY_WINDOW_SECONDS);
+        foreach ($limits as $key => [, $window]) {
+            RateLimiter::hit($key, $window);
         }
     }
 

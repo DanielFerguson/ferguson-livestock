@@ -25,7 +25,7 @@ final class SubscriberActions
             ->visible(fn (Subscriber $record): bool => $record->isSubscribed())
             ->requiresConfirmation()
             ->modalHeading('Stop texting this person?')
-            ->modalDescription('They won’t get any more broadcasts. To start again, they need to sign up on the website, which records their consent again.')
+            ->modalDescription('They won’t get any more broadcasts. To start again, they need to text START to the shop’s number from their phone, which records their consent again.')
             ->modalSubmitActionLabel('Opt them out')
             ->action(function (Subscriber $record): void {
                 $record->optOut();

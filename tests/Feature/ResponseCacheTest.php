@@ -9,13 +9,22 @@ use Symfony\Component\HttpFoundation\Cookie;
 it('serves the marketing pages from the cache', function (string $path) {
     $this->get($path)->assertOk();
 
-    expect(ResponseCache::hasBeenCached(Request::create($path)))->toBeTrue();
+    expect(ResponseCache::hasBeenCached(Request::create(url($path))))->toBeTrue();
 })->with(['/', '/beef-boxes', '/our-story', '/delivery', '/faq', '/contact', '/privacy']);
+
+it('doesn’t serve other visitors a page rendered for a forwarded port or scheme', function (string $url, array $headers, string $leak) {
+    $this->get($url, $headers)->assertOk()->assertSee($leak, false);
+
+    $this->get($url)->assertOk()->assertDontSee($leak, false);
+})->with([
+    'forwarded port' => ['https://shop.test/faq', ['X-Forwarded-Port' => '8444'], 'https://shop.test:8444/'],
+    'forwarded scheme' => ['http://shop.test/faq', ['X-Forwarded-Proto' => 'https'], 'https://shop.test/'],
+]);
 
 it('never caches personal or transactional pages', function (string $path) {
     $this->get($path);
 
-    expect(ResponseCache::hasBeenCached(Request::create($path)))->toBeFalse();
+    expect(ResponseCache::hasBeenCached(Request::create(url($path))))->toBeFalse();
 })->with(['/thank-you', '/order']);
 
 it('shows wait-list errors even after the page was cached', function () {
@@ -34,7 +43,7 @@ it('gives each visitor their own session cookie on a cached page', function () {
     $this->flushSession();
     $second = $this->get('/faq');
 
-    expect(ResponseCache::hasBeenCached(Request::create('/faq')))->toBeTrue()
+    expect(ResponseCache::hasBeenCached(Request::create(url('/faq'))))->toBeTrue()
         ->and($second->getCookie(config()->string('session.cookie'), false)?->getValue())
         ->not->toBeNull()
         ->not->toBe($firstSession);

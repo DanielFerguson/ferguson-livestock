@@ -1,8 +1,8 @@
 <?php
 
 use App\Http\ResponseCache\MarketingPagesProfile;
+use App\Http\ResponseCache\OriginHasher;
 use App\Http\ResponseCache\StripCookies;
-use Spatie\ResponseCache\Hasher\DefaultHasher;
 use Spatie\ResponseCache\Replacers\CsrfTokenReplacer;
 use Spatie\ResponseCache\Serializers\JsonSerializer;
 
@@ -110,7 +110,7 @@ return [
      * This class is responsible for generating a hash for
      * a request. Used for looking up cached responses.
      */
-    'hasher' => DefaultHasher::class,
+    'hasher' => OriginHasher::class,
 
     /*
      * This class is responsible for serializing responses.

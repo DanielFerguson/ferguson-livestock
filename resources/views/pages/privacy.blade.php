@@ -22,7 +22,7 @@
             <p>We keep wait-list and order details in our own system. We use service providers including Twilio to send wait-list text messages and receive your replies, Stripe for checkout, Resend for order emails, and Laravel Cloud (which runs on Amazon Web Services and Cloudflare) to host this website and store that information. These providers handle information under their own privacy and security terms and may process data outside Australia.</p>
 
             <h2>Marketing consent and opting out</h2>
-            <p>Joining the wait list means you consent to receive Ferguson Livestock messages about beef drops. Messages will identify Ferguson Livestock and include a way to opt out. Reply STOP to any of our texts and we stop straight away, or contact us and we will action your request promptly.</p>
+            <p>Joining the wait list means you consent to receive Ferguson Livestock messages about beef drops. Messages will identify Ferguson Livestock and include a way to opt out. Reply STOP to any of our texts and we stop straight away, or contact us and we will action your request promptly. To start getting our texts again after opting out, reply START from the same phone.</p>
 
             <h2>Access, correction and questions</h2>
             <p>To ask what information we hold about you, correct it, request deletion where appropriate, or raise a privacy concern, contact us at <a href="mailto:{{ config('shop.email') }}">{{ config('shop.email') }}</a> or <a href="tel:{{ config('shop.phone.international') }}">{{ config('shop.phone.display') }}</a>.</p>

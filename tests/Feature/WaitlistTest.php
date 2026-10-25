@@ -34,6 +34,12 @@ it('adds the visitor to the wait list with a record of their consent', function 
         ->and($subscriber->unsubscribed_at)->toBeNull();
 });
 
+it('records the address that connected, not one the visitor claims', function () {
+    $this->post('/waitlist', waitlistForm(), ['REMOTE_ADDR' => '203.0.113.7', 'X-Forwarded-For' => '198.51.100.23']);
+
+    expect(Subscriber::sole()->consent_ip)->toBe('203.0.113.7');
+})->skip('trustProxies(at: \'*\') takes the client IP from X-Forwarded-For, which a visitor can set. Enable once the proxy settings match what the Laravel Cloud edge sends (see the client IP check in docs/laravel-cloud.md).');
+
 it('greets the visitor by name without putting it in the URL', function () {
     $this->followingRedirects()
         ->post('/waitlist', waitlistForm(['first_name' => '  Sam ']))
@@ -53,16 +59,14 @@ it('updates the existing entry when someone signs up again', function () {
         ->and(Subscriber::sole()->only('first_name', 'postcode'))->toBe(['first_name' => 'Samantha', 'postcode' => '3351']);
 });
 
-it('resubscribes someone who had opted out, with fresh consent', function () {
-    $optedOut = Subscriber::factory()->unsubscribed()->create(['phone' => '+61412345678', 'consented_at' => now()->subYear()]);
+it('leaves an opt-out in place when the form names a number that opted out', function () {
+    $optedOut = Subscriber::factory()->unsubscribed()->create(['phone' => '+61412345678', 'first_name' => 'Jo', 'postcode' => '3000', 'consent_ip' => '198.51.100.1']);
+    $before = $optedOut->only('first_name', 'postcode', 'consented_at', 'consent_source', 'consent_ip', 'unsubscribed_at');
 
-    $this->freezeSecond();
-    $this->post('/waitlist', waitlistForm());
+    $this->post('/waitlist', waitlistForm(), ['REMOTE_ADDR' => '203.0.113.7'])->assertRedirect('/thank-you');
 
-    $optedOut->refresh();
-
-    expect($optedOut->unsubscribed_at)->toBeNull()
-        ->and($optedOut->consented_at->equalTo(now()))->toBeTrue();
+    expect($optedOut->refresh()->isSubscribed())->toBeFalse()
+        ->and($optedOut->only(array_keys($before)))->toEqual($before);
 });
 
 it('explains each problem next to the form', function (array $input, string $field, string $message) {

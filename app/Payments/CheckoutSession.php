@@ -43,7 +43,8 @@ final readonly class CheckoutSession
             },
             paymentStatus: self::text($session, 'payment_status') ?? 'unpaid',
             url: self::text($session, 'url'),
-            orderPublicId: self::text(self::object($session, 'metadata'), 'order_id') ?? self::text($session, 'client_reference_id'),
+            // Not client_reference_id: a Payment Link lets whoever opens it set that.
+            orderPublicId: self::text(self::object($session, 'metadata'), 'order_id'),
             paymentIntentId: is_string($paymentIntent) ? $paymentIntent : (is_array($paymentIntent) ? self::text($paymentIntent, 'id') : null),
             customerName: self::text($customer, 'name') ?? self::text($shipping, 'name'),
             email: self::text($customer, 'email'),
