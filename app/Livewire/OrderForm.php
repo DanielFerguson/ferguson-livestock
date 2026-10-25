@@ -5,9 +5,9 @@ namespace App\Livewire;
 use App\Checkout\CheckoutRequest;
 use App\Checkout\StartCheckout;
 use App\Enums\DeliveryMethod;
-use App\Enums\DropStatus;
 use App\Enums\ProductType;
 use App\Exceptions\DropNotOpen;
+use App\Exceptions\FailedBotCheck;
 use App\Exceptions\InsufficientStock;
 use App\Exceptions\InvalidCheckout;
 use App\Exceptions\PaymentProviderUnavailable;
@@ -15,7 +15,6 @@ use App\Exceptions\TooManyCheckoutAttempts;
 use App\Models\Drop;
 use App\Models\DropItem;
 use App\Stock\DropSnapshot;
-use App\Support\Turnstile;
 use Carbon\CarbonImmutable;
 use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Contracts\View\View;
@@ -67,9 +66,12 @@ class OrderForm extends Component
     }
 
     /**
+     * Checkout itself counts the try before the bot check or any database work, so nothing here may do either
+     * first.
+     *
      * @param  string  $turnstileToken  The bot check's token, read from the form in the browser.
      */
-    public function checkout(StartCheckout $start, Turnstile $turnstile, string $turnstileToken = ''): void
+    public function checkout(StartCheckout $start, string $turnstileToken = ''): void
     {
         $this->notices = [];
         $this->problem = null;
@@ -77,13 +79,6 @@ class OrderForm extends Component
         // A token only works once, so the widget fetches a fresh one for the next try.
         $this->dispatch('turnstile-reset');
 
-        if (! $turnstile->passes($turnstileToken, request()->ip())) {
-            $this->problem = Turnstile::FAILED_MESSAGE;
-
-            return;
-        }
-
-        $drop = $this->drop();
         $deliveryMethod = DeliveryMethod::tryFrom($this->deliveryMethod);
 
         if ($deliveryMethod === null) {
@@ -93,12 +88,12 @@ class OrderForm extends Component
         }
 
         try {
-            $url = $start(new CheckoutRequest($drop, $this->quantities(), $deliveryMethod, $this->chosenDay(), session()->getId(), (string) request()->ip()));
+            $url = $start(new CheckoutRequest($this->dropId, $this->quantities(), $deliveryMethod, $this->chosenDay(), session()->getId(), (string) request()->ip(), $turnstileToken));
         } catch (InsufficientStock $exception) {
-            $this->cutTo($drop, $exception->available);
+            $this->cutTo($this->drop(), $exception->available);
 
             return;
-        } catch (InvalidCheckout|DropNotOpen|TooManyCheckoutAttempts $exception) {
+        } catch (FailedBotCheck|InvalidCheckout|DropNotOpen|TooManyCheckoutAttempts $exception) {
             $this->problem = $exception->getMessage();
 
             return;
@@ -210,10 +205,5 @@ class OrderForm extends Component
         if ($available === []) {
             $this->problem = 'Something in your order just sold out. Please check it and try again.';
         }
-    }
-
-    public function isTakingOrders(): bool
-    {
-        return in_array($this->drop()->status(), [DropStatus::Live, DropStatus::SoldOut], true);
     }
 }

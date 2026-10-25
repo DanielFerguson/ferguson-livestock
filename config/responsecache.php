@@ -88,6 +88,9 @@ return [
      * These query parameters will be ignored when generating
      * the cache key. This is useful for ignoring tracking
      * parameters like UTM tags, gclid and also fbclid.
+     *
+     * Not used here: OriginHasher leaves the whole query
+     * string out of the key.
      */
     'ignored_query_parameters' => [
         'utm_source',

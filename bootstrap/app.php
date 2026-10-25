@@ -19,6 +19,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // Laravel Cloud terminates TLS at its edge and load balancer.
         $middleware->trustProxies(at: '*');
 
+        // Twilio signs its form fields exactly as it sends them, so its webhooks must see them untrimmed.
+        $fromTwilio = fn (Request $request): bool => $request->is('api/webhooks/twilio/*');
+        $middleware->trimStrings(except: [$fromTwilio]);
+        $middleware->convertEmptyStringsToNull(except: [$fromTwilio]);
+
         $middleware->prepend(RemoveTrailingSlash::class);
         $middleware->append([SecurityHeaders::class, PreventIndexingOutsideProduction::class]);
     })

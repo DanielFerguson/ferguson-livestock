@@ -17,7 +17,7 @@ use Tests\Fixtures\StockedDrop;
 function startCheckout(StockedDrop $shop, array $quantities, bool $delivery = false, string $visitor = 'visitor-a'): string
 {
     return app(StartCheckout::class)(new CheckoutRequest(
-        drop: $shop->drop,
+        dropId: $shop->drop->id,
         quantities: $quantities,
         deliveryMethod: $delivery ? DeliveryMethod::Delivery : DeliveryMethod::Pickup,
         deliveryDay: $delivery ? CarbonImmutable::parse($shop->drop->delivery_days[0]) : null,

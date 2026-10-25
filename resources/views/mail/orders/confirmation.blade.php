@@ -1,5 +1,5 @@
 <x-mail::message>
-# Thanks{{ $order->firstName() !== null ? ', '.$order->firstName() : '' }}!
+# Thanks{{ $order->firstName() !== null ? ', ' : '' }}{{ \App\Support\MarkdownText::escape($order->firstName()) }}!
 
 Your order **{{ $order->reference() }}** is paid and we’re getting it ready.
 
@@ -8,8 +8,8 @@ Your order **{{ $order->reference() }}** is paid and we’re getting it ready.
 @if ($order->delivery_method === \App\Enums\DeliveryMethod::Delivery)
 **Delivery** on {{ $order->delivery_day?->format('l j F') }}, in the afternoon or evening, to:
 
-{{ $order->shipping_address['line1'] ?? '' }}@if (($order->shipping_address['line2'] ?? null) !== null), {{ $order->shipping_address['line2'] }}@endif<br>
-{{ $order->shipping_address['city'] ?? '' }} {{ $order->shipping_address['postal_code'] ?? '' }}
+{{ \App\Support\MarkdownText::escape($order->shipping_address['line1'] ?? null) }}@if (($order->shipping_address['line2'] ?? null) !== null), {{ \App\Support\MarkdownText::escape($order->shipping_address['line2']) }}@endif<br>
+{{ \App\Support\MarkdownText::escape($order->shipping_address['city'] ?? null) }} {{ \App\Support\MarkdownText::escape($order->shipping_address['postal_code'] ?? null) }}
 
 We’ll be in touch to confirm a time. Everything arrives vacuum-sealed in insulated packaging: pop it straight in the freezer or fridge.
 @else

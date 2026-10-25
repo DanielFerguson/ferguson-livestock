@@ -11,7 +11,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Mail;
 use Tests\Fixtures\StockedDrop;
 
-function paidDelivery(string $name = 'Sam Buyer'): Order
+function paidDelivery(string $name = 'Sam Buyer', string $line1 = '1 Main St'): Order
 {
     Mail::fake();
     $shop = StockedDrop::create(drop: ['delivery_days' => ['2026-10-10']]);
@@ -19,7 +19,7 @@ function paidDelivery(string $name = 'Sam Buyer'): Order
 
     app(OrderPayments::class)->markPaid($order, new CheckoutSession('cs_test_1', 'complete', 'paid',
         customerName: $name, email: 'buyer@example.test', phone: '+61400000002',
-        shippingAddress: ['line1' => '1 Main St', 'line2' => null, 'city' => 'Ballarat', 'state' => 'VIC', 'postal_code' => '3350', 'country' => 'AU'],
+        shippingAddress: ['line1' => $line1, 'line2' => null, 'city' => 'Ballarat', 'state' => 'VIC', 'postal_code' => '3350', 'country' => 'AU'],
     ));
 
     return $order->refresh();
@@ -40,6 +40,18 @@ it('tells the farm who ordered and where it’s going', function () {
     (new NewOrderNotification($order))
         ->assertHasSubject("New order {$order->reference()}: Sam Buyer")
         ->assertSeeInOrderInHtml(['Sam Buyer', 'buyer@example.test', '+61400000002', '5kg Beef Box', 'Saturday 10 October', '1 Main St, Ballarat 3350']);
+});
+
+it('shows Markdown in what the buyer typed as plain text, not links or images', function () {
+    $order = paidDelivery('[Track your order](https://phish.test/track)', '![](https://phish.test/pixel.png) 1 Main St');
+
+    foreach ([new OrderConfirmation($order), new NewOrderNotification($order)] as $mail) {
+        expect($mail->render())
+            ->not->toMatch('/(href|src)="https:\/\/phish\.test/')
+            ->toContain('https://phish.test/pixel.png');
+
+        $mail->assertSeeInText('![](https://phish.test/pixel.png) 1 Main St');
+    }
 });
 
 it('escapes names in both emails', function () {

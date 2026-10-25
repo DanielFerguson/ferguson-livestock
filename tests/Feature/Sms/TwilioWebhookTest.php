@@ -108,6 +108,16 @@ it('opts someone out when they reply asking to stop', function () {
     expect($subscriber->refresh()->isSubscribed())->toBeFalse();
 });
 
+it('accepts a signed reply with spaces at either end, as Twilio signs it', function () {
+    $subscriber = Subscriber::factory()->create();
+
+    postFromTwilio('webhooks.twilio.inbound', ['MessageSid' => 'SMreply1', 'From' => $subscriber->phone, 'To' => '+61400000000', 'Body' => "Stop please \n"])
+        ->assertOk();
+
+    expect($subscriber->refresh()->isSubscribed())->toBeFalse()
+        ->and(SmsMessage::sole()->body)->toBe("Stop please \n");
+});
+
 it('starts texting someone again when they reply START from their phone', function (string $body) {
     $subscriber = Subscriber::factory()->unsubscribed()->create(['consent_ip' => '198.51.100.1']);
 

@@ -21,6 +21,12 @@ it('doesn’t serve other visitors a page rendered for a forwarded port or schem
     'forwarded scheme' => ['http://shop.test/faq', ['X-Forwarded-Proto' => 'https'], 'https://shop.test/'],
 ]);
 
+it('stores one copy of a page whatever query string it’s asked for with', function () {
+    $this->get('/faq?anything=1')->assertOk();
+
+    expect(ResponseCache::hasBeenCached(Request::create(url('/faq'))))->toBeTrue();
+});
+
 it('never caches personal or transactional pages', function (string $path) {
     $this->get($path);
 

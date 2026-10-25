@@ -6,6 +6,7 @@ use App\Enums\DeliveryMethod;
 use App\Enums\OrderStatus;
 use App\Enums\ProductType;
 use App\Exceptions\DropNotOpen;
+use App\Exceptions\FailedBotCheck;
 use App\Exceptions\InsufficientStock;
 use App\Exceptions\InvalidCheckout;
 use App\Exceptions\PaymentProviderUnavailable;
@@ -17,6 +18,7 @@ use App\Models\OrderItem;
 use App\Payments\NewCheckoutSession;
 use App\Payments\PaymentGateway;
 use App\Stock\StockLedger;
+use App\Support\Turnstile;
 use Illuminate\Support\Facades\RateLimiter;
 
 /**
@@ -51,12 +53,17 @@ final readonly class StartCheckout
         private StockLedger $stock,
         private PaymentGateway $payments,
         private OrderPayments $orders,
+        private Turnstile $botCheck,
     ) {}
 
     /**
+     * Every try is counted before anything else happens, so a script that keeps calling this (one request can
+     * carry thousands of calls) costs a cache lookup each, not a call to Cloudflare or a database query.
+     *
      * @return string the URL of Stripe's payment page
      *
      * @throws TooManyCheckoutAttempts
+     * @throws FailedBotCheck
      * @throws InvalidCheckout
      * @throws DropNotOpen
      * @throws InsufficientStock
@@ -68,7 +75,11 @@ final readonly class StartCheckout
 
         $this->limitTries($fingerprint, $request->ip);
 
-        $drop = Drop::query()->with('items.product')->findOrFail($request->drop->id);
+        if (! $this->botCheck->passes($request->botCheckToken, $request->ip)) {
+            throw new FailedBotCheck;
+        }
+
+        $drop = Drop::query()->with('items.product')->findOrFail($request->dropId);
         $quantities = $this->validated($drop, $request);
 
         $this->letGoOfEarlierCheckouts($fingerprint);
@@ -125,7 +136,8 @@ final readonly class StartCheckout
         foreach ($quantities as $dropItemId => $quantity) {
             $item = $drop->items->firstWhere('id', $dropItemId);
 
-            if (! $item instanceof DropItem || $item->product->type === ProductType::Delivery) {
+            // firstWhere() matches loosely, so "07" would find item 7 and slip past its limit under a second key.
+            if (! $item instanceof DropItem || $item->id !== $dropItemId || $item->product->type === ProductType::Delivery) {
                 throw new InvalidCheckout('Something in your order isn’t part of this drop.');
             }
 

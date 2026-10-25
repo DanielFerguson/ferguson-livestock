@@ -86,6 +86,9 @@ class AppServiceProvider extends ServiceProvider
                 ->withErrors([
                     'first_name' => 'You’ve tried a few times in a row. Please wait a few minutes and try again, or call us on '.config()->string('shop.phone.display').'.',
                 ], 'waitlist')));
+
+        // A customer lands on these once or twice; more than this is someone replaying a link.
+        RateLimiter::for('checkout-return', fn (Request $request) => Limit::perMinute(20)->by((string) $request->ip()));
     }
 
     /**

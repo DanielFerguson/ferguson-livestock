@@ -20,7 +20,7 @@ beforeEach(fn () => FakePaymentGateway::swap());
  */
 function attempt(StockedDrop $shop, Closure $cart, DeliveryMethod $method = DeliveryMethod::Pickup, ?string $day = null, string $visitor = 'visitor-a', string $ip = '192.0.2.1'): string
 {
-    return app(StartCheckout::class)(new CheckoutRequest($shop->drop, $cart($shop), $method, $day === null ? null : CarbonImmutable::parse($day), $visitor, $ip));
+    return app(StartCheckout::class)(new CheckoutRequest($shop->drop->id, $cart($shop), $method, $day === null ? null : CarbonImmutable::parse($day), $visitor, $ip));
 }
 
 it('explains what’s wrong with an order it can’t take', function (Closure $cart, DeliveryMethod $method, ?string $day, string $problem) {

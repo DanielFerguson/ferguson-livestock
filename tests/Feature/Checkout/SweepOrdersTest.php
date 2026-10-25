@@ -21,7 +21,7 @@ use function Pest\Laravel\travelBack;
 function leftAtPaymentPage(StockedDrop $shop, int $minutesAgo = 40): Order
 {
     travel(-$minutesAgo)->minutes();
-    app(StartCheckout::class)(new CheckoutRequest($shop->drop, [$shop->box->id => 1], DeliveryMethod::Pickup, null, 'visitor-'.$minutesAgo, '192.0.2.1'));
+    app(StartCheckout::class)(new CheckoutRequest($shop->drop->id, [$shop->box->id => 1], DeliveryMethod::Pickup, null, 'visitor-'.$minutesAgo, '192.0.2.1'));
     travelBack();
 
     return Order::latest('id')->firstOrFail();
