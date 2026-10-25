@@ -41,24 +41,24 @@ it('falls back to the brand description', function () {
         ->assertSee('<meta name="description" content="'.e(config()->string('shop.brand.short_description')).'">', false);
 });
 
-it('points the canonical link at the www host without a trailing slash', function () {
+it('points the canonical link at the main address without a trailing slash', function () {
     $this->get('/example-page')
-        ->assertSee('<link rel="canonical" href="https://www.fergusonlivestock.com.au/example-page">', false);
+        ->assertSee('<link rel="canonical" href="https://fergusonlivestock.com.au/example-page">', false);
 });
 
 it('keeps the homepage canonical with its trailing slash', function () {
     $this->get('/')
-        ->assertSee('<link rel="canonical" href="https://www.fergusonlivestock.com.au/">', false);
+        ->assertSee('<link rel="canonical" href="https://fergusonlivestock.com.au/">', false);
 });
 
 it('is indexable by default', function () {
     $this->get('/example-page')->assertSee('<meta name="robots" content="index, follow">', false);
 });
 
-it('sends absolute social image URLs on the www host', function () {
+it('sends absolute social image URLs on the main address', function () {
     $this->get('/example-page')
-        ->assertSee('<meta property="og:image" content="https://www.fergusonlivestock.com.au/og-image.jpg">', false)
-        ->assertSee('<meta property="og:url" content="https://www.fergusonlivestock.com.au/example-page">', false)
+        ->assertSee('<meta property="og:image" content="https://fergusonlivestock.com.au/og-image.jpg">', false)
+        ->assertSee('<meta property="og:url" content="https://fergusonlivestock.com.au/example-page">', false)
         ->assertSee('<meta name="twitter:card" content="summary_large_image">', false);
 });
 

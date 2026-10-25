@@ -16,7 +16,8 @@ return [
 
     // Canonical origin for canonical tags, sitemaps and structured data. It stays
     // the production host on every environment; non-production is noindexed.
-    'url' => env('SHOP_URL', 'https://www.fergusonlivestock.com.au'),
+    // The main address has no www: Laravel Cloud redirects www to it.
+    'url' => env('SHOP_URL', 'https://fergusonlivestock.com.au'),
 
     // Drop times are entered and shown in this timezone and stored in UTC.
     'timezone' => 'Australia/Melbourne',

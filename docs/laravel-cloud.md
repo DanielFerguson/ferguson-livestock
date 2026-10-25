@@ -56,7 +56,7 @@ The Turnstile keys turn on Cloudflare's bot check on the order and wait-list for
 
 The response cache uses `CACHE_STORE`, so every replica shares the cached marketing pages. The deploy command clears it, so a deploy never serves stale pages.
 
-`APP_URL` must be the environment's own address: the drop pre-flight check looks for a Stripe webhook endpoint at `APP_URL/api/webhooks/stripe`. `SHOP_URL` stays the canonical www address everywhere.
+`APP_URL` must be the environment's own address: the drop pre-flight check looks for a Stripe webhook endpoint at `APP_URL/api/webhooks/stripe`. `SHOP_URL` stays the main address, `https://fergusonlivestock.com.au` (no www), everywhere. Laravel Cloud's domain settings redirect www to it.
 
 Resend sends from the verified `fergusonlivestock.com.au` domain, and the API key is restricted to it, so `MAIL_FROM_ADDRESS` must be an address on that domain. The `send` record Resend asks for is where bounces go, not an address to send from: Resend refuses mail from `send.fergusonlivestock.com.au`. Until the domain is verified, pre-flight emails fail and the result is only shown in the admin.
 

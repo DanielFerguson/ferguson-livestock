@@ -92,10 +92,10 @@ it('finds everything that would stop the drop working', function (Closure $break
 ]);
 
 it('looks for the webhook at this site’s own address, so staging checks its own endpoint', function () {
-    config(['app.url' => 'https://staging.example.test', 'shop.url' => 'https://www.fergusonlivestock.com.au']);
+    config(['app.url' => 'https://staging.example.test', 'shop.url' => 'https://fergusonlivestock.com.au']);
     $drop = readyDrop($this->stripe);
     app()->instance(PaymentGateway::class, (new FakePaymentGateway)->addPrice('price_box', 16000)->addPrice('price_delivery', 1500)
-        ->addWebhookEndpoint('https://www.fergusonlivestock.com.au/api/webhooks/stripe', StripeWebhookEvents::REQUIRED));
+        ->addWebhookEndpoint('https://fergusonlivestock.com.au/api/webhooks/stripe', StripeWebhookEvents::REQUIRED));
 
     expect(app(RunDropPreflight::class)($drop)['problems'])
         ->toBe(['Stripe isn’t set up to tell the site about payments. Add the webhook endpoint in Stripe.']);

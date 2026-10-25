@@ -1,6 +1,6 @@
 # Switch-over runbook
 
-Moving www.fergusonlivestock.com.au from the Astro site on Vercel to the Laravel app on Laravel Cloud. Do it between drops, when nobody is part-way through a checkout. `docs/laravel-cloud.md` has the detail behind each step.
+Moving fergusonlivestock.com.au from the Astro site on Vercel to the Laravel app on Laravel Cloud. The main address has no www, and www redirects to it. Do it between drops, when nobody is part-way through a checkout. `docs/laravel-cloud.md` has the detail behind each step.
 
 ## 1. In the weeks before
 
@@ -24,7 +24,7 @@ Confirm each setting by eye in the environment's settings (the values are secret
 | --- | --- |
 | `APP_ENV` | `production` |
 | `APP_DEBUG` | `false` |
-| `APP_URL` | `https://www.fergusonlivestock.com.au` |
+| `APP_URL` | `https://fergusonlivestock.com.au` |
 | `SHOP_URL` | the same address |
 | `CACHE_STORE`, `SESSION_DRIVER` | `redis` |
 | `QUEUE_CONNECTION` | `cloud` (set by Cloud) |
@@ -66,27 +66,27 @@ With staging's Stripe webhook endpoint pointed at the staging address:
 
 In Stripe's live mode:
 
-1. Create a webhook endpoint for `https://www.fergusonlivestock.com.au/api/webhooks/stripe`, on API version `2026-08-26.dahlia`, with the five events listed in `docs/laravel-cloud.md`. **Disable it** until the switch in section 7: until then the old site's endpoint handles live payments.
+1. Create a webhook endpoint for `https://fergusonlivestock.com.au/api/webhooks/stripe`, on API version `2026-08-26.dahlia`, with the five events listed in `docs/laravel-cloud.md`. **Disable it** until the switch in section 7: until then the old site's endpoint handles live payments.
 2. Copy its signing secret into production's `STRIPE_WEBHOOK_SECRET` and redeploy.
 3. Create or copy the live one-time AUD prices for the first drop. You'll paste them into the drop after the switch.
 
 ## 6. Domains
 
-In the production environment's Domains settings, add `www.fergusonlivestock.com.au` and `fergusonlivestock.com.au`, with the apex redirecting to www. Pre-verify both so the SSL certificates are issued before any traffic moves.
+In the production environment's Domains settings, add `fergusonlivestock.com.au` with **Redirect from www** turned on, so www redirects to it. Pre-verify it so the SSL certificates are issued before any traffic moves.
 
 ## 7. Switch (between drops)
 
 1. Confirm there are no open checkouts on the old site: no drop live, and nothing in Stripe's live payments from the last half hour still in progress.
-2. Deploy `main` to production and run `php artisan site:check https://<production Cloud host>`. Only the canonical and apex checks may fail at this point, because the Cloud host isn't the www address yet.
+2. Deploy `main` to production and run `php artisan site:check https://<production Cloud host>`. Only the canonical and www checks may fail at this point, because the Cloud host isn't the main address yet.
 3. Point DNS for `www` and the apex at Laravel Cloud, using the records its Domains page shows.
 4. In Stripe's live mode, **enable** the new webhook endpoint and **disable** the old site's. Both use the same address, and Laravel only accepts events signed with the new endpoint's secret, so the old endpoint must not stay on.
-5. In Twilio, change the number's **A message comes in** webhook from the staging address to `https://www.fergusonlivestock.com.au/api/webhooks/twilio/inbound`. Until you do, customers' STOP and START replies go to staging and production never records them.
+5. In Twilio, change the number's **A message comes in** webhook from the staging address to `https://fergusonlivestock.com.au/api/webhooks/twilio/inbound`. Until you do, customers' STOP and START replies go to staging and production never records them.
 6. In Vercel, disconnect the project's Git integration, but keep the project and its last deployment for rollback. Turn on its **Deployment Protection** too. Its checkout has no server-side check that a drop is open, so while it's reachable at a `*.vercel.app` address it can still start live Stripe checkouts for the old Upstash stock, outside Laravel's records.
 
 ## 8. Check it
 
-1. `php artisan site:check https://www.fergusonlivestock.com.au` passes every check, including the apex redirect. Run it again an hour later, once DNS has settled everywhere.
-2. In Google Search Console, submit `https://www.fergusonlivestock.com.au/sitemap-index.xml` again.
+1. `php artisan site:check https://fergusonlivestock.com.au` passes every check, including the www redirect. Run it again an hour later, once DNS has settled everywhere.
+2. In Google Search Console, submit `https://fergusonlivestock.com.au/sitemap-index.xml` again.
 3. Import the Klaviyo export in the admin (Subscribers → Import from Klaviyo) while production has one replica, and check the count matches Klaviyo's.
 4. Create the first real drop with the live prices. Confirm its pre-flight check passes and the pre-flight email arrives.
 5. Send yourself a test broadcast and reply to it from your phone. The reply should appear under the admin's replies, which shows the Twilio webhook reaches production. Then announce the drop.
