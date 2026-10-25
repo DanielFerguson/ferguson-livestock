@@ -113,6 +113,8 @@ Before each drop:
 
 **Load test (staging):** `k6 run -e BASE_URL=https://<staging-host> scripts/load/drop-day.js` runs 500 visitors polling the feed for five minutes, with some loading the order page. It fails if more than 1% of requests fail or the feed's 95th percentile goes over 300 ms. It doesn't start checkouts (see the script's notes).
 
+**Cloudflare rate limit:** the `fergusonlivestock.com.au` zone in Cloudflare (Free plan) proxies the site, and has one rate limiting rule, "Wait-list and order form submissions per visitor". An IP address that sends more than 60 requests in 10 seconds to `/waitlist` or `/livewire-*/update` (the order form and the admin) is blocked from those paths for 10 seconds. Page loads, the stock feed and the Stripe and Twilio webhooks aren't counted. If customers say the order form stops responding during a drop, look for blocks under Security → Analytics in Cloudflare before raising the limit.
+
 **Visitors' IP addresses:** checkout limits tries per IP address, so the app must see each visitor's own address, not a proxy's, and not one the visitor made up. `trustProxies(at: '*')` in `bootstrap/app.php` is right on Laravel Cloud, because its edge replaces any `X-Forwarded-For` a visitor sends. Checked on production on 2026-10-25, through the proxied Cloudflare zone: a wait-list try sent with `X-Forwarded-For: 198.51.100.23` counted against the sender's real address, and a made-up `X-Forwarded-Host` was ignored.
 
 Check again on a new environment, or if the domain's Cloudflare proxying changes:
