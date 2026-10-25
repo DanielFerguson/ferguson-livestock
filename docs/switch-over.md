@@ -5,7 +5,7 @@ Moving www.fergusonlivestock.com.au from the Astro site on Vercel to the Laravel
 ## 1. In the weeks before
 
 - **Twilio:** create the account and add the ABN so no GST is charged. Submit the Australian regulatory bundle (business name, address, ID) and buy one 04xx number. Point its incoming messages at `/api/webhooks/twilio/inbound` (see "Twilio" in `docs/laravel-cloud.md`).
-- **Resend:** verify the sending subdomain `send.fergusonlivestock.com.au` by adding the SPF (MX and TXT) and DKIM records Resend shows, plus a DMARC record starting at `p=none`. Send a test email to the farm's Outlook address and check it doesn't land in junk.
+- **Resend:** verify `fergusonlivestock.com.au` by adding the DKIM and SPF records Resend shows, plus a DMARC record starting at `p=none`. Resend's SPF records sit on `send` (where bounces go), but mail is sent from the domain itself. Create a sending-access API key restricted to the domain. Send a test email to the farm's Outlook address and check it doesn't land in junk.
 - **Staging:** deploy `main`, run through section 4 below, and fix anything it finds.
 - **Klaviyo:** export the SMS-consented list (phone number, first name, postcode, SMS consent and its timestamp). Keep the file safe: it holds customers' details.
 
@@ -30,7 +30,7 @@ Confirm each setting by eye in the environment's settings (the values are secret
 | `QUEUE_CONNECTION` | `cloud` (set by Cloud) |
 | `MAIL_MAILER` | `resend` |
 | `RESEND_API_KEY` | present |
-| `MAIL_FROM_ADDRESS` | an address on `send.fergusonlivestock.com.au` |
+| `MAIL_FROM_ADDRESS` | an address on `fergusonlivestock.com.au` itself, not on `send.` |
 | `STRIPE_SECRET` | the **live** secret key, copied from Stripe's live mode (the dashboard's test-mode toggle off) |
 | `STRIPE_WEBHOOK_SECRET` | the signing secret of the **live** endpoint created in section 5 |
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` | the live Twilio account's, not its test credentials |
