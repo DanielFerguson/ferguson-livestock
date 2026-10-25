@@ -1,10 +1,6 @@
 # Laravel Cloud setup
 
-How the Laravel app is hosted. The `production` environment is only created at the switch-over: follow `docs/switch-over.md`. Until then the live site is the Astro version's last Vercel deployment.
-
-## Vercel during the migration
-
-`main` holds the Laravel app. `vercel.json` only sets `git.deploymentEnabled: false`, so Vercel doesn't try to build it as the old Astro project, and www.fergusonlivestock.com.au keeps serving the last Astro deployment (built from `0dce200`). To change the live site before the switch-over, branch from `0dce200` and deploy that branch with `vercel --prod`. Delete `vercel.json` once the Vercel project is decommissioned.
+How the Laravel app is hosted. `docs/switch-over.md` records how the `production` environment was set up and the site moved onto it.
 
 ## Application
 

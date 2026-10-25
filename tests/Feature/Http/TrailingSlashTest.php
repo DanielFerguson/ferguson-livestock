@@ -8,12 +8,13 @@ use Illuminate\Testing\TestResponse;
 /**
  * Laravel's test client trims trailing slashes, so send raw requests through the HTTP kernel.
  *
+ * @param  array<string, string>  $server
  * @return TestResponse<Response>
  */
-function sendRaw(string $method, string $uri): TestResponse
+function sendRaw(string $method, string $uri, array $server = []): TestResponse
 {
     return TestResponse::fromBaseResponse(
-        app(Kernel::class)->handle(Request::create($uri, $method))
+        app(Kernel::class)->handle(Request::create($uri, $method, server: $server))
     );
 }
 
@@ -33,6 +34,15 @@ it('collapses several trailing slashes', function () {
     sendRaw('GET', '/delivery///')
         ->assertStatus(301)
         ->assertHeader('Location', 'http://localhost/delivery');
+});
+
+it('stays on https behind Laravel Cloud’s proxy', function () {
+    // Each real request starts with no trusted proxies; an earlier test's request mustn't have set them.
+    Request::setTrustedProxies([], 0);
+
+    sendRaw('GET', 'http://fergusonlivestock.com.au/our-story/', ['REMOTE_ADDR' => '10.0.0.5', 'HTTP_X_FORWARDED_PROTO' => 'https'])
+        ->assertStatus(301)
+        ->assertHeader('Location', 'https://fergusonlivestock.com.au/our-story');
 });
 
 it('redirects HEAD requests too', function () {

@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * The headers previously set by vercel.json, plus the HSTS header Vercel added itself.
+ * Security headers sent with every response, including HSTS.
  */
 class SecurityHeaders
 {

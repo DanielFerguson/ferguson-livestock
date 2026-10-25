@@ -42,5 +42,3 @@ Thumbs.db
 # Git worktrees
 /.worktrees/
 
-# Vercel CLI link and build output (until the old Vercel project is deleted)
-/.vercel/

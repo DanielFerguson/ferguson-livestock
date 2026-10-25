@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Keeps one URL per page: `/path/` permanently redirects to `/path`, as it did on Vercel.
+ * Keeps one URL per page: `/path/` permanently redirects to `/path`.
  */
 class RemoveTrailingSlash
 {
