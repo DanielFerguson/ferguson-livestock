@@ -43,7 +43,7 @@ final class LiveSiteCheck
         $checks[] = $this->redirect('/delivery-and-refunds', '/delivery#refunds', 'The old refunds page redirects');
 
         if (! $this->staging) {
-            $checks[] = $this->apexRedirect();
+            $checks[] = $this->wwwRedirect();
         }
 
         return [...$checks, $this->securityHeaders(), $this->sitemap(), $this->robots(), $this->liveFeed(), $this->health()];
@@ -68,7 +68,7 @@ final class LiveSiteCheck
 
         $checks = [
             self::result("{$path} loads", true, '200'),
-            self::result("{$path} points search engines at the www address", $canonical === $expected, "canonical {$canonical}"),
+            self::result("{$path} points search engines at the main address", $canonical === $expected, "canonical {$canonical}"),
         ];
 
         if ($this->staging) {
@@ -97,14 +97,14 @@ final class LiveSiteCheck
     /**
      * @return array{check: string, passed: bool, detail: string}
      */
-    private function apexRedirect(): array
+    private function wwwRedirect(): array
     {
-        $www = rtrim(config()->string('shop.url'), '/');
-        $apex = str_replace('://www.', '://', $www);
-        $response = $this->fetch("{$apex}/");
+        $main = rtrim(config()->string('shop.url'), '/');
+        $www = str_replace('://', '://www.', $main);
+        $response = $this->fetch("{$www}/");
         $location = $response?->header('Location') ?? '';
 
-        return self::result('The address without www redirects to www', in_array($response?->status(), [301, 308], true) && str_starts_with($location, $www), "{$apex} → {$this->describe($response)} {$location}");
+        return self::result('The www address redirects to the main address', in_array($response?->status(), [301, 308], true) && str_starts_with($location, "{$main}/"), "{$www} → {$this->describe($response)} {$location}");
     }
 
     /**

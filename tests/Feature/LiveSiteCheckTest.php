@@ -8,19 +8,19 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
 
 /**
- * Answer the checker's requests from this app, as if it were deployed at the www address. The apex answers
- * with the redirect Laravel Cloud's domain settings add.
+ * Answer the checker's requests from this app, as if it were deployed at the main address. The www address
+ * answers with the redirect Laravel Cloud's domain settings add.
  *
  * @param  array<string, int>  $broken  path => status to answer with instead
  */
-function serveThisApp(array $broken = []): void
+function serveThisApp(array $broken = [], bool $wwwRedirects = true): void
 {
-    Http::fake(function (Request $request) use ($broken) {
+    Http::fake(function (Request $request) use ($broken, $wwwRedirects) {
         $url = parse_url($request->url());
         $path = ($url['path'] ?? '/').(isset($url['query']) ? "?{$url['query']}" : '');
 
-        if (($url['host'] ?? '') === 'fergusonlivestock.com.au') {
-            return Http::response('', 301, ['Location' => 'https://www.fergusonlivestock.com.au/']);
+        if (($url['host'] ?? '') === 'www.fergusonlivestock.com.au' && $wwwRedirects) {
+            return Http::response('', 301, ['Location' => 'https://fergusonlivestock.com.au/']);
         }
 
         if (isset($broken[$url['path'] ?? '/'])) {
@@ -45,7 +45,7 @@ it('passes a production site that keeps every URL and SEO signal', function () {
     app()->instance('env', 'production');
     serveThisApp();
 
-    $failures = array_filter((new LiveSiteCheck('https://www.fergusonlivestock.com.au'))->run(), fn (array $check): bool => ! $check['passed']);
+    $failures = array_filter((new LiveSiteCheck('https://fergusonlivestock.com.au'))->run(), fn (array $check): bool => ! $check['passed']);
 
     expect($failures)->toBe([]);
 });
@@ -54,15 +54,24 @@ it('reports what’s wrong, page by page', function () {
     app()->instance('env', 'production');
     serveThisApp(['/faq' => 500]);
 
-    $failures = collect((new LiveSiteCheck('https://www.fergusonlivestock.com.au'))->run())->reject(fn (array $check): bool => $check['passed']);
+    $failures = collect((new LiveSiteCheck('https://fergusonlivestock.com.au'))->run())->reject(fn (array $check): bool => $check['passed']);
 
     expect($failures->pluck('check')->all())->toContain('/faq loads');
+});
+
+it('catches a www address that serves the site instead of redirecting to the main address', function () {
+    app()->instance('env', 'production');
+    serveThisApp(wwwRedirects: false);
+
+    $failures = collect((new LiveSiteCheck('https://fergusonlivestock.com.au'))->run())->reject(fn (array $check): bool => $check['passed']);
+
+    expect($failures->pluck('check')->all())->toBe(['The www address redirects to the main address']);
 });
 
 it('catches a production site still asking search engines not to index it', function () {
     serveThisApp();
 
-    $failures = collect((new LiveSiteCheck('https://www.fergusonlivestock.com.au'))->run())->reject(fn (array $check): bool => $check['passed']);
+    $failures = collect((new LiveSiteCheck('https://fergusonlivestock.com.au'))->run())->reject(fn (array $check): bool => $check['passed']);
 
     expect($failures->pluck('check')->all())->toContain('/ can be indexed');
 });
@@ -70,7 +79,7 @@ it('catches a production site still asking search engines not to index it', func
 it('expects staging to be hidden from search engines', function () {
     serveThisApp();
 
-    $failures = array_filter((new LiveSiteCheck('https://www.fergusonlivestock.com.au', staging: true))->run(), fn (array $check): bool => ! $check['passed']);
+    $failures = array_filter((new LiveSiteCheck('https://fergusonlivestock.com.au', staging: true))->run(), fn (array $check): bool => ! $check['passed']);
 
     expect($failures)->toBe([]);
 });
@@ -79,6 +88,6 @@ it('fails the command when anything fails', function () {
     app()->instance('env', 'production');
     serveThisApp(['/sitemap-0.xml' => 404]);
 
-    expect(Artisan::call('site:check', ['url' => 'https://www.fergusonlivestock.com.au']))->toBe(1)
+    expect(Artisan::call('site:check', ['url' => 'https://fergusonlivestock.com.au']))->toBe(1)
         ->and(Artisan::output())->toContain('sitemap');
 });

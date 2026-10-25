@@ -4,7 +4,7 @@ it('points the sitemap index at the page sitemap', function () {
     $this->get('/sitemap-index.xml')
         ->assertOk()
         ->assertHeader('Content-Type', 'application/xml')
-        ->assertSee('<sitemap><loc>https://www.fergusonlivestock.com.au/sitemap-0.xml</loc></sitemap>', false);
+        ->assertSee('<sitemap><loc>https://fergusonlivestock.com.au/sitemap-0.xml</loc></sitemap>', false);
 });
 
 it('lists the same public pages as the Astro sitemap', function () {
@@ -13,13 +13,13 @@ it('lists the same public pages as the Astro sitemap', function () {
     preg_match_all('#<loc>(.*?)</loc>#', $xml, $locations);
 
     expect($locations[1])->toBe([
-        'https://www.fergusonlivestock.com.au',
-        'https://www.fergusonlivestock.com.au/beef-boxes',
-        'https://www.fergusonlivestock.com.au/contact',
-        'https://www.fergusonlivestock.com.au/delivery',
-        'https://www.fergusonlivestock.com.au/faq',
-        'https://www.fergusonlivestock.com.au/our-story',
-        'https://www.fergusonlivestock.com.au/privacy',
+        'https://fergusonlivestock.com.au',
+        'https://fergusonlivestock.com.au/beef-boxes',
+        'https://fergusonlivestock.com.au/contact',
+        'https://fergusonlivestock.com.au/delivery',
+        'https://fergusonlivestock.com.au/faq',
+        'https://fergusonlivestock.com.au/our-story',
+        'https://fergusonlivestock.com.au/privacy',
     ]);
 });
 
@@ -33,7 +33,7 @@ it('is valid XML', function () {
 it('tells crawlers where the sitemap is and keeps them out of the API and admin', function () {
     $robots = (string) file_get_contents(public_path('robots.txt'));
 
-    expect($robots)->toContain('Sitemap: https://www.fergusonlivestock.com.au/sitemap-index.xml')
+    expect($robots)->toContain('Sitemap: https://fergusonlivestock.com.au/sitemap-index.xml')
         ->toContain('Disallow: /api/')
         ->toContain('Disallow: /admin');
 });

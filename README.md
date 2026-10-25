@@ -2,11 +2,11 @@
 
 The public website and stock-aware ordering experience for Ferguson Livestock, a family-run Murray Grey cattle farm in Snake Valley, Victoria.
 
-[Visit the live site](https://www.fergusonlivestock.com.au) · [View the repository](https://github.com/DanielFerguson/ferguson-livestock)
+[Visit the live site](https://fergusonlivestock.com.au) · [View the repository](https://github.com/DanielFerguson/ferguson-livestock)
 
 ![Murray Grey cattle at Ferguson Livestock](resources/images/cows-1.webp)
 
-> **Live:** this Laravel app serves [fergusonlivestock.com.au](https://www.fergusonlivestock.com.au) from Laravel Cloud. It replaced the earlier Astro and Vercel site, and every existing URL was kept.
+> **Live:** this Laravel app serves [fergusonlivestock.com.au](https://fergusonlivestock.com.au) from Laravel Cloud. It replaced the earlier Astro and Vercel site, and every existing URL was kept.
 
 ## About the project
 

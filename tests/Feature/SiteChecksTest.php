@@ -67,8 +67,8 @@ it('has exactly one title, description, canonical link and h1', function (string
         ->and(preg_match_all('/<h1(\s[^>]*)?>/', $html))->toBe(1);
 })->with('pages');
 
-it('canonicalises to the www host', function (string $path) {
-    $expected = 'https://www.fergusonlivestock.com.au'.($path === '/' ? '/' : $path);
+it('canonicalises to the main address, without www', function (string $path) {
+    $expected = 'https://fergusonlivestock.com.au'.($path === '/' ? '/' : $path);
 
     expect(renderedPage($this, $path))->toContain('<link rel="canonical" href="'.$expected.'">');
 })->with('pages');

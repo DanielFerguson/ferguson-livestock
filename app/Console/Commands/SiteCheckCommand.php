@@ -11,7 +11,7 @@ class SiteCheckCommand extends Command
      * @var string
      */
     protected $signature = 'site:check
-        {url : The deployed site, e.g. https://www.fergusonlivestock.com.au}
+        {url : The deployed site, e.g. https://fergusonlivestock.com.au}
         {--staging : Expect every page to be hidden from search engines}';
 
     /**
