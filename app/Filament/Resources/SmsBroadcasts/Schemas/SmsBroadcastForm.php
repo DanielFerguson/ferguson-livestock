@@ -71,7 +71,7 @@ class SmsBroadcastForm
                             ->multiple()
                             ->searchable()
                             ->getSearchResultsUsing(fn (string $search): array => self::subscriberSearch($search))
-                            ->getOptionLabelsUsing(fn (array $values): array => self::subscriberLabels($values))
+                            ->getOptionLabelsUsing(fn (array $values): array => self::subscriberLabels(array_values($values)))
                             ->helperText('Only people who are still subscribed get the text.')
                             ->required()
                             ->visible(fn (Get $get): bool => $get('audience_scope') === 'subscribers'),
