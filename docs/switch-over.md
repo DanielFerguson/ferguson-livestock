@@ -2,7 +2,7 @@
 
 Moving fergusonlivestock.com.au from the old Astro site to the Laravel app on Laravel Cloud. The main address has no www, and www redirects to it. Do it between drops, when nobody is part-way through a checkout. `docs/laravel-cloud.md` has the detail behind each step.
 
-The switch-over is done. The old site's hosting and stock database were deleted on 25 October 2026, so there's no rolling back to it. The steps stay here as a record, and for setting up another environment the same way.
+The switch-over is done, follow-ups included. On 25 October 2026 the old site's hosting and stock database were deleted, so there's no rolling back to it, and Klaviyo was cancelled. The DNS records for the site are proxied by Cloudflare, which sets their TTL automatically. The steps stay here as a record, and for setting up another environment the same way.
 
 ## 1. In the weeks before
 
@@ -91,8 +91,3 @@ In the production environment's Domains settings, add `fergusonlivestock.com.au`
 3. Import the Klaviyo export in the admin (Subscribers → Import from Klaviyo) while production has one replica, and check the count matches Klaviyo's.
 4. Create the first real drop with the live prices. Confirm its pre-flight check passes and the pre-flight email arrives.
 5. Send yourself a test broadcast and reply to it from your phone. The reply should appear under the admin's replies, which shows the Twilio webhook reaches production. Then announce the drop.
-
-## 9. After the first Laravel drop
-
-- Cancel Klaviyo once the first broadcast from the admin has gone out.
-- Raise the DNS TTLs back to their usual value.
