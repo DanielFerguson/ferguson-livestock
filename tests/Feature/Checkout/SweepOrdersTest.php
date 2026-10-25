@@ -4,11 +4,14 @@ use App\Checkout\CheckoutRequest;
 use App\Checkout\StartCheckout;
 use App\Enums\DeliveryMethod;
 use App\Enums\OrderStatus;
+use App\Jobs\SettleOrderWhenPaymentPageCloses;
 use App\Models\Order;
 use App\Stock\StockLedger;
+use Carbon\CarbonInterface;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Queue;
 use Tests\Fakes\FakePaymentGateway;
 use Tests\Fixtures\StockedDrop;
 
@@ -84,8 +87,51 @@ it('leaves customers who are still at the payment page alone', function () {
         ->and($stripe->session((string) $order->stripe_checkout_session_id)->status)->toBe('open');
 });
 
-it('sweeps every minute', function () {
+it('settles a payment page once Stripe has closed it, without waiting for the hourly sweep', function () {
+    Queue::fake();
+    $stripe = FakePaymentGateway::swap();
+    $shop = StockedDrop::create(boxes: 5);
+    app(StartCheckout::class)(new CheckoutRequest($shop->drop->id, [$shop->box->id => 1], DeliveryMethod::Pickup, null, 'visitor', '192.0.2.1'));
+    $order = Order::latest('id')->firstOrFail();
+    $stripe->timeOutSession((string) $order->stripe_checkout_session_id);
+
+    Queue::assertPushed(SettleOrderWhenPaymentPageCloses::class, fn (SettleOrderWhenPaymentPageCloses $job): bool => $job->orderId === $order->id);
+
+    $this->travelTo($order->expires_at->addMinutes(3));
+    app()->call([new SettleOrderWhenPaymentPageCloses($order->id), 'handle']);
+
+    expect($order->refresh()->status)->toBe(OrderStatus::Expired)
+        ->and($shop->box->refresh()->available)->toBe(5);
+});
+
+it('waits for the payment page to close a quarter of an hour at a time, the longest delay the queue allows', function () {
+    FakePaymentGateway::swap();
+    $order = leftAtPaymentPage(StockedDrop::create(), minutesAgo: 1);
+    Queue::fake();
+    $this->freezeTime();
+
+    app()->call([new SettleOrderWhenPaymentPageCloses($order->id), 'handle']);
+
+    expect($order->refresh()->status)->toBe(OrderStatus::Pending);
+    Queue::assertPushed(SettleOrderWhenPaymentPageCloses::class, fn (SettleOrderWhenPaymentPageCloses $job): bool => $job->orderId === $order->id
+        && $job->delay instanceof CarbonInterface
+        && $job->delay->eq(now()->addMinutes(15)));
+});
+
+it('settles an order that never reached Stripe two minutes after it was made', function () {
+    FakePaymentGateway::swap();
+    $shop = StockedDrop::create(boxes: 5);
+    $order = app(StockLedger::class)->reserve($shop->drop, [$shop->box->id => 1], DeliveryMethod::Pickup, null, 'fingerprint', now()->addMinutes(31));
+
+    $this->travelTo($order->created_at->addMinutes(2));
+    app()->call([new SettleOrderWhenPaymentPageCloses($order->id), 'handle']);
+
+    expect($order->refresh()->status)->toBe(OrderStatus::Expired)
+        ->and($shop->box->refresh()->available)->toBe(5);
+});
+
+it('sweeps every hour, as a safety net for timed settles that went missing', function () {
     $event = collect(app(Schedule::class)->events())->first(fn ($event) => str_contains((string) $event->command, 'orders:sweep'));
 
-    expect($event?->expression)->toBe('* * * * *');
+    expect($event?->expression)->toBe('0 * * * *');
 });

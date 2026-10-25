@@ -11,6 +11,7 @@ use App\Exceptions\InsufficientStock;
 use App\Exceptions\InvalidCheckout;
 use App\Exceptions\PaymentProviderUnavailable;
 use App\Exceptions\TooManyCheckoutAttempts;
+use App\Jobs\SettleOrderWhenPaymentPageCloses;
 use App\Models\Drop;
 use App\Models\DropItem;
 use App\Models\Order;
@@ -86,6 +87,9 @@ final readonly class StartCheckout
 
         $deliveryDay = $request->deliveryMethod === DeliveryMethod::Delivery ? $request->deliveryDay : null;
         $order = $this->stock->reserve($drop, $quantities, $request->deliveryMethod, $deliveryDay, $fingerprint, now()->addMinutes(self::PAYMENT_PAGE_MINUTES)->toImmutable());
+
+        // Queued before Stripe is called, so the stock comes back even if this request stops part-way.
+        SettleOrderWhenPaymentPageCloses::dispatch($order->id)->delay(SettleClosedCheckout::dueAt($order));
 
         try {
             $session = $this->payments->createCheckoutSession($this->paymentPage($order));

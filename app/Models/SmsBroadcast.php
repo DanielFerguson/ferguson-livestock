@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\BroadcastStatus;
+use App\Jobs\StartBroadcastWhenDue;
 use App\Sms\SmsText;
 use Carbon\CarbonImmutable;
 use Database\Factories\SmsBroadcastFactory;
@@ -41,6 +42,19 @@ class SmsBroadcast extends Model
     protected $attributes = [
         'audience' => '{"postcodes": [], "subscribers": []}',
     ];
+
+    /**
+     * Scheduling a broadcast within the hour times its start straight away; later ones are timed by the hourly
+     * sms:send-scheduled.
+     */
+    protected static function booted(): void
+    {
+        static::saved(function (SmsBroadcast $broadcast): void {
+            if ($broadcast->wasRecentlyCreated || $broadcast->wasChanged('scheduled_for')) {
+                StartBroadcastWhenDue::timeFor($broadcast);
+            }
+        });
+    }
 
     /**
      * @return HasMany<SmsMessage, $this>

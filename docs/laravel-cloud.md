@@ -77,11 +77,13 @@ The seeder adds the boxes, extras and delivery fee without prices; each drop set
 
 Then sign in at `/admin`. Filament asks you to set up an authenticator app on first sign-in; keep the recovery codes somewhere safe. Only the `SHOP_ADMIN_EMAIL` account can sign in, even if other users exist.
 
-The scheduler must stay on. Every minute it runs:
+The scheduler and the managed queue must both stay on. Delayed jobs on the queue do the exact timing:
 
-- `drops:preflight`, which checks each published drop 10 minutes before it opens, then emails the admin and adds a notification in the admin
-- `orders:sweep`, which settles checkouts whose payment page has closed, so a lost webhook never leaves stock held
-- `sms:send-scheduled`, which starts scheduled broadcasts
+- 10 minutes before a published drop opens, its pre-flight check runs, then emails the admin and adds a notification in the admin.
+- When a checkout's payment page closes, the order is settled, so a lost webhook never leaves stock held.
+- At a broadcast's scheduled time, it starts.
+
+The scheduler runs `drops:preflight`, `sms:send-scheduled` and `orders:sweep` once an hour. They time the jobs for anything due within the hour, and catch up on any job that went missing. They don't run every minute, because Laravel Cloud wakes the app, database and cache for every scheduled run, and they would never get to sleep.
 
 ## Stripe
 

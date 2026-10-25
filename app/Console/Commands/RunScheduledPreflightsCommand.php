@@ -2,12 +2,10 @@
 
 namespace App\Console\Commands;
 
-use App\Actions\RunDropPreflight;
+use App\Actions\CheckDropBeforeItOpens;
+use App\Jobs\RunDropPreflightWhenDue;
 use App\Models\Drop;
-use App\Models\User;
-use App\Notifications\DropPreflightFinished;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Notification;
 
 class RunScheduledPreflightsCommand extends Command
 {
@@ -19,36 +17,28 @@ class RunScheduledPreflightsCommand extends Command
     /**
      * @var string
      */
-    protected $description = 'Check drops opening in the next 10 minutes and tell the admin whether they are ready';
+    protected $description = 'Check drops opening in the next 10 minutes, and time a check for those opening within the hour';
 
-    public function handle(RunDropPreflight $preflight): int
+    public function handle(CheckDropBeforeItOpens $check): int
     {
-        $drops = Drop::query()
+        $upcoming = Drop::query()
             ->published()
             ->whereNull('preflight_ran_at')
-            ->whereBetween('opens_at', [now(), now()->addMinutes(10)])
+            ->whereBetween('opens_at', [now(), now()->addMinutes(RunDropPreflightWhenDue::LOOKAHEAD_MINUTES)])
             ->get();
 
-        foreach ($drops as $drop) {
-            $this->notifyAdmin(new DropPreflightFinished($drop, $preflight($drop)));
-            $this->info("Checked {$drop->name}.");
+        foreach ($upcoming as $drop) {
+            if ($drop->opens_at->isAfter(now()->addMinutes(CheckDropBeforeItOpens::MINUTES_BEFORE_OPENING))) {
+                RunDropPreflightWhenDue::dispatch($drop->id);
+
+                continue;
+            }
+
+            if ($check($drop)) {
+                $this->info("Checked {$drop->name}.");
+            }
         }
 
         return self::SUCCESS;
-    }
-
-    private function notifyAdmin(DropPreflightFinished $notification): void
-    {
-        $email = config('shop.admin_email');
-
-        if (! is_string($email) || $email === '') {
-            $this->warn('SHOP_ADMIN_EMAIL is not set, so nobody was told.');
-
-            return;
-        }
-
-        $admin = User::where('email', $email)->first();
-
-        $admin !== null ? $admin->notify($notification) : Notification::route('mail', $email)->notify($notification);
     }
 }
