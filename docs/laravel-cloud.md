@@ -115,12 +115,12 @@ Before each drop:
 
 **Load test (staging):** `k6 run -e BASE_URL=https://<staging-host> scripts/load/drop-day.js` runs 500 visitors polling the feed for five minutes, with some loading the order page. It fails if more than 1% of requests fail or the feed's 95th percentile goes over 300 ms. It doesn't start checkouts (see the script's notes).
 
-**Check visitors' IP addresses once:** checkout limits tries per IP address, so the app must see each visitor's own address, not a proxy's, and not one the visitor made up.
+**Visitors' IP addresses:** checkout limits tries per IP address, so the app must see each visitor's own address, not a proxy's, and not one the visitor made up. `trustProxies(at: '*')` in `bootstrap/app.php` is right on Laravel Cloud, because its edge replaces any `X-Forwarded-For` a visitor sends. Checked on production on 2026-10-25, through the proxied Cloudflare zone: a wait-list try sent with `X-Forwarded-For: 198.51.100.23` counted against the sender's real address, and a made-up `X-Forwarded-Host` was ignored.
 
-1. After deploying staging, join the wait list from your phone, then check the subscriber's IP address in the admin matches your phone's. If it shows the same address for everyone, the app trusts too few proxies.
-2. Join again from a browser with an extension that adds the header `X-Forwarded-For: 198.51.100.23` (a documentation address nobody uses). If the admin now shows `198.51.100.23`, the app trusts addresses a visitor can invent, and every per-address limit can be dodged.
+Check again on a new environment, or if the domain's Cloudflare proxying changes:
 
-Either way, fix `trustProxies` in `bootstrap/app.php` before the first drop, then turn on the skipped test in `tests/Feature/WaitlistTest.php` ("records the address that connected").
+1. Join the wait list from your phone, then check the subscriber's IP address in the admin matches your phone's. If it shows the same address for everyone, the app trusts too few proxies.
+2. With `curl`, load the home page (keeping its cookies) and post its wait-list form empty, with just the `_token`, twice: once plainly, then with the header `X-Forwarded-For: 198.51.100.23` (a documentation address nobody uses). Nothing is saved, because the form fails validation. The second response's `X-RateLimit-Remaining` should be one lower than the first's, not back at 4. If it starts again, the app trusts addresses a visitor can invent, and every per-address limit can be dodged.
 
 ## Twilio (wait-list texts)
 

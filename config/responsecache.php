@@ -35,7 +35,9 @@ return [
          *
          * You may use a string or an array here.
          */
-        'tag' => env('RESPONSE_CACHE_TAG', ''),
+        // Without a tag, clearing empties the whole store. On Laravel Cloud that's the Valkey database holding
+        // sessions and queued jobs too, so every admin edit or deploy would log everyone out and drop jobs.
+        'tag' => env('RESPONSE_CACHE_TAG', 'responsecache'),
     ],
 
     'bypass' => [

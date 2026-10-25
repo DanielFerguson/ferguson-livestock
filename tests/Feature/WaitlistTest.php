@@ -34,11 +34,12 @@ it('adds the visitor to the wait list with a record of their consent', function 
         ->and($subscriber->unsubscribed_at)->toBeNull();
 });
 
-it('records the address that connected, not one the visitor claims', function () {
-    $this->post('/waitlist', waitlistForm(), ['REMOTE_ADDR' => '203.0.113.7', 'X-Forwarded-For' => '198.51.100.23']);
+it('records the visitor’s address that Laravel Cloud’s edge forwards, not the proxy’s', function () {
+    $this->withServerVariables(['REMOTE_ADDR' => '10.0.0.5'])
+        ->post('/waitlist', waitlistForm(), ['X-Forwarded-For' => '203.0.113.7']);
 
     expect(Subscriber::sole()->consent_ip)->toBe('203.0.113.7');
-})->skip('trustProxies(at: \'*\') takes the client IP from X-Forwarded-For, which a visitor can set. Enable once the proxy settings match what the Laravel Cloud edge sends (see the client IP check in docs/laravel-cloud.md).');
+});
 
 it('greets the visitor by name without putting it in the URL', function () {
     $this->followingRedirects()

@@ -1,8 +1,11 @@
 <?php
 
 use App\Http\ResponseCache\StripCookies;
+use App\Models\Product;
+use Database\Seeders\ProductSeeder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Cache;
 use Spatie\ResponseCache\Facades\ResponseCache;
 use Symfony\Component\HttpFoundation\Cookie;
 
@@ -53,6 +56,17 @@ it('gives each visitor their own session cookie on a cached page', function () {
         ->and($second->getCookie(config()->string('session.cookie'), false)?->getValue())
         ->not->toBeNull()
         ->not->toBe($firstSession);
+});
+
+it('clears only the cached pages when the admin edits a product, not the rest of the cache', function () {
+    $this->seed(ProductSeeder::class);
+    $this->get('/beef-boxes')->assertOk();
+    Cache::put('sessions-and-queued-jobs', 'kept');
+
+    Product::firstOrFail()->update(['name' => 'Renamed box']);
+
+    expect(ResponseCache::hasBeenCached(Request::create(url('/beef-boxes'))))->toBeFalse()
+        ->and(Cache::get('sessions-and-queued-jobs'))->toBe('kept');
 });
 
 it('removes cookies before a response is stored', function () {

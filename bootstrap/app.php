@@ -16,7 +16,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Laravel Cloud terminates TLS at its edge and load balancer.
+        // Laravel Cloud terminates TLS at its edge and load balancer. The edge replaces any X-Forwarded-For or
+        // X-Forwarded-Host a visitor sends, so trusting every proxy still gives the visitor's own address.
         $middleware->trustProxies(at: '*');
 
         // Twilio signs its form fields exactly as it sends them, so its webhooks must see them untrimmed.
