@@ -49,7 +49,7 @@ it('ignores links that aren’t for one of its checkouts', function (?string $se
     FakePaymentGateway::swap();
     $order = atPaymentPage(StockedDrop::create());
 
-    $this->get(route('checkout.cancel', array_filter(['session_id' => $sessionId])))->assertRedirect(route('order'));
+    $this->get(route('checkout.cancel', $sessionId === null ? [] : ['session_id' => $sessionId]))->assertRedirect(route('order'));
 
     expect($order->refresh()->status)->toBe(OrderStatus::Pending);
 })->with(['cs_test_someone_else', 'not-a-session', null]);

@@ -9,7 +9,7 @@ use Stripe\HttpClient\ClientInterface;
  */
 final class FakeStripeHttpClient implements ClientInterface
 {
-    /** @var list<array{method: string, url: string, headers: array<int, string>, params: array<string, mixed>}> */
+    /** @var list<array{method: string, url: string, headers: array<mixed>, params: array<mixed>}> */
     public array $requests = [];
 
     /**
@@ -18,8 +18,8 @@ final class FakeStripeHttpClient implements ClientInterface
     public function __construct(private array $responses) {}
 
     /**
-     * @param  array<int, string>  $headers
-     * @param  array<string, mixed>  $params
+     * @param  array<mixed>  $headers
+     * @param  array<mixed>  $params
      * @return array{string, int, array<string, string>}
      */
     public function request($method, $absUrl, $headers, $params, $hasFile, $apiMode = 'v1', $maxNetworkRetries = null): array

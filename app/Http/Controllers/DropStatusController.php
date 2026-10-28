@@ -14,8 +14,12 @@ class DropStatusController extends Controller
     {
         $snapshot = DropSnapshot::current();
 
+        // A stock list with no items must encode as {} rather than [].
+        $payload = $snapshot;
+        $payload['items'] = (object) $snapshot['items'];
+
         return response()
-            ->json([...$snapshot, 'items' => (object) $snapshot['items']])
+            ->json($payload)
             ->header('Cache-Control', 'public, max-age=1, s-maxage=1');
     }
 }

@@ -49,7 +49,7 @@ function trackingScripts(): array
 
 function renderedPage(TestCase $test, string $path): string
 {
-    return $test->get($path)->assertOk()->getContent() ?: '';
+    return (string) $test->get($path)->assertOk()->getContent();
 }
 
 dataset('pages', fn () => [...PublicPages::indexable(), ...PublicPages::noindex()]);
@@ -146,15 +146,15 @@ it('links only to pages and sections that exist', function (string $path) {
 
     // Static files (icons, the manifest, built assets) are served by the web server and checked in UrlParityTest.
     $internal = collect($matches[1])
-        ->map(fn (string $href) => Str::startsWith($href, $appUrl) ? (Str::after($href, $appUrl) ?: '/') : $href)
+        ->map(fn (string $href) => Str::startsWith($href, $appUrl) ? Str::of(Str::after($href, $appUrl))->whenEmpty(fn () => Str::of('/'))->toString() : $href)
         ->filter(fn (string $href) => Str::startsWith($href, ['/', '#']) && ! Str::startsWith($href, '//'))
         ->reject(fn (string $href) => (bool) pathinfo(Str::before(Str::before($href, '#'), '?'), PATHINFO_EXTENSION) && ! Str::endsWith(Str::before($href, '#'), '.xml'))
         ->unique();
 
     foreach ($internal as $href) {
-        $target = Str::before(Str::before($href, '#'), '?') ?: $path;
+        $target = Str::of(Str::before(Str::before($href, '#'), '?'))->whenEmpty(fn () => Str::of($path))->toString();
         $fragment = Str::contains($href, '#') ? Str::after($href, '#') : null;
-        $html = $this->get($target)->assertOk()->getContent() ?: '';
+        $html = (string) $this->get($target)->assertOk()->getContent();
 
         if ($fragment !== null) {
             expect(str_contains($html, 'id="'.$fragment.'"'))->toBeTrue("{$path} links to missing #{$fragment} on {$target}");
@@ -163,7 +163,7 @@ it('links only to pages and sections that exist', function (string $path) {
 })->with('pages');
 
 it('shows a friendly 404 that search engines skip', function () {
-    $html = $this->get('/no-such-paddock')->assertNotFound()->getContent() ?: '';
+    $html = (string) $this->get('/no-such-paddock')->assertNotFound()->getContent();
 
     expect($html)->toContain('<meta name="robots" content="noindex, follow">')
         ->toContain('This page has wandered off.')

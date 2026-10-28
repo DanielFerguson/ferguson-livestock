@@ -34,11 +34,11 @@ it('announces the date of the next drop before its stock is known', function () 
     $this->travelTo('2026-10-01 12:00');
     Drop::factory()->announced()->create(['opens_at' => '2026-11-13 22:00:00']);
 
-    $page = $this->get(route('home'))
+    $page = (string) $this->get(route('home'))
         ->assertSee('Next drop: Saturday 14 November')
         ->assertSee('The next drop is Saturday 14 November. Stock and prices are still to come')
         ->assertSee('Join the wait list')
-        ->getContent() ?: '';
+        ->getContent();
 
     expect(messagesFor($page, 'announced'))->toBe(2)
         ->and(messagesFor($page, 'closed none', hidden: true))->toBe(2);
@@ -49,7 +49,7 @@ it('announces the next drop’s date after the last drop has closed', function (
     Drop::factory()->closed()->create();
     Drop::factory()->announced()->create(['opens_at' => '2026-11-13 22:00:00']);
 
-    $page = $this->get(route('home'))->assertSee('Next drop: Saturday 14 November')->getContent() ?: '';
+    $page = (string) $this->get(route('home'))->assertSee('Next drop: Saturday 14 November')->getContent();
 
     expect(messagesFor($page, 'announced'))->toBe(2)
         ->and(messagesFor($page, 'closed none', hidden: true))->toBe(2);
@@ -60,7 +60,7 @@ it('shows a published drop’s opening time instead of an announced date', funct
     Drop::factory()->create(['opens_at' => '2026-10-09 22:00:00']);
     Drop::factory()->announced()->create(['opens_at' => '2026-11-13 22:00:00']);
 
-    $page = $this->get(route('home'))->assertSee('Next drop opens Saturday 10 October at 9:00am')->getContent() ?: '';
+    $page = (string) $this->get(route('home'))->assertSee('Next drop opens Saturday 10 October at 9:00am')->getContent();
 
     expect(messagesFor($page, 'scheduled'))->toBe(2)
         ->and(messagesFor($page, 'announced', hidden: true))->toBe(2);

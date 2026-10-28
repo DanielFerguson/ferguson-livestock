@@ -11,7 +11,7 @@ use Twilio\Http\Response;
  */
 final class FakeTwilioHttpClient implements Client
 {
-    /** @var list<array{method: string, url: string, data: array<string, mixed>}> */
+    /** @var list<array{method: string, url: string, data: array<mixed>}> */
     public array $requests = [];
 
     /**
@@ -20,9 +20,9 @@ final class FakeTwilioHttpClient implements Client
     public function __construct(private int $status, private array $body) {}
 
     /**
-     * @param  array<string, mixed>  $params
-     * @param  array<string, mixed>  $data
-     * @param  array<string, string>  $headers
+     * @param  array<mixed>  $params
+     * @param  array<mixed>  $data
+     * @param  array<mixed>  $headers
      */
     public function request(string $method, string $url, array $params = [], array $data = [], array $headers = [], ?string $user = null, ?string $password = null, ?int $timeout = null, ?AuthStrategy $authStrategy = null): Response
     {

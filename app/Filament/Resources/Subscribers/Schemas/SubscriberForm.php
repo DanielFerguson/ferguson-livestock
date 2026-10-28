@@ -45,6 +45,9 @@ class SubscriberForm
             ]);
     }
 
+    /**
+     * @return Closure(string, mixed, Closure(string): mixed): void
+     */
     private static function mobileNotOnTheList(?Subscriber $record): Closure
     {
         return function (string $attribute, mixed $value, Closure $fail) use ($record): void {

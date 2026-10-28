@@ -19,6 +19,7 @@ final class FakeSmsGateway implements SmsGateway
     /** @var array<string, int> */
     private array $refusals = [];
 
+    /** @var (Closure(): mixed)|null */
     private ?Closure $whileSending = null;
 
     /**
@@ -40,6 +41,9 @@ final class FakeSmsGateway implements SmsGateway
 
     /**
      * Run a callback as each text is sent, e.g. to move the clock on.
+     */
+    /**
+     * @param  Closure(): mixed  $callback
      */
     public function whileSending(Closure $callback): self
     {

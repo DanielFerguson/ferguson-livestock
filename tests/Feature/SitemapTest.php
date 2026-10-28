@@ -8,7 +8,7 @@ it('points the sitemap index at the page sitemap', function () {
 });
 
 it('lists the same public pages as the Astro sitemap', function () {
-    $xml = $this->get('/sitemap-0.xml')->assertOk()->assertHeader('Content-Type', 'application/xml')->getContent() ?: '';
+    $xml = (string) $this->get('/sitemap-0.xml')->assertOk()->assertHeader('Content-Type', 'application/xml')->getContent();
 
     preg_match_all('#<loc>(.*?)</loc>#', $xml, $locations);
 
@@ -24,7 +24,7 @@ it('lists the same public pages as the Astro sitemap', function () {
 });
 
 it('is valid XML', function () {
-    $xml = $this->get('/sitemap-0.xml')->getContent() ?: '';
+    $xml = (string) $this->get('/sitemap-0.xml')->getContent();
 
     expect(simplexml_load_string($xml))->not->toBeFalse()
         ->and($xml)->toStartWith('<?xml version="1.0" encoding="UTF-8"?>');

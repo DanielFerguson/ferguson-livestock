@@ -145,6 +145,9 @@ final class BroadcastActions
             && QuietHours::contains(CarbonImmutable::parse($localTime, QuietHours::TIMEZONE));
     }
 
+    /**
+     * @return Closure(string, mixed, Closure(string): mixed): void
+     */
     private static function inTheFuture(): Closure
     {
         return function (string $attribute, mixed $value, Closure $fail): void {

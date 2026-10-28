@@ -21,7 +21,7 @@ it('declares Australian English', function () {
 });
 
 it('renders exactly one title, description and canonical link', function () {
-    $html = $this->get('/example-page')->getContent() ?: '';
+    $html = (string) $this->get('/example-page')->getContent();
 
     expect(substr_count($html, '<title>'))->toBe(1)
         ->and(substr_count($html, '<meta name="description"'))->toBe(1)
@@ -69,7 +69,7 @@ it('renders structured data as JSON that cannot break out of its script tag', fu
         'structuredData' => ['@context' => 'https://schema.org', 'name' => $name],
     ]));
 
-    $html = $this->get('/with-schema')->getContent() ?: '';
+    $html = (string) $this->get('/with-schema')->getContent();
     $json = Str::betweenFirst($html, '<script type="application/ld+json">', '</script>');
 
     expect($json)->not->toContain('</script>')
@@ -81,7 +81,7 @@ it('renders one script tag per structured data object', function () {
         'structuredData' => [['@type' => 'WebPage'], ['@type' => 'Product']],
     ]));
 
-    $html = $this->get('/with-schemas')->getContent() ?: '';
+    $html = (string) $this->get('/with-schemas')->getContent();
 
     expect(substr_count($html, '<script type="application/ld+json">'))->toBe(2);
 });

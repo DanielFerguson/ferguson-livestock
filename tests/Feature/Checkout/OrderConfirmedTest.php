@@ -98,5 +98,5 @@ it('sends anyone without a paid order to the order page', function (?string $ses
     app(StartCheckout::class)(new CheckoutRequest($shop->drop->id, [$shop->mince->id => 1], DeliveryMethod::Pickup, null, 'visitor-a', '192.0.2.1'));
     $stripe->timeOutSession('cs_test_1');
 
-    $this->get(route('order-confirmed', array_filter(['session_id' => $sessionId])))->assertRedirect(route('order'));
+    $this->get(route('order-confirmed', $sessionId === null ? [] : ['session_id' => $sessionId]))->assertRedirect(route('order'));
 })->with(['cs_test_1', 'cs_test_someone_else', null]);

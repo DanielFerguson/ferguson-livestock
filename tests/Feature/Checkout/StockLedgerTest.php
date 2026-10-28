@@ -21,6 +21,7 @@ function reserve(StockedDrop $shop, array $quantities, DeliveryMethod $method = 
 /**
  * What the ledger says is left when it refuses an order.
  *
+ * @param  Closure(): mixed  $reserve
  * @return array<int, int>|null
  */
 function shortfall(Closure $reserve): ?array
