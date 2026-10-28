@@ -100,6 +100,12 @@ it('stores a reply against the subscriber who sent it', function () {
         ->and($subscriber->refresh()->isSubscribed())->toBeTrue();
 });
 
+it('files a reply under the number it came from, even when the sender isn’t a subscriber', function () {
+    postFromTwilio('webhooks.twilio.inbound', ['MessageSid' => 'SMreply1', 'From' => '+61412000111', 'To' => '+61400000000', 'Body' => 'Do you deliver to Creswick?'])->assertOk();
+
+    expect(SmsMessage::sole())->contact_phone->toBe('+61412000111')->subscriber_id->toBeNull();
+});
+
 it('opts someone out when they reply asking to stop', function () {
     $subscriber = Subscriber::factory()->create();
 

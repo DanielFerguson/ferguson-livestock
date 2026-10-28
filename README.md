@@ -22,7 +22,7 @@ I designed and built the site end to end, including the visual system, content s
 - **Orders admin:** paid orders with a printable delivery run sorted by suburb, a CSV export, bulk "mark fulfilled", and a log of every Stripe event with a retry button.
 - **Flexible fulfilment:** customers can select paid delivery across the Ballarat region or free farm pickup, with the correct options passed into Stripe Checkout.
 - **Drop-based sales:** releases are set up in the admin with their own prices, stock and delivery days, scheduled in Melbourne time, and checked automatically ten minutes before opening (Stripe prices, stock, delivery and webhooks).
-- **Wait list and SMS:** sign-ups are stored in the app with evidence of consent. Drop announcements are written, previewed (length, recipients and cost), scheduled and sent by text from the admin, replies land in an inbox, and anyone who replies STOP is opted out straight away.
+- **Wait list and SMS:** sign-ups are stored in the app with evidence of consent. Drop announcements are written, previewed (length, recipients and cost), scheduled and sent by text from the admin, replies show up as conversations you can answer from the admin, and anyone who replies STOP is opted out straight away.
 - **Search-ready publishing:** canonical URLs, sitemap generation, structured data, social metadata, and intentionally excluded confirmation routes are built in.
 - **Accessible, responsive UI:** semantic page structure, descriptive image text, mobile navigation, and clear sold-out and extras-only states support the full purchase journey.
 

@@ -90,4 +90,4 @@ In the production environment's Domains settings, add `fergusonlivestock.com.au`
 2. In Google Search Console, submit `https://fergusonlivestock.com.au/sitemap-index.xml` again.
 3. Import the Klaviyo export in the admin (Subscribers → Import from Klaviyo) while production has one replica, and check the count matches Klaviyo's.
 4. Create the first real drop with the live prices. Confirm its pre-flight check passes and the pre-flight email arrives.
-5. Send yourself a test broadcast and reply to it from your phone. The reply should appear under the admin's replies, which shows the Twilio webhook reaches production. Then announce the drop.
+5. Send yourself a test broadcast and reply to it from your phone. The reply should appear under the admin's Conversations, which shows the Twilio webhook reaches production, and you can answer it from there. Then announce the drop.

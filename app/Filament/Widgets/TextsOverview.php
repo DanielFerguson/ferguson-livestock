@@ -2,8 +2,9 @@
 
 namespace App\Filament\Widgets;
 
-use App\Filament\Resources\SmsReplies\SmsReplyResource;
+use App\Filament\Pages\Conversations;
 use App\Models\Subscriber;
+use App\Sms\ConversationList;
 use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -19,15 +20,15 @@ class TextsOverview extends StatsOverviewWidget
      */
     protected function getStats(): array
     {
-        $unread = SmsReplyResource::unreadCount();
+        $unread = ConversationList::unreadCount();
 
         return [
             Stat::make('Subscribed', Number::format(Subscriber::query()->subscribed()->count()))
                 ->description('On the wait list for texts')
                 ->icon(Heroicon::OutlinedUsers),
-            Stat::make('Unread replies', Number::format($unread))
+            Stat::make('Unread conversations', Number::format($unread))
                 ->icon(Heroicon::OutlinedInboxArrowDown)
-                ->url(SmsReplyResource::getUrl())
+                ->url(Conversations::getUrl())
                 ->color($unread > 0 ? 'warning' : 'gray'),
         ];
     }

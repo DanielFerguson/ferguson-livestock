@@ -32,12 +32,12 @@ final class StartBroadcast
             }
 
             $recipients = $broadcast->recipients()->toBase()->selectRaw(
-                'id, ?::bigint, ?, phone, ?, ?, ?, ?::timestamp, ?::timestamp',
+                'id, ?::bigint, ?, phone, ?, ?, ?, ?::timestamp, ?::timestamp, phone',
                 [$broadcast->id, SmsDirection::Outbound->value, config()->string('services.twilio.from'), $broadcast->text()->text, SmsStatus::Queued->value, now(), now()],
             );
 
             return DB::table('sms_messages')->insertOrIgnoreUsing(
-                ['subscriber_id', 'sms_broadcast_id', 'direction', 'to', 'from', 'body', 'status', 'created_at', 'updated_at'],
+                ['subscriber_id', 'sms_broadcast_id', 'direction', 'to', 'from', 'body', 'status', 'created_at', 'updated_at', 'contact_phone'],
                 $recipients,
             );
         });

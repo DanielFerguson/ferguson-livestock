@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\DB;
  *
  * @property int $id
  * @property int|null $subscriber_id
+ * @property string $contact_phone
  * @property int|null $sms_broadcast_id
  * @property SmsDirection $direction
  * @property string $to
@@ -36,11 +37,21 @@ use Illuminate\Support\Facades\DB;
  * @property-read Subscriber|null $subscriber
  * @property-read SmsBroadcast|null $broadcast
  */
-#[Fillable(['subscriber_id', 'sms_broadcast_id', 'direction', 'to', 'from', 'body', 'status', 'twilio_sid', 'segments', 'error_code', 'sent_at', 'delivered_at', 'read_at'])]
+#[Fillable(['subscriber_id', 'contact_phone', 'sms_broadcast_id', 'direction', 'to', 'from', 'body', 'status', 'twilio_sid', 'segments', 'error_code', 'sent_at', 'delivered_at', 'read_at'])]
 class SmsMessage extends Model
 {
     /** @use HasFactory<SmsMessageFactory> */
     use HasFactory;
+
+    /**
+     * A text belongs to the conversation with the other person's number: who sent it, or who it went to.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (SmsMessage $message): void {
+            $message->contact_phone ??= $message->direction === SmsDirection::Inbound ? $message->from : $message->to;
+        });
+    }
 
     /**
      * @return BelongsTo<Subscriber, $this>
