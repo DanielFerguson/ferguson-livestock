@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Cache;
 use Stripe\Checkout\Session as StripeSession;
 use Stripe\Exception\ApiErrorException;
 use Stripe\Exception\InvalidRequestException;
+use Stripe\HttpClient\CurlClient;
 use Stripe\Product as StripeProduct;
 use Stripe\StripeClient;
 
@@ -24,6 +25,15 @@ final readonly class StripePaymentGateway implements PaymentGateway
 
     public static function fromConfig(): self
     {
+        // The SDK waits 80 seconds by default. A checkout makes up to three Stripe calls in one request, so a slow
+        // Stripe at the moment a drop opens would hold every PHP worker. Fail fast instead; the order is retried.
+        $http = CurlClient::instance();
+
+        if ($http instanceof CurlClient) {
+            $http->setTimeout(15);
+            $http->setConnectTimeout(5);
+        }
+
         return new self(new StripeClient([
             'api_key' => config()->string('services.stripe.secret'),
             'stripe_version' => self::API_VERSION,

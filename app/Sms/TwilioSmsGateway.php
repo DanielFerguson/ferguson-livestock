@@ -7,6 +7,7 @@ namespace App\Sms;
 use App\Exceptions\SmsNotSent;
 use Twilio\Exceptions\RestException;
 use Twilio\Exceptions\TwilioException;
+use Twilio\Http\CurlClient;
 use Twilio\Rest\Client;
 
 /**
@@ -23,7 +24,12 @@ final readonly class TwilioSmsGateway implements SmsGateway
     public static function fromConfig(): self
     {
         return new self(
-            new Client(config()->string('services.twilio.sid'), config()->string('services.twilio.token')),
+            // Fail fast rather than waiting out Twilio's defaults: a broadcast job has 90 seconds to finish.
+            new Client(
+                config()->string('services.twilio.sid'),
+                config()->string('services.twilio.token'),
+                httpClient: new CurlClient([CURLOPT_CONNECTTIMEOUT => 5, CURLOPT_TIMEOUT => 20]),
+            ),
             config()->string('services.twilio.from'),
             route('webhooks.twilio.status'),
         );

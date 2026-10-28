@@ -8,15 +8,35 @@ use App\Models\DropItem;
 use App\Models\Product;
 use App\Payments\PaymentGateway;
 use App\Payments\StripeWebhookEvents;
+use App\Support\Turnstile;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
 use Tests\Fakes\FakePaymentGateway;
 
 /**
  * A drop that should pass: a box, the delivery fee, a delivery day and matching Stripe prices, in an environment
  * with the Stripe webhook registered and Cloudflare's bot check set up.
  */
-function readyDrop(FakePaymentGateway $stripe): Drop
+/**
+ * @param  list<string>  $turnstileErrors  what Cloudflare says about the made-up token the check sends
+ */
+function readyDrop(FakePaymentGateway $stripe, array $turnstileErrors = ['invalid-input-response'], int $turnstileStatus = 200): Drop
 {
-    config(['services.turnstile.site_key' => 'test-site-key', 'services.turnstile.secret_key' => 'test-secret-key']);
+    config([
+        'services.turnstile.site_key' => 'test-site-key',
+        'services.turnstile.secret_key' => 'test-secret-key',
+        'mail.default' => 'resend',
+        'services.resend.key' => 're_test',
+        'services.twilio.sid' => 'ACtest',
+        'services.twilio.token' => 'token',
+        'services.twilio.from' => '+61400000000',
+        'queue.default' => 'database',
+    ]);
+
+    // Cloudflare says a made-up token is invalid, which is what it says when the secret is right.
+    Http::preventStrayRequests();
+    Http::fake([Turnstile::VERIFY_URL => Http::response(['success' => false, 'error-codes' => $turnstileErrors], $turnstileStatus)]);
 
     $drop = Drop::factory()->create([
         'opens_at' => now()->addMinutes(5),
@@ -126,4 +146,70 @@ it('reports Stripe being unreachable instead of failing', function (): void {
     app()->instance(PaymentGateway::class, (new FakePaymentGateway)->goOffline('Connection timed out'));
 
     expect(app(RunDropPreflight::class)($drop)['problems'])->toContain('Couldn’t reach Stripe to check this drop: Connection timed out');
+});
+
+it('warns when the infrastructure a drop depends on isn’t set up', function (string $setting, ?string $value, string $problem): void {
+    $drop = readyDrop($this->stripe);
+    config([$setting => $value]);
+
+    $report = app(RunDropPreflight::class)($drop);
+
+    expect($report['passed'])->toBeFalse()
+        ->and(implode("\n", $report['problems']))->toContain($problem);
+})->with([
+    'email only goes to the log' => ['mail.default', 'log', 'Order emails won’t reach customers'],
+    'Resend has no API key' => ['services.resend.key', null, 'Order emails won’t reach customers'],
+    'texts have no account' => ['services.twilio.sid', null, 'Texts aren’t set up'],
+    'texts have no number' => ['services.twilio.from', null, 'Texts aren’t set up'],
+    'jobs run in the request, with no worker' => ['queue.default', 'sync', 'There’s no queue worker'],
+]);
+
+it('warns when the queue can’t be reached', function (): void {
+    $drop = readyDrop($this->stripe);
+    Queue::shouldReceive('size')->andThrow(new RuntimeException('Connection refused'));
+
+    $report = app(RunDropPreflight::class)($drop);
+
+    expect(implode("\n", $report['problems']))->toContain('Can’t reach the queue');
+});
+
+it('warns about background jobs that have already failed', function (): void {
+    $drop = readyDrop($this->stripe);
+    DB::table('failed_jobs')->insert(['uuid' => 'a', 'connection' => 'database', 'queue' => 'default', 'payload' => '{}', 'exception' => 'x', 'failed_at' => now()]);
+
+    $report = app(RunDropPreflight::class)($drop);
+
+    expect(implode("\n", $report['problems']))->toContain('1 background job has failed');
+});
+
+it('warns about debug mode and a test Stripe key on the live site', function (): void {
+    $drop = readyDrop($this->stripe);
+    app()->detectEnvironment(fn (): string => 'production');
+    config(['app.debug' => true, 'services.stripe.secret' => 'sk_test_123']);
+
+    $problems = implode("\n", app(RunDropPreflight::class)($drop)['problems']);
+
+    expect($problems)->toContain('Debug mode is on')->toContain('Stripe is in test mode');
+});
+
+it('is happy with a live Stripe key and debug off on the live site', function (): void {
+    $drop = readyDrop($this->stripe);
+    app()->detectEnvironment(fn (): string => 'production');
+    config(['app.debug' => false, 'services.stripe.secret' => 'sk_live_123']);
+
+    expect(app(RunDropPreflight::class)($drop)['passed'])->toBeTrue();
+});
+
+it('warns when Cloudflare rejects the bot-check secret, which would turn every customer away', function (): void {
+    $drop = readyDrop($this->stripe, turnstileErrors: ['invalid-input-secret']);
+
+    $report = app(RunDropPreflight::class)($drop);
+
+    expect(implode("\n", $report['problems']))->toContain('Cloudflare doesn’t accept the bot-check secret');
+});
+
+it('doesn’t blame the bot check when Cloudflare can’t be reached', function (): void {
+    $drop = readyDrop($this->stripe, turnstileErrors: [], turnstileStatus: 502);
+
+    expect(app(RunDropPreflight::class)($drop)['passed'])->toBeTrue();
 });

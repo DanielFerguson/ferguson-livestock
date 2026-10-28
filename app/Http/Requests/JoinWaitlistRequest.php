@@ -71,10 +71,15 @@ class JoinWaitlistRequest extends FormRequest
     }
 
     /**
-     * The URL of the wait-list form on the page someone submitted from.
+     * The URL of the wait-list form on the page someone submitted from. The page comes from the Referer header,
+     * which anyone can set, so a page on another site is replaced by the home page.
      */
     public static function formUrl(string $page): string
     {
+        if (parse_url($page, PHP_URL_HOST) !== request()->getHost()) {
+            $page = url('/');
+        }
+
         $hasPath = (parse_url($page, PHP_URL_PATH) ?? '') !== '';
 
         return ($hasPath ? $page : "{$page}/").'#waitlist';
