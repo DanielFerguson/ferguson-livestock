@@ -24,7 +24,8 @@ it('texts everyone subscribed once, from the shop’s number', function () {
         ->and($sms->sent[0]['body'])->toBe("Ferguson Livestock: The next drop opens Saturday.\nReply STOP to opt out")
         ->and($broadcast->refresh()->status())->toBe(BroadcastStatus::Sent)
         ->and($broadcast->messages()->pluck('status')->unique()->all())->toBe([SmsStatus::Sent])
-        ->and($broadcast->messages()->pluck('from')->unique()->all())->toBe(['+61400000000']);
+        ->and($broadcast->messages()->pluck('from')->unique()->all())->toBe(['+61400000000'])
+        ->and($broadcast->messages()->pluck('contact_phone')->all())->toEqualCanonicalizing([$ballarat->phone, $creswick->phone]);
 });
 
 it('only texts the chosen postcodes', function () {

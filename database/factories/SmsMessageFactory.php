@@ -25,7 +25,7 @@ class SmsMessageFactory extends Factory
             'subscriber_id' => Subscriber::factory(),
             'sms_broadcast_id' => SmsBroadcast::factory()->sent(),
             'direction' => SmsDirection::Outbound,
-            'to' => '+614'.fake()->unique()->numerify('########'),
+            'to' => fn (array $attributes): string => (is_int($attributes['subscriber_id']) ? Subscriber::find($attributes['subscriber_id'])?->phone : null) ?? '+614'.fake()->unique()->numerify('########'),
             'from' => '+61400000000',
             'body' => "Ferguson Livestock: Our next beef drop opens Saturday at 9am.\nReply STOP to opt out",
             'status' => SmsStatus::Sent,

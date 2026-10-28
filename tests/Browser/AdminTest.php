@@ -1,8 +1,8 @@
 <?php
 
+use App\Filament\Pages\Conversations;
 use App\Filament\Resources\Orders\OrderResource;
 use App\Filament\Resources\SmsBroadcasts\SmsBroadcastResource;
-use App\Filament\Resources\SmsReplies\SmsReplyResource;
 use App\Filament\Resources\StripeEvents\StripeEventResource;
 use App\Filament\Resources\Subscribers\SubscriberResource;
 use App\Models\Drop;
@@ -60,7 +60,8 @@ it('renders the texting pages in a real browser without errors', function () {
         SmsBroadcastResource::getUrl('view', ['record' => $draft]),
         SmsBroadcastResource::getUrl('edit', ['record' => $draft]),
         SmsBroadcastResource::getUrl('view', ['record' => $sent]),
-        SmsReplyResource::getUrl(),
+        Conversations::getUrl(),
+        Conversations::getUrl(['phone' => $subscriber->phone]),
     ])->assertNoJavaScriptErrors();
 });
 
