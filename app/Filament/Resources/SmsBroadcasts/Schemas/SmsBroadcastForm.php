@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\SmsBroadcasts\Schemas;
 
 use App\Models\Drop;
@@ -55,9 +57,9 @@ class SmsBroadcastForm
                             ->default('everyone')
                             ->live()
                             ->dehydrated(false)
-                            ->afterStateHydrated(fn (Radio $component, ?SmsBroadcast $record) => $component->state(match (true) {
-                                $record !== null && $record->subscriberIds() !== [] => 'subscribers',
-                                $record !== null && $record->postcodes() !== [] => 'postcodes',
+                            ->afterStateHydrated(fn (Radio $component, ?SmsBroadcast $record): Radio => $component->state(match (true) {
+                                $record instanceof SmsBroadcast && $record->subscriberIds() !== [] => 'subscribers',
+                                $record instanceof SmsBroadcast && $record->postcodes() !== [] => 'postcodes',
                                 default => 'everyone',
                             })),
                         Select::make('audience.postcodes')
@@ -80,7 +82,7 @@ class SmsBroadcastForm
                             ->state(fn (Get $get): string => self::preview($get)->reach()),
                         Select::make('drop_id')
                             ->label('About a drop (optional)')
-                            ->options(fn (): array => Drop::query()->orderByDesc('opens_at')->limit(20)->pluck('name', 'id')->all())
+                            ->options(fn (): array => Drop::query()->latest('opens_at')->limit(20)->pluck('name', 'id')->all())
                             ->helperText('Scheduling then suggests the time the drop opens.'),
                     ]),
             ]);

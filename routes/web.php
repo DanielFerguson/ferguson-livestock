@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Http\Controllers\Checkout\CancelCheckoutController;
 use App\Http\Controllers\Checkout\OrderConfirmedController;
 use App\Http\Controllers\JoinWaitlistController;
@@ -10,7 +12,7 @@ use Spatie\ResponseCache\Middlewares\CacheResponse;
 
 // Marketing pages look the same for everyone, so they're served from the response cache.
 // Their catalogue and FAQ data comes from view composers in AppServiceProvider.
-Route::middleware(CacheResponse::class)->group(function () {
+Route::middleware(CacheResponse::class)->group(function (): void {
     Route::view('/', 'pages.home')->name('home');
     Route::view('/beef-boxes', 'pages.beef-boxes')->name('beef-boxes');
     Route::view('/our-story', 'pages.our-story')->name('our-story');

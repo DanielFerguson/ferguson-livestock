@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Filament\Imports\SubscriberImporter;
 use App\Models\Subscriber;
 use Carbon\CarbonImmutable;
@@ -34,10 +36,10 @@ function klaviyoRow(array $overrides = []): array
     ], $overrides);
 }
 
-it('keeps the date each person agreed to texts in Klaviyo', function () {
+it('keeps the date each person agreed to texts in Klaviyo', function (): void {
     klaviyoImport()->import(klaviyoRow())->assertImported();
 
-    $subscriber = Subscriber::sole();
+    $subscriber = Subscriber::query()->sole();
     expect($subscriber->only('first_name', 'phone', 'postcode', 'consent_source'))->toBe([
         'first_name' => 'Jane',
         'phone' => '+61412345678',
@@ -49,29 +51,29 @@ it('keeps the date each person agreed to texts in Klaviyo', function () {
         ->and($subscriber->isSubscribed())->toBeTrue();
 });
 
-it('reads mobile numbers however Klaviyo wrote them', function () {
+it('reads mobile numbers however Klaviyo wrote them', function (): void {
     klaviyoImport()->import(klaviyoRow(['Phone Number' => '0412 345 678']))->assertImported();
 
-    expect(Subscriber::sole()->phone)->toBe('+61412345678');
+    expect(Subscriber::query()->sole()->phone)->toBe('+61412345678');
 });
 
-it('imports people without a name or postcode', function () {
+it('imports people without a name or postcode', function (): void {
     klaviyoImport()->import(klaviyoRow(['First Name' => '', 'Zip Code' => '']))->assertImported();
 
-    expect(Subscriber::sole()->only('first_name', 'postcode'))->toBe(['first_name' => null, 'postcode' => null]);
+    expect(Subscriber::query()->sole()->only('first_name', 'postcode'))->toBe(['first_name' => null, 'postcode' => null]);
 });
 
-it('skips anyone without SMS consent', function (string $column, string $value) {
+it('skips anyone without SMS consent', function (string $column, string $value): void {
     klaviyoImport()->import(klaviyoRow([$column => $value]))->assertSkipped();
 
-    expect(Subscriber::count())->toBe(0);
+    expect(Subscriber::query()->count())->toBe(0);
 })->with([
     'no consent date' => ['SMS Consent Timestamp', ''],
     'unsubscribed in Klaviyo' => ['SMS Consent', 'UNSUBSCRIBED'],
     'never subscribed' => ['SMS Consent', 'NEVER_SUBSCRIBED'],
 ]);
 
-it('leaves people already on the list as they are, including anyone who opted out', function () {
+it('leaves people already on the list as they are, including anyone who opted out', function (): void {
     $optedOut = Subscriber::factory()->unsubscribed()->create(['phone' => '+61412345678', 'first_name' => 'J']);
 
     klaviyoImport()->import(klaviyoRow())->assertSkipped();
@@ -80,8 +82,8 @@ it('leaves people already on the list as they are, including anyone who opted ou
         ->and($optedOut->isSubscribed())->toBeFalse();
 });
 
-it('rejects numbers that aren’t Australian mobiles', function () {
+it('rejects numbers that aren’t Australian mobiles', function (): void {
     klaviyoImport()->import(klaviyoRow(['Phone Number' => '03 5342 0000']))->assertHasErrors(['phone']);
 
-    expect(Subscriber::count())->toBe(0);
+    expect(Subscriber::query()->count())->toBe(0);
 });

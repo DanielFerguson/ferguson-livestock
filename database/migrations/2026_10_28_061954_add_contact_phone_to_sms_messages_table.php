@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -12,14 +14,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('sms_messages', function (Blueprint $table) {
+        Schema::table('sms_messages', function (Blueprint $table): void {
             // The other person's number, whichever way the text went: what groups texts into conversations.
             $table->string('contact_phone', 16)->nullable()->after('subscriber_id');
         });
 
         DB::statement('update sms_messages set contact_phone = case when direction = \'inbound\' then "from" else "to" end');
 
-        Schema::table('sms_messages', function (Blueprint $table) {
+        Schema::table('sms_messages', function (Blueprint $table): void {
             $table->string('contact_phone', 16)->nullable(false)->change();
             $table->index(['contact_phone', 'created_at']);
         });
@@ -30,7 +32,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('sms_messages', function (Blueprint $table) {
+        Schema::table('sms_messages', function (Blueprint $table): void {
             $table->dropIndex(['contact_phone', 'created_at']);
             $table->dropColumn('contact_phone');
         });

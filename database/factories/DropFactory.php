@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Factories;
 
 use App\Models\Drop;
@@ -30,7 +32,7 @@ class DropFactory extends Factory
 
     public function draft(): static
     {
-        return $this->state(fn () => ['published_at' => null]);
+        return $this->state(fn (): array => ['published_at' => null]);
     }
 
     /**
@@ -38,7 +40,7 @@ class DropFactory extends Factory
      */
     public function announced(): static
     {
-        return $this->draft()->state(fn () => ['announced_at' => now()]);
+        return $this->draft()->state(fn (): array => ['announced_at' => now()]);
     }
 
     /**
@@ -46,7 +48,7 @@ class DropFactory extends Factory
      */
     public function open(): static
     {
-        return $this->state(fn () => ['opens_at' => now()->subHour()]);
+        return $this->state(fn (): array => ['opens_at' => now()->subHour()]);
     }
 
     /**
@@ -54,7 +56,7 @@ class DropFactory extends Factory
      */
     public function closed(): static
     {
-        return $this->state(fn () => ['opens_at' => now()->subMonth(), 'closed_at' => now()->subMonth()->addWeek()]);
+        return $this->state(fn (): array => ['opens_at' => now()->subMonth(), 'closed_at' => now()->subMonth()->addWeek()]);
     }
 
     /**

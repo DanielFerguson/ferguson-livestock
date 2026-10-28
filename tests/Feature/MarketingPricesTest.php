@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\DropItem;
 use App\Models\Product;
 use Database\Seeders\DemoDropSeeder;
 use Database\Seeders\ProductSeeder;
 
-it('shows the featured drop’s prices on the marketing pages', function (string $path, string ...$prices) {
+it('shows the featured drop’s prices on the marketing pages', function (string $path, string ...$prices): void {
     $this->seed([ProductSeeder::class, DemoDropSeeder::class]);
 
     $this->get($path)->assertOk()->assertSeeInOrder(array_values($prices));
@@ -15,7 +17,7 @@ it('shows the featured drop’s prices on the marketing pages', function (string
     'delivery' => ['/delivery', '$15 flat fee'],
 ]);
 
-it('hides prices until a drop sets them', function () {
+it('hides prices until a drop sets them', function (): void {
     $this->seed(ProductSeeder::class);
 
     $this->get('/')->assertOk()->assertSee('Farm-direct beef boxes')->assertDontSee('$160');
@@ -23,11 +25,11 @@ it('hides prices until a drop sets them', function () {
     $this->get('/delivery')->assertOk()->assertSee('One flat fee');
 });
 
-it('shows a new price straight away, even on a cached page', function () {
+it('shows a new price straight away, even on a cached page', function (): void {
     $this->seed([ProductSeeder::class, DemoDropSeeder::class]);
     $this->get('/beef-boxes')->assertSee('$160');
 
-    DropItem::whereBelongsTo(Product::where('slug', 'beef-box-5kg')->sole())->sole()->update(['price' => 17000]);
+    DropItem::query()->whereBelongsTo(Product::query()->where('slug', 'beef-box-5kg')->sole())->sole()->update(['price' => 17000]);
 
     $this->get('/beef-boxes')->assertSee('$170')->assertDontSee('$160');
 });

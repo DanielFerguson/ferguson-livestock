@@ -17,6 +17,7 @@
         "twilio/sdk": "^8.12"
     },
     "require-dev": {
+        "driftingly/rector-laravel": "^2.6",
         "fakerphp/faker": "^1.23",
         "larastan/larastan": "^3.12",
         "laravel/boost": "^2.10",
@@ -30,7 +31,10 @@
         "pestphp/pest-plugin-browser": "^5.0",
         "pestphp/pest-plugin-laravel": "^5.0",
         "pestphp/pest-plugin-livewire": "^5.0",
-        "pestphp/pest-plugin-phpstan": "^5.2"
+        "pestphp/pest-plugin-phpstan": "^5.2",
+        "phpstan/phpstan-deprecation-rules": "^2.0",
+        "phpstan/phpstan-strict-rules": "^2.0",
+        "rector/rector": "^2.6"
     },
     "autoload": {
         "psr-4": {
@@ -60,6 +64,29 @@
         "test": [
             "@php artisan config:clear --ansi @no_additional_args",
             "@php artisan test"
+        ],
+        "test:fast": [
+            "@php artisan config:clear --ansi",
+            "@putenv XDEBUG_MODE=coverage",
+            "vendor/bin/pest --tia"
+        ],
+        "lint": [
+            "vendor/bin/pint --test",
+            "vendor/bin/rector process --dry-run --no-progress-bar"
+        ],
+        "lint:fix": [
+            "vendor/bin/pint",
+            "vendor/bin/rector process --no-progress-bar",
+            "vendor/bin/pint"
+        ],
+        "analyse": [
+            "vendor/bin/phpstan analyse --memory-limit=2G --no-progress"
+        ],
+        "ci": [
+            "@lint",
+            "@analyse",
+            "@test",
+            "@composer audit"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
@@ -93,8 +120,18 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "php-http/discovery": true
+        },
+        "audit": {
+            "abandoned": "report"
         }
     },
     "minimum-stability": "stable",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "scripts-descriptions": {
+        "test:fast": "Re-run only the tests a change can affect (Pest TIA), replaying the rest from cache",
+        "lint": "Check formatting (Pint) and Rector changes without applying them",
+        "lint:fix": "Apply Pint and Rector changes",
+        "analyse": "PHPStan at max level with strict rules",
+        "ci": "Everything CI runs: lint, analyse, the full test suite, and the dependency audit"
+    }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Support\Turnstile;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -16,6 +18,20 @@ use Tests\TestCase;
 | browser tests render the real built assets. Unit tests stay framework-free.
 |
 */
+
+/*
+|--------------------------------------------------------------------------
+| Test Impact Analysis
+|--------------------------------------------------------------------------
+|
+| `composer test:fast` runs Pest with --tia: it records which source files each
+| test touches, then re-runs only the tests a change can affect and replays the
+| rest from cache. It's switched on for local runs only, so CI and `composer ci`
+| always run the whole suite. The recorded graph lives outside the repository.
+|
+*/
+
+pest()->tia()->locally();
 
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)

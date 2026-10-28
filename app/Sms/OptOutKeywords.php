@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Sms;
 
 /**
@@ -58,12 +60,6 @@ final class OptOutKeywords
      */
     private static function containsAny(string $words, array $phrases): bool
     {
-        foreach ($phrases as $phrase) {
-            if (preg_match('/\b'.preg_quote($phrase, '/').'\b/', $words) === 1) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any($phrases, fn (string $phrase): bool => preg_match('/\b'.preg_quote($phrase, '/').'\b/', $words) === 1);
     }
 }

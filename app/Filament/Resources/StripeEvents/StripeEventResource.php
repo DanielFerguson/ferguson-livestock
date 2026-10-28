@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\StripeEvents;
 
 use App\Filament\Resources\StripeEvents\Pages\ListStripeEvents;

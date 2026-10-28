@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\DropStatus;
 use App\Enums\OrderStatus;
 use App\Enums\ProductType;
@@ -23,7 +25,7 @@ use Tests\Fakes\FakePaymentGateway;
 
 use function Pest\Livewire\livewire;
 
-beforeEach(function () {
+beforeEach(function (): void {
     // 1 October 2026 is still standard time (AEST); the drop below opens after the clocks go forward.
     $this->travelTo(CarbonImmutable::parse('2026-10-01 12:00', 'Australia/Melbourne'));
 
@@ -54,8 +56,8 @@ function dropForm(array $overrides = []): array
         'published_at' => true,
         'delivery_days' => [['day' => '2026-10-17']],
         'items' => [
-            ['product_id' => Product::where('type', ProductType::Box)->value('id'), 'stripe_price_id' => 'price_box', 'price' => '160', 'quantity' => 5, 'max_per_order' => 1],
-            ['product_id' => Product::where('type', ProductType::Delivery)->value('id'), 'stripe_price_id' => 'price_delivery', 'price' => '15'],
+            ['product_id' => Product::query()->where('type', ProductType::Box)->value('id'), 'stripe_price_id' => 'price_box', 'price' => '160', 'quantity' => 5, 'max_per_order' => 1],
+            ['product_id' => Product::query()->where('type', ProductType::Delivery)->value('id'), 'stripe_price_id' => 'price_delivery', 'price' => '15'],
         ],
     ], $overrides);
 }
@@ -72,11 +74,11 @@ function formErrors(Testable $component, string $field): array
     $errors = $component->errors();
 
     return $errors instanceof MessageBag
-        ? array_values(array_filter($errors->get("data.{$field}"), fn (mixed $message): bool => is_string($message)))
+        ? array_values(array_filter($errors->get("data.{$field}"), is_string(...)))
         : [];
 }
 
-it('saves a drop entered in Melbourne time as UTC, across the clock change', function () {
+it('saves a drop entered in Melbourne time as UTC, across the clock change', function (): void {
     livewire(CreateDrop::class)->fillForm(dropForm())->call('create')->assertHasNoFormErrors();
 
     $drop = Drop::with('items')->sole();
@@ -90,23 +92,23 @@ it('saves a drop entered in Melbourne time as UTC, across the clock change', fun
         ->toBe(['price' => 1500, 'quantity' => null, 'available' => null]);
 });
 
-it('shows the saved times in Melbourne time', function () {
+it('shows the saved times in Melbourne time', function (): void {
     $drop = Drop::factory()->create(['opens_at' => '2026-10-09 22:00:00']);
 
     livewire(EditDrop::class, ['record' => $drop->getRouteKey()])->assertFormSet(['opens_at' => '2026-10-10 09:00']);
 });
 
-it('keeps a draft unpublished', function () {
+it('keeps a draft unpublished', function (): void {
     livewire(CreateDrop::class)->fillForm(dropForm(['published_at' => false]))->call('create')->assertHasNoFormErrors();
 
-    expect(Drop::sole()->published_at)->toBeNull();
+    expect(Drop::query()->sole()->published_at)->toBeNull();
 });
 
-it('starts a new drop as a draft', function () {
+it('starts a new drop as a draft', function (): void {
     livewire(CreateDrop::class)->assertFormSet(['published_at' => false, 'announced_at' => false]);
 });
 
-it('keeps a draft unpublished when it is edited and saved', function () {
+it('keeps a draft unpublished when it is edited and saved', function (): void {
     $drop = Drop::factory()->draft()->create();
 
     livewire(EditDrop::class, ['record' => $drop->getRouteKey()])
@@ -117,29 +119,29 @@ it('keeps a draft unpublished when it is edited and saved', function () {
     expect($drop->refresh()->published_at)->toBeNull();
 });
 
-it('announces a draft’s date on the website without publishing it', function () {
+it('announces a draft’s date on the website without publishing it', function (): void {
     livewire(CreateDrop::class)
         ->fillForm(dropForm(['published_at' => false, 'announced_at' => true, 'items' => []]))
         ->call('create')
         ->assertHasNoFormErrors();
 
-    $drop = Drop::sole();
+    $drop = Drop::query()->sole();
 
     expect($drop->published_at)->toBeNull()
         ->and($drop->announced_at)->not->toBeNull()
         ->and($drop->status())->toBe(DropStatus::Announced);
 });
 
-it('doesn’t announce a draft unless asked', function () {
+it('doesn’t announce a draft unless asked', function (): void {
     livewire(CreateDrop::class)
         ->fillForm(dropForm(['published_at' => false, 'items' => []]))
         ->call('create')
         ->assertHasNoFormErrors();
 
-    expect(Drop::sole()->announced_at)->toBeNull();
+    expect(Drop::query()->sole()->announced_at)->toBeNull();
 });
 
-it('stops announcing when the toggle is switched off', function () {
+it('stops announcing when the toggle is switched off', function (): void {
     $drop = Drop::factory()->announced()->create(['opens_at' => '2026-11-13 22:00:00']);
 
     livewire(EditDrop::class, ['record' => $drop->getRouteKey()])
@@ -151,7 +153,7 @@ it('stops announcing when the toggle is switched off', function () {
     expect($drop->refresh()->announced_at)->toBeNull();
 });
 
-it('offers to announce a draft, but not a published drop', function () {
+it('offers to announce a draft, but not a published drop', function (): void {
     livewire(CreateDrop::class)
         ->fillForm(['published_at' => false])
         ->assertFormFieldVisible('announced_at')
@@ -159,7 +161,7 @@ it('offers to announce a draft, but not a published drop', function () {
         ->assertFormFieldHidden('announced_at');
 });
 
-it('rejects opening times that daylight saving skips or repeats', function (string $time, string $message) {
+it('rejects opening times that daylight saving skips or repeats', function (string $time, string $message): void {
     $component = livewire(CreateDrop::class)
         ->fillForm(dropForm(['opens_at' => $time]))
         ->call('create')
@@ -171,14 +173,14 @@ it('rejects opening times that daylight saving skips or repeats', function (stri
     'clocks go back' => ['2027-04-04 02:30', '2:30am happens twice on Sunday 4 April 2027 because the clocks go back that morning. Pick a time before 2am or after 3am.'],
 ]);
 
-it('rejects a close time before the opening time', function () {
+it('rejects a close time before the opening time', function (): void {
     livewire(CreateDrop::class)
         ->fillForm(dropForm(['closes_at' => '2026-10-10 08:00']))
         ->call('create')
         ->assertHasFormErrors(['closes_at']);
 });
 
-it('keeps published drops from overlapping', function () {
+it('keeps published drops from overlapping', function (): void {
     Drop::factory()->create(['name' => 'Spring drop', 'opens_at' => '2026-10-09 22:00:00']);
 
     $component = livewire(CreateDrop::class)
@@ -189,13 +191,13 @@ it('keeps published drops from overlapping', function () {
     expect(formErrors($component, 'opens_at'))->toContain('This overlaps “Spring drop”, which opens at 9:00am Sat 10 Oct. Only one drop can be open at a time.');
 });
 
-it('lets a draft share a time with another drop', function () {
+it('lets a draft share a time with another drop', function (): void {
     Drop::factory()->create(['opens_at' => '2026-10-09 22:00:00']);
 
     livewire(CreateDrop::class)->fillForm(dropForm(['published_at' => false]))->call('create')->assertHasNoFormErrors();
 });
 
-it('checks each Stripe price before saving', function (Closure $stripe, string $message) {
+it('checks each Stripe price before saving', function (Closure $stripe, string $message): void {
     $stripe($this->stripe);
 
     livewire(CreateDrop::class)
@@ -204,20 +206,20 @@ it('checks each Stripe price before saving', function (Closure $stripe, string $
         ->assertHasFormErrors(['items.0.stripe_price_id' => $message]);
 })->with([
     'missing' => [fn (FakePaymentGateway $stripe) => app()->instance(PaymentGateway::class, (new FakePaymentGateway)->addPrice('price_delivery', 1500)), 'Stripe has no price with this ID. Check it was copied from the right Stripe account (test or live).'],
-    'archived' => [fn (FakePaymentGateway $stripe) => $stripe->addPrice('price_box', 16000, active: false), 'This Stripe price is archived. Unarchive it or use an active price.'],
-    'subscription' => [fn (FakePaymentGateway $stripe) => $stripe->addPrice('price_box', 16000, type: 'recurring'), 'This is a subscription price. Drops need a one-time price.'],
-    'US dollars' => [fn (FakePaymentGateway $stripe) => $stripe->addPrice('price_box', 16000, currency: 'usd'), 'This price is in USD. Drops are charged in AUD.'],
-    'different amount' => [fn (FakePaymentGateway $stripe) => $stripe->addPrice('price_box', 15000), 'Stripe charges $150 for this price, but the drop says $160.'],
+    'archived' => [fn (FakePaymentGateway $stripe): FakePaymentGateway => $stripe->addPrice('price_box', 16000, active: false), 'This Stripe price is archived. Unarchive it or use an active price.'],
+    'subscription' => [fn (FakePaymentGateway $stripe): FakePaymentGateway => $stripe->addPrice('price_box', 16000, type: 'recurring'), 'This is a subscription price. Drops need a one-time price.'],
+    'US dollars' => [fn (FakePaymentGateway $stripe): FakePaymentGateway => $stripe->addPrice('price_box', 16000, currency: 'usd'), 'This price is in USD. Drops are charged in AUD.'],
+    'different amount' => [fn (FakePaymentGateway $stripe): FakePaymentGateway => $stripe->addPrice('price_box', 15000), 'Stripe charges $150 for this price, but the drop says $160.'],
 ]);
 
-it('fills in the price from Stripe when a price ID is pasted', function () {
+it('fills in the price from Stripe when a price ID is pasted', function (): void {
     livewire(CreateDrop::class)
         ->fillForm(dropForm(['items' => [['product_id' => $this->box->id, 'price' => null, 'quantity' => 5]]]))
         ->set('data.items.0.stripe_price_id', 'price_box')
         ->assertFormSet(['items.0.price' => '160']);
 });
 
-it('changes stock on a live drop without losing what customers are holding', function () {
+it('changes stock on a live drop without losing what customers are holding', function (): void {
     $drop = Drop::factory()->open()->create();
     $item = DropItem::factory()->for($drop)->for($this->box)->create(['stripe_price_id' => 'price_box', 'price' => 16000, 'quantity' => 5, 'available' => 3]);
 
@@ -229,7 +231,7 @@ it('changes stock on a live drop without losing what customers are holding', fun
     expect($item->refresh()->only('quantity', 'available'))->toBe(['quantity' => 4, 'available' => 2]);
 });
 
-it('won’t set stock below what customers are holding', function () {
+it('won’t set stock below what customers are holding', function (): void {
     $drop = Drop::factory()->open()->create();
     $item = DropItem::factory()->for($drop)->for($this->box)->create(['stripe_price_id' => 'price_box', 'price' => 16000, 'quantity' => 5, 'available' => 3]);
 
@@ -241,7 +243,7 @@ it('won’t set stock below what customers are holding', function () {
     expect($item->refresh()->only('quantity', 'available'))->toBe(['quantity' => 5, 'available' => 3]);
 });
 
-it('won’t remove a product customers are holding', function () {
+it('won’t remove a product customers are holding', function (): void {
     $drop = Drop::factory()->open()->create();
     DropItem::factory()->for($drop)->for($this->box)->create(['stripe_price_id' => 'price_box', 'price' => 16000, 'quantity' => 5, 'available' => 3]);
 
@@ -253,7 +255,7 @@ it('won’t remove a product customers are holding', function () {
     expect($drop->items()->count())->toBe(1);
 });
 
-it('won’t remove a product that’s on an order, even one that was abandoned', function () {
+it('won’t remove a product that’s on an order, even one that was abandoned', function (): void {
     $drop = Drop::factory()->open()->create();
     $item = DropItem::factory()->for($drop)->for($this->box)->create(['stripe_price_id' => 'price_box', 'price' => 16000, 'quantity' => 5]);
     OrderItem::factory()->for(Order::factory()->for($drop)->pending()->create(['status' => OrderStatus::Expired]))->create(['drop_item_id' => $item->id]);
@@ -266,7 +268,7 @@ it('won’t remove a product that’s on an order, even one that was abandoned',
     expect($drop->items()->count())->toBe(1);
 });
 
-it('only lets a drop be deleted before anyone has ordered from it', function () {
+it('only lets a drop be deleted before anyone has ordered from it', function (): void {
     $drop = Drop::factory()->create();
     livewire(EditDrop::class, ['record' => $drop->getRouteKey()])->assertActionVisible('delete');
 
@@ -275,13 +277,13 @@ it('only lets a drop be deleted before anyone has ordered from it', function () 
     livewire(EditDrop::class, ['record' => $drop->getRouteKey()])->assertActionHidden('delete');
 });
 
-it('lets an announced draft be deleted', function () {
+it('lets an announced draft be deleted', function (): void {
     $drop = Drop::factory()->announced()->create();
 
     livewire(EditDrop::class, ['record' => $drop->getRouteKey()])->assertActionVisible('delete');
 });
 
-it('stops announcing the date once the draft is published', function () {
+it('stops announcing the date once the draft is published', function (): void {
     $drop = Drop::factory()->announced()->create(['opens_at' => '2026-11-13 22:00:00']);
 
     livewire(EditDrop::class, ['record' => $drop->getRouteKey()])
@@ -294,7 +296,7 @@ it('stops announcing the date once the draft is published', function () {
         ->and($drop->refresh()->status())->toBe(DropStatus::Scheduled);
 });
 
-it('closes a live drop from the list', function () {
+it('closes a live drop from the list', function (): void {
     $drop = Drop::factory()->open()->withStock()->create();
 
     livewire(ListDrops::class)->callAction(TestAction::make('closeNow')->table($drop));
@@ -302,15 +304,15 @@ it('closes a live drop from the list', function () {
     expect($drop->refresh()->closed_at)->not->toBeNull();
 });
 
-it('duplicates a drop as a draft', function () {
+it('duplicates a drop as a draft', function (): void {
     $drop = Drop::factory()->closed()->withStock()->create(['name' => 'Autumn drop']);
 
     livewire(EditDrop::class, ['record' => $drop->getRouteKey()])->callAction('duplicate');
 
-    expect(Drop::where('name', 'Autumn drop (copy)')->sole()->published_at)->toBeNull();
+    expect(Drop::query()->where('name', 'Autumn drop (copy)')->sole()->published_at)->toBeNull();
 });
 
-it('runs the pre-flight check on demand and shows what to fix', function () {
+it('runs the pre-flight check on demand and shows what to fix', function (): void {
     $drop = Drop::factory()->create(['opens_at' => now()->addDay()]);
 
     livewire(EditDrop::class, ['record' => $drop->getRouteKey()])
@@ -320,7 +322,7 @@ it('runs the pre-flight check on demand and shows what to fix', function () {
     expect($drop->refresh()->preflight_report['passed'] ?? null)->toBeFalse();
 });
 
-it('lists drops with Melbourne times and their status', function () {
+it('lists drops with Melbourne times and their status', function (): void {
     $drop = Drop::factory()->withStock()->create(['name' => 'October drop', 'opens_at' => '2026-10-09 22:00:00']);
 
     livewire(ListDrops::class)
@@ -329,7 +331,7 @@ it('lists drops with Melbourne times and their status', function () {
         ->assertSee('Scheduled');
 });
 
-it('explains where a box that borrows stock gets it from', function () {
+it('explains where a box that borrows stock gets it from', function (): void {
     $large = Product::factory()->drawsStockFrom($this->box, 2)->create(['name' => '10kg Beef Box']);
     $drop = Drop::factory()->create();
     DropItem::factory()->for($drop)->for($this->box)->create();

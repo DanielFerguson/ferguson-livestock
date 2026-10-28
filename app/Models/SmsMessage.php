@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Enums\SmsDirection;
@@ -123,7 +125,7 @@ class SmsMessage extends Model
      */
     public function recordStatus(SmsStatus $status, ?int $errorCode = null): void
     {
-        $earlier = array_filter(SmsStatus::cases(), fn (SmsStatus $current): bool => $status->isAfter($current));
+        $earlier = array_filter(SmsStatus::cases(), $status->isAfter(...));
 
         self::query()->whereKey($this->id)->whereIn('status', $earlier)->update(array_filter([
             'status' => $status,

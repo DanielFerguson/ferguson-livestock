@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Support;
 
 use Illuminate\Http\Client\ConnectionException;
@@ -62,7 +64,7 @@ final class LiveSiteCheck
 
         $html = $response->body();
         $canonical = self::match('/<link rel="canonical" href="([^"]+)"/', $html);
-        $expected = rtrim(config()->string('shop.url'), '/').($path === '/' ? '/' : $path);
+        $expected = rtrim(config()->string('shop.url'), '/').($path);
         $robotsMeta = (string) self::match('/<meta name="robots" content="([^"]+)"/', $html);
         $robotsHeader = strtolower($response->header('X-Robots-Tag'));
 
@@ -113,7 +115,7 @@ final class LiveSiteCheck
     private function securityHeaders(): array
     {
         $response = $this->get('/');
-        $missing = array_values(array_filter(self::SECURITY_HEADERS, fn (string $header): bool => $response?->header($header) === '' || $response === null));
+        $missing = array_values(array_filter(self::SECURITY_HEADERS, fn (string $header): bool => $response?->header($header) === '' || ! $response instanceof Response));
 
         return self::result('Security headers are sent', $missing === [], $missing === [] ? 'all present' : 'missing '.implode(', ', $missing));
     }
@@ -186,7 +188,7 @@ final class LiveSiteCheck
 
     private function describe(?Response $response): string
     {
-        return $response === null ? 'no answer' : (string) $response->status();
+        return $response instanceof Response ? (string) $response->status() : 'no answer';
     }
 
     private static function match(string $pattern, string $html): ?string

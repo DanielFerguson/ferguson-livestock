@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Jobs;
 
 use App\Models\SmsBroadcast;
@@ -37,9 +39,9 @@ class SendBroadcastMessages implements ShouldQueue
         do {
             $message = SmsMessage::claimNext($this->broadcastId);
             $message?->sendWith($sms);
-        } while ($message !== null && now()->lessThan($handOverAt));
+        } while ($message instanceof SmsMessage && now()->lessThan($handOverAt));
 
-        if ($message !== null) {
+        if ($message instanceof SmsMessage) {
             self::dispatch($this->broadcastId);
 
             return;

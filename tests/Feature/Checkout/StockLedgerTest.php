@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\DeliveryMethod;
 use App\Enums\OrderStatus;
 use App\Exceptions\DropNotOpen;
@@ -21,6 +23,7 @@ function reserve(StockedDrop $shop, array $quantities, DeliveryMethod $method = 
 /**
  * What the ledger says is left when it refuses an order.
  *
+ * @param  Closure(): mixed  $reserve
  * @return array<int, int>|null
  */
 function shortfall(Closure $reserve): ?array
@@ -34,7 +37,7 @@ function shortfall(Closure $reserve): ?array
     return null;
 }
 
-it('holds the stock for a pending order at the drop’s prices', function () {
+it('holds the stock for a pending order at the drop’s prices', function (): void {
     $shop = StockedDrop::create();
 
     $order = reserve($shop, [$shop->box->id => 1, $shop->mince->id => 3, $shop->delivery->id => 1], DeliveryMethod::Delivery);
@@ -46,7 +49,7 @@ it('holds the stock for a pending order at the drop’s prices', function () {
         ->and($shop->mince->refresh()->available)->toBe(7);
 });
 
-it('takes two units of 5kg-box stock for each 10kg box', function () {
+it('takes two units of 5kg-box stock for each 10kg box', function (): void {
     $shop = StockedDrop::create(boxes: 5);
 
     reserve($shop, [$shop->largeBox->id => 1]);
@@ -54,22 +57,22 @@ it('takes two units of 5kg-box stock for each 10kg box', function () {
     expect($shop->box->refresh()->available)->toBe(3);
 });
 
-it('holds everything or nothing, and says what’s left', function () {
+it('holds everything or nothing, and says what’s left', function (): void {
     $shop = StockedDrop::create(boxes: 5, mince: 2);
 
-    expect(shortfall(fn () => reserve($shop, [$shop->box->id => 1, $shop->mince->id => 3])))->toBe([$shop->mince->id => 2]);
+    expect(shortfall(fn (): Order => reserve($shop, [$shop->box->id => 1, $shop->mince->id => 3])))->toBe([$shop->mince->id => 2]);
 
     expect($shop->box->refresh()->available)->toBe(5)
-        ->and(Order::count())->toBe(0);
+        ->and(Order::query()->count())->toBe(0);
 });
 
-it('works out what’s left of a 10kg box from the 5kg-box stock', function () {
+it('works out what’s left of a 10kg box from the 5kg-box stock', function (): void {
     $shop = StockedDrop::create(boxes: 1);
 
-    expect(shortfall(fn () => reserve($shop, [$shop->largeBox->id => 1])))->toBe([$shop->largeBox->id => 0]);
+    expect(shortfall(fn (): Order => reserve($shop, [$shop->largeBox->id => 1])))->toBe([$shop->largeBox->id => 0]);
 });
 
-it('only takes orders while the drop is open', function (string $state) {
+it('only takes orders while the drop is open', function (string $state): void {
     $shop = StockedDrop::create();
     $shop->drop->update(match ($state) {
         'scheduled' => ['opens_at' => now()->addHour()],
@@ -77,12 +80,12 @@ it('only takes orders while the drop is open', function (string $state) {
         default => ['published_at' => null],
     });
 
-    expect(fn () => reserve($shop, [$shop->mince->id => 1]))->toThrow(DropNotOpen::class);
+    expect(fn (): Order => reserve($shop, [$shop->mince->id => 1]))->toThrow(DropNotOpen::class);
 
     expect($shop->mince->refresh()->available)->toBe(10);
 })->with(['scheduled', 'closed', 'draft']);
 
-it('gives stock back once, however many times it’s released', function () {
+it('gives stock back once, however many times it’s released', function (): void {
     $shop = StockedDrop::create(boxes: 5);
     $order = reserve($shop, [$shop->largeBox->id => 1, $shop->mince->id => 2]);
     $ledger = app(StockLedger::class);
@@ -95,17 +98,17 @@ it('gives stock back once, however many times it’s released', function () {
         ->and($order->refresh()->released_at)->not->toBeNull();
 });
 
-it('never lets stock go below zero or above the quantity, whatever the code does', function (int $available) {
+it('never lets stock go below zero or above the quantity, whatever the code does', function (int $available): void {
     $shop = StockedDrop::create(boxes: 5);
 
-    expect(fn () => DropItem::whereKey($shop->box->id)->update(['available' => $available]))
+    expect(fn () => DropItem::query()->whereKey($shop->box->id)->update(['available' => $available]))
         ->toThrow(QueryException::class);
 })->with([-1, 6]);
 
-it('treats a box as sold out when the stock it’s packed from isn’t in the drop', function () {
+it('treats a box as sold out when the stock it’s packed from isn’t in the drop', function (): void {
     $shop = StockedDrop::create();
     $shop->box->delete();
 
-    expect(shortfall(fn () => reserve($shop, [$shop->largeBox->id => 1])))->toBe([$shop->largeBox->id => 0])
-        ->and(Order::count())->toBe(0);
+    expect(shortfall(fn (): Order => reserve($shop, [$shop->largeBox->id => 1])))->toBe([$shop->largeBox->id => 0])
+        ->and(Order::query()->count())->toBe(0);
 });

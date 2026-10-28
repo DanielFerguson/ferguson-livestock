@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\DropStatus;
 use App\Models\Drop;
 use App\Models\DropItem;
 
-it('closes a drop straight away', function () {
+it('closes a drop straight away', function (): void {
     $this->freezeSecond();
     $drop = Drop::factory()->open()->withStock()->create();
 
@@ -14,7 +16,7 @@ it('closes a drop straight away', function () {
         ->and($drop->status())->toBe(DropStatus::Closed);
 });
 
-it('duplicates a drop as a draft a week later, with fresh stock', function () {
+it('duplicates a drop as a draft a week later, with fresh stock', function (): void {
     $drop = Drop::factory()->closed()->create([
         'name' => 'Autumn drop',
         'opens_at' => '2026-04-11 23:00:00',
@@ -40,7 +42,7 @@ it('duplicates a drop as a draft a week later, with fresh stock', function () {
         ]);
 });
 
-it('doesn’t announce a duplicated drop on the website', function () {
+it('doesn’t announce a duplicated drop on the website', function (): void {
     $drop = Drop::factory()->announced()->create();
 
     $copy = $drop->duplicateAsDraft();

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Payments;
 
 use App\Exceptions\PaymentProviderUnavailable;
@@ -11,14 +13,14 @@ use Stripe\Exception\InvalidRequestException;
 use Stripe\Product as StripeProduct;
 use Stripe\StripeClient;
 
-final class StripePaymentGateway implements PaymentGateway
+final readonly class StripePaymentGateway implements PaymentGateway
 {
     /**
      * Pinned so a Stripe SDK upgrade never silently changes request or webhook shapes.
      */
     public const string API_VERSION = '2026-08-26.dahlia';
 
-    public function __construct(private readonly StripeClient $stripe) {}
+    public function __construct(private StripeClient $stripe) {}
 
     public static function fromConfig(): self
     {
@@ -128,7 +130,7 @@ final class StripePaymentGateway implements PaymentGateway
         try {
             return CheckoutSession::fromStripe($request()->toArray());
         } catch (ApiErrorException $exception) {
-            throw new PaymentProviderUnavailable($exception->getMessage(), previous: $exception);
+            throw new PaymentProviderUnavailable($exception->getMessage(), $exception->getCode(), previous: $exception);
         }
     }
 }

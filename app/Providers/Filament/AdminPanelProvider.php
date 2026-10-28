@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Providers\Filament;
 
 use App\Http\Middleware\PreventIndexing;
@@ -15,6 +17,8 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Icons\Heroicon;
 use Filament\View\PanelsRenderHook;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -74,7 +78,7 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->brandName(config()->string('shop.name'))
-            ->brandLogo(fn () => view('filament.admin.logo'))
+            ->brandLogo(fn (): Factory|View => view('filament.admin.logo'))
             ->brandLogoHeight('auto')
             ->favicon('/favicon-32x32.png')
             ->colors([

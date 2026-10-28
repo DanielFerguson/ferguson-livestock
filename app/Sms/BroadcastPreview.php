@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Sms;
 
 use App\Models\SmsBroadcast;

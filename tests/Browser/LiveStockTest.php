@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\Drop;
 use App\Models\DropItem;
 use App\Stock\DropSnapshot;
@@ -8,7 +10,7 @@ use Tests\Fixtures\StockedDrop;
 
 beforeEach(fn () => config(['shop.drop_poll_ms' => 200]));
 
-it('updates what’s left while the page is open, and trims a choice to match', function () {
+it('updates what’s left while the page is open, and trims a choice to match', function (): void {
     $shop = StockedDrop::create(mince: 10);
     $more = '[aria-label="One more 500g Beef Mince"]';
 
@@ -18,7 +20,7 @@ it('updates what’s left while the page is open, and trims a choice to match', 
         ->click($more)
         ->click($more);
 
-    DropItem::whereKey($shop->mince->id)->update(['available' => 2]);
+    DropItem::query()->whereKey($shop->mince->id)->update(['available' => 2]);
     DropSnapshot::forget();
 
     $page->assertSee('2 left')
@@ -26,7 +28,7 @@ it('updates what’s left while the page is open, and trims a choice to match', 
         ->assertNoJavaScriptErrors();
 });
 
-it('opens the drop on time, without a reload', function () {
+it('opens the drop on time, without a reload', function (): void {
     StockedDrop::create(drop: ['opens_at' => now()->addSeconds(3)]);
 
     visit(route('order'))
@@ -36,7 +38,7 @@ it('opens the drop on time, without a reload', function () {
         ->assertNoJavaScriptErrors();
 });
 
-it('announces the next drop’s date, then goes back to coming soon once it has passed', function () {
+it('announces the next drop’s date, then goes back to coming soon once it has passed', function (): void {
     // Three seconds before 9am on Saturday 14 November in Melbourne.
     $this->travelTo(CarbonImmutable::parse('2026-11-13 21:59:57', 'UTC'));
     Drop::factory()->announced()->create(['opens_at' => '2026-11-13 22:00:00']);
@@ -48,7 +50,7 @@ it('announces the next drop’s date, then goes back to coming soon once it has 
         ->assertNoJavaScriptErrors();
 });
 
-it('drops the announced date from the sold-out message once it has passed', function () {
+it('drops the announced date from the sold-out message once it has passed', function (): void {
     StockedDrop::create(boxes: 0, mince: 0);
     $announced = Drop::factory()->announced()->create(['opens_at' => now()->addSeconds(3)]);
     $message = "Next drop {$announced->announcedLabel()}";
@@ -61,7 +63,7 @@ it('drops the announced date from the sold-out message once it has passed', func
         ->assertNoJavaScriptErrors();
 });
 
-it('tells people the drop has closed, and points to the wait list, when a date is announced', function () {
+it('tells people the drop has closed, and points to the wait list, when a date is announced', function (): void {
     StockedDrop::create(drop: ['closes_at' => now()->addSeconds(4)]);
     Drop::factory()->announced()->create(['opens_at' => now()->addWeek()]);
 

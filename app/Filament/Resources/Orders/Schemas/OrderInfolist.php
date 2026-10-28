@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\Orders\Schemas;
 
 use App\Enums\DeliveryMethod;
@@ -53,7 +55,7 @@ class OrderInfolist
                             ->state(fn (Order $record): ?string => $record->shipping_address === null ? null : implode(', ', array_filter([
                                 $record->shipping_address['line1'], $record->shipping_address['line2'],
                                 trim(($record->shipping_address['city'] ?? '').' '.($record->shipping_address['postal_code'] ?? '')),
-                            ])))
+                            ], fn (?string $part): bool => $part !== null && $part !== '')))
                             ->placeholder('—')
                             ->visible(fn (Order $record): bool => $record->delivery_method === DeliveryMethod::Delivery),
                     ]),

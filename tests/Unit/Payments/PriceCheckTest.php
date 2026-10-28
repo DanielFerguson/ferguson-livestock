@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Payments\Price;
 use App\Payments\PriceCheck;
 
@@ -18,21 +20,21 @@ function stripePrice(array $overrides = []): Price
     );
 }
 
-it('accepts an active one-time AUD price for the same amount', function () {
+it('accepts an active one-time AUD price for the same amount', function (): void {
     expect(PriceCheck::problems(stripePrice(), 16000))->toBe([]);
 });
 
-it('explains every reason a price can’t be used', function (?Price $price, string $problem) {
+it('explains every reason a price can’t be used', function (?Price $price, string $problem): void {
     expect(PriceCheck::problems($price, 16000))->toContain($problem);
 })->with([
     'missing' => [null, 'Stripe has no price with this ID. Check it was copied from the right Stripe account (test or live).'],
-    'archived' => [fn () => stripePrice(['active' => false]), 'This Stripe price is archived. Unarchive it or use an active price.'],
-    'recurring' => [fn () => stripePrice(['type' => 'recurring']), 'This is a subscription price. Drops need a one-time price.'],
-    'wrong currency' => [fn () => stripePrice(['currency' => 'usd']), 'This price is in USD. Drops are charged in AUD.'],
-    'wrong amount' => [fn () => stripePrice(['unitAmount' => 15000]), 'Stripe charges $150 for this price, but the drop says $160.'],
+    'archived' => [fn (): Price => stripePrice(['active' => false]), 'This Stripe price is archived. Unarchive it or use an active price.'],
+    'recurring' => [fn (): Price => stripePrice(['type' => 'recurring']), 'This is a subscription price. Drops need a one-time price.'],
+    'wrong currency' => [fn (): Price => stripePrice(['currency' => 'usd']), 'This price is in USD. Drops are charged in AUD.'],
+    'wrong amount' => [fn (): Price => stripePrice(['unitAmount' => 15000]), 'Stripe charges $150 for this price, but the drop says $160.'],
 ]);
 
-it('reports every problem at once', function () {
+it('reports every problem at once', function (): void {
     $problems = PriceCheck::problems(stripePrice(['active' => false, 'currency' => 'usd']), 16000);
 
     expect($problems)->toHaveCount(2);

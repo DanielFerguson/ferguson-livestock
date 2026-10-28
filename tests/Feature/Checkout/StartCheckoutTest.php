@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Checkout\CheckoutRequest;
 use App\Checkout\StartCheckout;
 use App\Enums\DeliveryMethod;
@@ -26,14 +28,14 @@ function startCheckout(StockedDrop $shop, array $quantities, bool $delivery = fa
     ));
 }
 
-it('holds the stock, then sends the customer to Stripe for the items and delivery', function () {
+it('holds the stock, then sends the customer to Stripe for the items and delivery', function (): void {
     $this->freezeSecond();
     $stripe = FakePaymentGateway::swap();
     $shop = StockedDrop::create(boxes: 5);
 
     $url = startCheckout($shop, [$shop->box->id => 1, $shop->mince->id => 2], delivery: true);
 
-    $order = Order::sole();
+    $order = Order::query()->sole();
     $sent = $stripe->createdSessions[0];
     expect($url)->toBe('https://checkout.stripe.test/cs_test_1')
         ->and($order->status)->toBe(OrderStatus::Pending)
@@ -52,7 +54,7 @@ it('holds the stock, then sends the customer to Stripe for the items and deliver
         ->and($sent->cancelUrl)->toBe(route('checkout.cancel').'?session_id={CHECKOUT_SESSION_ID}');
 });
 
-it('skips the delivery fee and the address for farm pickup', function () {
+it('skips the delivery fee and the address for farm pickup', function (): void {
     $stripe = FakePaymentGateway::swap();
     $shop = StockedDrop::create();
 
@@ -62,21 +64,21 @@ it('skips the delivery fee and the address for farm pickup', function () {
         ->and($stripe->createdSessions[0]->collectShippingAddress)->toBeFalse();
 });
 
-it('lets go of a customer’s earlier unpaid checkout when they start again', function () {
+it('lets go of a customer’s earlier unpaid checkout when they start again', function (): void {
     $stripe = FakePaymentGateway::swap();
     $shop = StockedDrop::create(boxes: 5);
     startCheckout($shop, [$shop->box->id => 1]);
 
     startCheckout($shop, [$shop->mince->id => 1]);
 
-    $first = Order::oldest('id')->firstOrFail();
+    $first = Order::query()->oldest('id')->firstOrFail();
     expect($first->status)->toBe(OrderStatus::Expired)
         ->and($stripe->session('cs_test_1')->isExpired())->toBeTrue()
         ->and($shop->box->refresh()->available)->toBe(5)
-        ->and(Order::where('status', OrderStatus::Pending)->count())->toBe(1);
+        ->and(Order::query()->where('status', OrderStatus::Pending)->count())->toBe(1);
 });
 
-it('keeps an earlier checkout the customer finished paying for', function () {
+it('keeps an earlier checkout the customer finished paying for', function (): void {
     Mail::fake();
     $stripe = FakePaymentGateway::swap();
     $shop = StockedDrop::create(boxes: 5);
@@ -85,16 +87,16 @@ it('keeps an earlier checkout the customer finished paying for', function () {
 
     startCheckout($shop, [$shop->mince->id => 1]);
 
-    expect(Order::oldest('id')->firstOrFail()->status)->toBe(OrderStatus::Paid)
+    expect(Order::query()->oldest('id')->firstOrFail()->status)->toBe(OrderStatus::Paid)
         ->and($shop->box->refresh()->available)->toBe(4);
 });
 
-it('puts the stock back when Stripe can’t be reached', function () {
+it('puts the stock back when Stripe can’t be reached', function (): void {
     FakePaymentGateway::swap()->goOffline();
     $shop = StockedDrop::create(boxes: 5);
 
-    expect(fn () => startCheckout($shop, [$shop->box->id => 1]))->toThrow(PaymentProviderUnavailable::class);
+    expect(fn (): string => startCheckout($shop, [$shop->box->id => 1]))->toThrow(PaymentProviderUnavailable::class);
 
-    expect(Order::sole()->status)->toBe(OrderStatus::Expired)
+    expect(Order::query()->sole()->status)->toBe(OrderStatus::Expired)
         ->and($shop->box->refresh()->available)->toBe(5);
 });

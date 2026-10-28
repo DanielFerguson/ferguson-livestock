@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Actions\CheckDropBeforeItOpens;
 use App\Jobs\RunDropPreflightWhenDue;
 use App\Models\Drop;
@@ -14,13 +16,13 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
 use Tests\Fakes\FakePaymentGateway;
 
-beforeEach(function () {
+beforeEach(function (): void {
     config(['shop.admin_email' => 'daniel@example.com']);
     app()->instance(PaymentGateway::class, new FakePaymentGateway);
     Notification::fake();
 });
 
-it('checks drops about to open and tells the admin', function () {
+it('checks drops about to open and tells the admin', function (): void {
     $admin = User::factory()->create(['email' => 'daniel@example.com']);
     $soon = Drop::factory()->create(['opens_at' => now()->addMinutes(8)]);
 
@@ -30,7 +32,7 @@ it('checks drops about to open and tells the admin', function () {
     Notification::assertSentTo($admin, DropPreflightFinished::class, fn (DropPreflightFinished $notification) => $notification->drop->is($soon));
 });
 
-it('checks each drop only once', function () {
+it('checks each drop only once', function (): void {
     User::factory()->create(['email' => 'daniel@example.com']);
     Drop::factory()->create(['opens_at' => now()->addMinutes(8)]);
 
@@ -40,7 +42,7 @@ it('checks each drop only once', function () {
     Notification::assertSentTimes(DropPreflightFinished::class, 1);
 });
 
-it('leaves drafts, drops far off and drops already open alone', function () {
+it('leaves drafts, drops far off and drops already open alone', function (): void {
     User::factory()->create(['email' => 'daniel@example.com']);
     $draft = Drop::factory()->draft()->create(['opens_at' => now()->addMinutes(5)]);
     $later = Drop::factory()->create(['opens_at' => now()->addHour()]);
@@ -52,15 +54,15 @@ it('leaves drafts, drops far off and drops already open alone', function () {
     Notification::assertNothingSent();
 });
 
-it('emails the admin address even before the admin account exists', function () {
+it('emails the admin address even before the admin account exists', function (): void {
     Drop::factory()->create(['opens_at' => now()->addMinutes(8)]);
 
     $this->artisan('drops:preflight');
 
-    Notification::assertSentTo(new AnonymousNotifiable, DropPreflightFinished::class, fn ($notification, array $channels, AnonymousNotifiable $notifiable) => $notifiable->routes['mail'] === 'daniel@example.com');
+    Notification::assertSentTo(new AnonymousNotifiable, DropPreflightFinished::class, fn ($notification, array $channels, AnonymousNotifiable $notifiable): bool => $notifiable->routes['mail'] === 'daniel@example.com');
 });
 
-it('times a check for a drop published to open within the hour', function () {
+it('times a check for a drop published to open within the hour', function (): void {
     Queue::fake();
 
     $drop = Drop::factory()->create(['opens_at' => now()->addMinutes(45)]);
@@ -68,7 +70,7 @@ it('times a check for a drop published to open within the hour', function () {
     Queue::assertPushed(RunDropPreflightWhenDue::class, fn (RunDropPreflightWhenDue $job): bool => $job->dropId === $drop->id);
 });
 
-it('times checks for drops opening within the next hour each time it runs', function () {
+it('times checks for drops opening within the next hour each time it runs', function (): void {
     $drop = Drop::factory()->create(['opens_at' => now()->addMinutes(50)]);
     Queue::fake();
 
@@ -78,7 +80,7 @@ it('times checks for drops opening within the next hour each time it runs', func
     expect($drop->refresh()->preflight_ran_at)->toBeNull();
 });
 
-it('waits until ten minutes before the drop opens', function () {
+it('waits until ten minutes before the drop opens', function (): void {
     $drop = Drop::factory()->create(['opens_at' => now()->addMinutes(20)]);
     Queue::fake();
     $this->freezeTime();
@@ -91,7 +93,7 @@ it('waits until ten minutes before the drop opens', function () {
         && $job->delay->eq($drop->opens_at->subMinutes(10)));
 });
 
-it('checks the drop when its timed check comes due, once', function () {
+it('checks the drop when its timed check comes due, once', function (): void {
     $admin = User::factory()->create(['email' => 'daniel@example.com']);
     $drop = Drop::factory()->create(['opens_at' => now()->addMinutes(45)]);
     $this->travelTo($drop->opens_at->subMinutes(10));
@@ -104,7 +106,7 @@ it('checks the drop when its timed check comes due, once', function () {
     Notification::assertSentTo($admin, DropPreflightFinished::class);
 });
 
-it('leaves a drop alone while another check of it is running', function () {
+it('leaves a drop alone while another check of it is running', function (): void {
     User::factory()->create(['email' => 'daniel@example.com']);
     $drop = Drop::factory()->create(['opens_at' => now()->addMinutes(8)]);
     CheckDropBeforeItOpens::lockFor($drop)->get();
@@ -114,8 +116,8 @@ it('leaves a drop alone while another check of it is running', function () {
     Notification::assertNothingSent();
 });
 
-it('runs every hour, as a safety net for timed checks that went missing', function () {
-    $event = collect(app(Schedule::class)->events())->first(fn ($event) => str_contains((string) $event->command, 'drops:preflight'));
+it('runs every hour, as a safety net for timed checks that went missing', function (): void {
+    $event = collect(app(Schedule::class)->events())->first(fn ($event): bool => str_contains((string) $event->command, 'drops:preflight'));
 
     expect($event?->expression)->toBe('0 * * * *');
 });

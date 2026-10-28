@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\Products\Schemas;
 
 use App\Enums\ProductType;
@@ -57,7 +59,7 @@ class ProductForm
                         Select::make('stock_product_id')
                             ->label('Uses stock from')
                             ->helperText('For a bigger box packed from the same stock, e.g. the 10kg box uses 5kg-box stock.')
-                            ->options(fn (?Product $record): array => Product::where('type', ProductType::Box)
+                            ->options(fn (?Product $record): array => Product::query()->where('type', ProductType::Box)
                                 ->when($record?->id, fn ($query, int $id) => $query->whereKeyNot($id))
                                 ->whereNull('stock_product_id')
                                 ->pluck('name', 'id')

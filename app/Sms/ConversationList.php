@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Sms;
 
 use App\Enums\ConversationFilter;
@@ -71,7 +73,7 @@ final class ConversationList
      */
     public static function thread(string $phone): Collection
     {
-        return SmsMessage::query()->where('contact_phone', $phone)->with('broadcast')->orderBy('created_at')->orderBy('id')->get();
+        return SmsMessage::query()->where('contact_phone', $phone)->with('broadcast')->oldest()->orderBy('id')->get();
     }
 
     public static function markRead(string $phone): void
@@ -99,7 +101,7 @@ final class ConversationList
         $latest = SmsMessage::query()
             ->whereIn('contact_phone', $phones)
             ->whereNull('sms_broadcast_id')
-            ->orderBy('contact_phone')->orderByDesc('created_at')->orderByDesc('id')
+            ->orderBy('contact_phone')->latest()->orderByDesc('id')
             ->selectRaw('distinct on (contact_phone) sms_messages.*')
             ->get();
 

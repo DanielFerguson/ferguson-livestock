@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Checkout\CheckoutRequest;
 use App\Checkout\StartCheckout;
 use App\Enums\DeliveryMethod;
@@ -24,10 +26,10 @@ function paidFor(StockedDrop $shop, array $quantities, bool $delivery, FakePayme
     ));
     $stripe->completeSession('cs_test_1', $paymentStatus, $name);
 
-    return Order::sole();
+    return Order::query()->sole();
 }
 
-it('confirms a paid delivery order, checking with Stripe if the webhook hasn’t arrived yet', function () {
+it('confirms a paid delivery order, checking with Stripe if the webhook hasn’t arrived yet', function (): void {
     $stripe = FakePaymentGateway::swap();
     $shop = StockedDrop::create();
     $order = paidFor($shop, [$shop->box->id => 1, $shop->mince->id => 2], delivery: true, stripe: $stripe);
@@ -40,7 +42,7 @@ it('confirms a paid delivery order, checking with Stripe if the webhook hasn’t
     expect($order->refresh()->status)->toBe(OrderStatus::Paid);
 });
 
-it('shows an order that’s already paid without calling Stripe', function () {
+it('shows an order that’s already paid without calling Stripe', function (): void {
     config(['services.stripe.secret' => null]);
     $order = Order::factory()->create(['customer_name' => 'Sam Buyer']);
     OrderItem::factory()->for($order)->create();
@@ -50,7 +52,7 @@ it('shows an order that’s already paid without calling Stripe', function () {
         ->assertSee('Order confirmed, Sam!');
 });
 
-it('says when a bank payment is still clearing', function () {
+it('says when a bank payment is still clearing', function (): void {
     $stripe = FakePaymentGateway::swap();
     $shop = StockedDrop::create();
     paidFor($shop, [$shop->box->id => 1], delivery: false, stripe: $stripe, paymentStatus: 'unpaid');
@@ -60,7 +62,7 @@ it('says when a bank payment is still clearing', function () {
         ->assertSee('Your payment is on its way');
 });
 
-it('tells the customer not to pay again when Stripe can’t confirm the payment yet', function () {
+it('tells the customer not to pay again when Stripe can’t confirm the payment yet', function (): void {
     $stripe = FakePaymentGateway::swap();
     $shop = StockedDrop::create();
     app(StartCheckout::class)(new CheckoutRequest($shop->drop->id, [$shop->mince->id => 1], DeliveryMethod::Pickup, null, 'visitor-a', '192.0.2.1'));
@@ -71,7 +73,7 @@ it('tells the customer not to pay again when Stripe can’t confirm the payment 
         ->assertSee('there’s no need to pay again');
 });
 
-it('explains farm pickup, and doesn’t mention a box for an extras-only order', function () {
+it('explains farm pickup, and doesn’t mention a box for an extras-only order', function (): void {
     $stripe = FakePaymentGateway::swap();
     $shop = StockedDrop::create();
     paidFor($shop, [$shop->mince->id => 1], delivery: false, stripe: $stripe);
@@ -82,7 +84,7 @@ it('explains farm pickup, and doesn’t mention a box for an extras-only order',
         ->assertDontSee('Your beef box is being prepared');
 });
 
-it('escapes the name Stripe collected', function () {
+it('escapes the name Stripe collected', function (): void {
     $stripe = FakePaymentGateway::swap();
     $shop = StockedDrop::create();
     paidFor($shop, [$shop->mince->id => 1], delivery: false, stripe: $stripe, name: '<script>alert(1)</script> Buyer');
@@ -92,11 +94,11 @@ it('escapes the name Stripe collected', function () {
         ->assertDontSee('<script>alert(1)</script>', escape: false);
 });
 
-it('sends anyone without a paid order to the order page', function (?string $sessionId) {
+it('sends anyone without a paid order to the order page', function (?string $sessionId): void {
     $stripe = FakePaymentGateway::swap();
     $shop = StockedDrop::create();
     app(StartCheckout::class)(new CheckoutRequest($shop->drop->id, [$shop->mince->id => 1], DeliveryMethod::Pickup, null, 'visitor-a', '192.0.2.1'));
     $stripe->timeOutSession('cs_test_1');
 
-    $this->get(route('order-confirmed', array_filter(['session_id' => $sessionId])))->assertRedirect(route('order'));
+    $this->get(route('order-confirmed', $sessionId === null ? [] : ['session_id' => $sessionId]))->assertRedirect(route('order'));
 })->with(['cs_test_1', 'cs_test_someone_else', null]);

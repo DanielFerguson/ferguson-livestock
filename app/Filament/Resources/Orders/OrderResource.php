@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\Orders;
 
 use App\Enums\OrderStatus;
@@ -44,11 +46,11 @@ class OrderResource extends Resource
     }
 
     /**
-     * @return Builder<Order>
+     * @return Builder<Model>
      */
     public static function getRecordRouteBindingEloquentQuery(): Builder
     {
-        return Order::query()->with(['drop', 'items.product']);
+        return parent::getRecordRouteBindingEloquentQuery()->with(['drop', 'items.product']);
     }
 
     public static function infolist(Schema $schema): Schema

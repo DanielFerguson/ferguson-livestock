@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Factories;
 
 use App\Models\Subscriber;
@@ -34,6 +36,6 @@ class SubscriberFactory extends Factory
      */
     public function unsubscribed(): static
     {
-        return $this->state(fn () => ['unsubscribed_at' => now()]);
+        return $this->state(fn (): array => ['unsubscribed_at' => now()]);
     }
 }

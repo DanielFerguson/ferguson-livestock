@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Sms;
 
 /**
@@ -75,7 +77,7 @@ final readonly class SmsText
     public function length(): int
     {
         if (! $this->isGsm()) {
-            return intdiv(strlen((string) mb_convert_encoding($this->text, 'UTF-16BE', 'UTF-8')), 2);
+            return intdiv(strlen(mb_convert_encoding($this->text, 'UTF-16BE', 'UTF-8')), 2);
         }
 
         return array_sum(array_map(

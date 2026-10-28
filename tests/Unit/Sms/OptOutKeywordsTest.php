@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Sms\OptOutKeywords;
 
-it('recognises replies asking to stop', function (string $reply) {
+it('recognises replies asking to stop', function (string $reply): void {
     expect(OptOutKeywords::matches($reply))->toBeTrue();
 })->with([
     'STOP',
@@ -18,7 +20,7 @@ it('recognises replies asking to stop', function (string $reply) {
     'take me off your list',
 ]);
 
-it('leaves other replies alone', function (string $reply) {
+it('leaves other replies alone', function (string $reply): void {
     expect(OptOutKeywords::matches($reply))->toBeFalse();
 })->with([
     'Can’t wait for the next drop!',

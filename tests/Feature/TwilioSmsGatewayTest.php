@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Exceptions\SmsNotSent;
 use App\Sms\TwilioSmsGateway;
 use Tests\Fakes\FakeTwilioHttpClient;
@@ -10,7 +12,7 @@ function twilioGateway(FakeTwilioHttpClient $http): TwilioSmsGateway
     return new TwilioSmsGateway(new Client('AC123', 'secret', httpClient: $http), '+61400000000', 'https://example.test/api/webhooks/twilio/status');
 }
 
-it('sends from the shop’s number and asks Twilio to report delivery', function () {
+it('sends from the shop’s number and asks Twilio to report delivery', function (): void {
     $http = new FakeTwilioHttpClient(201, ['sid' => 'SM123', 'status' => 'queued', 'num_segments' => '2']);
 
     $sent = twilioGateway($http)->send('+61412345678', 'Hello');
@@ -26,7 +28,7 @@ it('sends from the shop’s number and asks Twilio to report delivery', function
         ]);
 });
 
-it('reports Twilio’s error code when it refuses a text', function () {
+it('reports Twilio’s error code when it refuses a text', function (): void {
     $http = new FakeTwilioHttpClient(400, ['code' => 21610, 'message' => 'Attempt to send to unsubscribed recipient', 'status' => 400]);
     $refusal = null;
 

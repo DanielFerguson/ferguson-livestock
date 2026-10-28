@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Support\ResponsiveImages;
 
 function responsiveImages(): ResponsiveImages
@@ -10,11 +12,11 @@ function responsiveImages(): ResponsiveImages
             'portrait' => ['source' => 'wide.webp', 'aspect' => '4:5', 'widths' => [360, 480]],
         ],
         sourceDirectory: __DIR__.'/../../Fixtures/images',
-        url: fn (string $path) => "/build/{$path}",
+        url: fn (string $path): string => "/build/{$path}",
     );
 }
 
-it('builds a srcset for each format from the configured widths', function () {
+it('builds a srcset for each format from the configured widths', function (): void {
     $image = responsiveImages()->get('hero');
 
     expect($image->srcset('avif'))->toBe(
@@ -24,23 +26,23 @@ it('builds a srcset for each format from the configured widths', function () {
     );
 });
 
-it('falls back to the largest WebP', function () {
+it('falls back to the largest WebP', function (): void {
     expect(responsiveImages()->get('hero')->fallback())->toBe('/build/resources/images/generated/hero-960.webp');
 });
 
-it('keeps the source aspect ratio when none is configured', function () {
+it('keeps the source aspect ratio when none is configured', function (): void {
     // The fixture is 1200x800.
     $image = responsiveImages()->get('hero');
 
     expect($image->width)->toBe(960)->and($image->height)->toBe(640);
 });
 
-it('uses the configured aspect ratio for cropped variants', function () {
+it('uses the configured aspect ratio for cropped variants', function (): void {
     $image = responsiveImages()->get('portrait');
 
     expect($image->width)->toBe(480)->and($image->height)->toBe(600);
 });
 
-it('rejects an unknown image', function () {
+it('rejects an unknown image', function (): void {
     responsiveImages()->get('missing');
 })->throws(InvalidArgumentException::class, 'missing');

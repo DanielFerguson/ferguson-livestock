@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire;
 
 use App\Checkout\CheckoutRequest;
@@ -32,7 +34,7 @@ use Livewire\Component;
 class OrderForm extends Component
 {
     #[Locked]
-    public int $dropId;
+    public int $dropId = 0;
 
     /**
      * The chosen box's drop item ID, 'none' for extras only, or '' before the customer has chosen.

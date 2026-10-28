@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Factories;
 
 use App\Enums\ProductType;
@@ -35,7 +37,7 @@ class ProductFactory extends Factory
 
     public function box(int $weightKg = 5): static
     {
-        return $this->state(fn () => [
+        return $this->state(fn (): array => [
             'type' => ProductType::Box,
             'box_details' => [
                 'weight_kg' => $weightKg,
@@ -48,7 +50,7 @@ class ProductFactory extends Factory
 
     public function delivery(): static
     {
-        return $this->state(fn () => ['type' => ProductType::Delivery]);
+        return $this->state(fn (): array => ['type' => ProductType::Delivery]);
     }
 
     /**
@@ -56,6 +58,6 @@ class ProductFactory extends Factory
      */
     public function drawsStockFrom(Product $product, int $units): static
     {
-        return $this->box()->state(fn () => ['stock_product_id' => $product->id, 'stock_units' => $units]);
+        return $this->box()->state(fn (): array => ['stock_product_id' => $product->id, 'stock_units' => $units]);
     }
 }

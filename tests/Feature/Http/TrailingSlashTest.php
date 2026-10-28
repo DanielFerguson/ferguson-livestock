@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -18,25 +20,25 @@ function sendRaw(string $method, string $uri, array $server = []): TestResponse
     );
 }
 
-it('permanently redirects a trailing slash to the path without it', function () {
+it('permanently redirects a trailing slash to the path without it', function (): void {
     sendRaw('GET', '/our-story/')
         ->assertStatus(301)
         ->assertHeader('Location', 'http://localhost/our-story');
 });
 
-it('keeps the query string when removing a trailing slash', function () {
+it('keeps the query string when removing a trailing slash', function (): void {
     sendRaw('GET', '/faq/?ref=newsletter')
         ->assertStatus(301)
         ->assertHeader('Location', 'http://localhost/faq?ref=newsletter');
 });
 
-it('collapses several trailing slashes', function () {
+it('collapses several trailing slashes', function (): void {
     sendRaw('GET', '/delivery///')
         ->assertStatus(301)
         ->assertHeader('Location', 'http://localhost/delivery');
 });
 
-it('stays on https behind Laravel Cloud’s proxy', function () {
+it('stays on https behind Laravel Cloud’s proxy', function (): void {
     // Each real request starts with no trusted proxies; an earlier test's request mustn't have set them.
     Request::setTrustedProxies([], 0);
 
@@ -45,14 +47,14 @@ it('stays on https behind Laravel Cloud’s proxy', function () {
         ->assertHeader('Location', 'https://fergusonlivestock.com.au/our-story');
 });
 
-it('redirects HEAD requests too', function () {
+it('redirects HEAD requests too', function (): void {
     sendRaw('HEAD', '/contact/')->assertStatus(301);
 });
 
-it('leaves the homepage alone', function () {
+it('leaves the homepage alone', function (): void {
     sendRaw('GET', '/')->assertOk();
 });
 
-it('does not redirect non-GET requests', function () {
+it('does not redirect non-GET requests', function (): void {
     expect(sendRaw('POST', '/our-story/')->isRedirect())->toBeFalse();
 });

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Payments;
 
 use App\Support\Money;
@@ -14,7 +16,7 @@ final class PriceCheck
      */
     public static function problems(?Price $price, int $expectedCents): array
     {
-        if ($price === null) {
+        if (! $price instanceof Price) {
             return ['Stripe has no price with this ID. Check it was copied from the right Stripe account (test or live).'];
         }
 

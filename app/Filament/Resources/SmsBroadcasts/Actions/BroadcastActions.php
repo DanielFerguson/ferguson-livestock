@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\SmsBroadcasts\Actions;
 
 use App\Actions\StartBroadcast;
@@ -145,6 +147,9 @@ final class BroadcastActions
             && QuietHours::contains(CarbonImmutable::parse($localTime, QuietHours::TIMEZONE));
     }
 
+    /**
+     * @return Closure(string, mixed, Closure(string): mixed): void
+     */
     private static function inTheFuture(): Closure
     {
         return function (string $attribute, mixed $value, Closure $fail): void {

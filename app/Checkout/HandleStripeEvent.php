@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Checkout;
 
 use App\Models\Order;
@@ -27,7 +29,7 @@ final readonly class HandleStripeEvent
         $session = CheckoutSession::fromStripe($object);
         $order = $this->orderFor($session);
 
-        if ($order === null) {
+        if (! $order instanceof Order) {
             return;
         }
 

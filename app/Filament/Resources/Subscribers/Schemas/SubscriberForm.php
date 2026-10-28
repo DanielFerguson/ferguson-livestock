@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\Subscribers\Schemas;
 
 use App\Models\Subscriber;
@@ -45,6 +47,9 @@ class SubscriberForm
             ]);
     }
 
+    /**
+     * @return Closure(string, mixed, Closure(string): mixed): void
+     */
     private static function mobileNotOnTheList(?Subscriber $record): Closure
     {
         return function (string $attribute, mixed $value, Closure $fail) use ($record): void {
@@ -56,7 +61,7 @@ class SubscriberForm
                 return;
             }
 
-            if (Subscriber::where('phone', $phone)->when($record !== null, fn ($query) => $query->whereKeyNot($record?->id))->exists()) {
+            if (Subscriber::query()->where('phone', $phone)->when($record instanceof Subscriber, fn ($query) => $query->whereKeyNot($record?->id))->exists()) {
                 $fail('Someone on the list already has this number.');
             }
         };

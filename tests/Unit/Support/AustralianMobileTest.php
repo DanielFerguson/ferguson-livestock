@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Support\AustralianMobile;
 
-it('converts the ways people write a mobile number to international format', function (string $typed) {
+it('converts the ways people write a mobile number to international format', function (string $typed): void {
     expect(AustralianMobile::toE164($typed))->toBe('+61412345678');
 })->with([
     'spaced' => '0412 345 678',
@@ -14,7 +16,7 @@ it('converts the ways people write a mobile number to international format', fun
     'with dots' => '0412.345.678',
 ]);
 
-it('rejects numbers that cannot receive text messages', function (string $typed) {
+it('rejects numbers that cannot receive text messages', function (string $typed): void {
     expect(AustralianMobile::toE164($typed))->toBeNull();
 })->with([
     'landline' => '03 5344 1234',
@@ -25,11 +27,11 @@ it('rejects numbers that cannot receive text messages', function (string $typed)
     'empty' => '',
 ]);
 
-it('writes a mobile number the way Australians read it', function () {
+it('writes a mobile number the way Australians read it', function (): void {
     expect(AustralianMobile::format('+61412345678'))->toBe('0412 345 678');
 });
 
-it('turns a search for a mobile number into the digits stored', function (string $search, ?string $digits) {
+it('turns a search for a mobile number into the digits stored', function (string $search, ?string $digits): void {
     expect(AustralianMobile::searchDigits($search))->toBe($digits);
 })->with([
     ['0412 345', '412345'],
@@ -38,7 +40,7 @@ it('turns a search for a mobile number into the digits stored', function (string
     ['Jane', null],
 ]);
 
-it('writes any phone number readably, leaving ones that aren’t Australian mobiles as they are', function (string $number, string $readable) {
+it('writes any phone number readably, leaving ones that aren’t Australian mobiles as they are', function (string $number, string $readable): void {
     expect(AustralianMobile::readable($number))->toBe($readable);
 })->with([
     ['+61412345678', '0412 345 678'],

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Actions\StartBroadcast;
 use App\Enums\BroadcastStatus;
 use App\Enums\SmsStatus;
@@ -11,7 +13,7 @@ use App\Models\Subscriber;
 use Illuminate\Support\Facades\Queue;
 use Tests\Fakes\FakeSmsGateway;
 
-it('texts everyone subscribed once, from the shop’s number', function () {
+it('texts everyone subscribed once, from the shop’s number', function (): void {
     $sms = FakeSmsGateway::swap();
     $ballarat = Subscriber::factory()->create(['postcode' => '3350']);
     $creswick = Subscriber::factory()->create(['postcode' => '3363']);
@@ -28,7 +30,7 @@ it('texts everyone subscribed once, from the shop’s number', function () {
         ->and($broadcast->messages()->pluck('contact_phone')->all())->toEqualCanonicalizing([$ballarat->phone, $creswick->phone]);
 });
 
-it('only texts the chosen postcodes', function () {
+it('only texts the chosen postcodes', function (): void {
     $sms = FakeSmsGateway::swap();
     $ballarat = Subscriber::factory()->create(['postcode' => '3350']);
     Subscriber::factory()->create(['postcode' => '3363']);
@@ -38,7 +40,7 @@ it('only texts the chosen postcodes', function () {
     expect($sms->recipients())->toBe([$ballarat->phone]);
 });
 
-it('only texts the chosen subscribers, and not one of them who has opted out', function () {
+it('only texts the chosen subscribers, and not one of them who has opted out', function (): void {
     $sms = FakeSmsGateway::swap();
     $tester = Subscriber::factory()->create();
     $optedOut = Subscriber::factory()->unsubscribed()->create();
@@ -49,7 +51,7 @@ it('only texts the chosen subscribers, and not one of them who has opted out', f
     expect($sms->recipients())->toBe([$tester->phone]);
 });
 
-it('never texts anyone twice when a broadcast is started again or its job runs twice', function () {
+it('never texts anyone twice when a broadcast is started again or its job runs twice', function (): void {
     $sms = FakeSmsGateway::swap();
     Subscriber::factory()->count(2)->create();
     $broadcast = SmsBroadcast::factory()->create();
@@ -61,7 +63,7 @@ it('never texts anyone twice when a broadcast is started again or its job runs t
     expect($sms->sent)->toHaveCount(2);
 });
 
-it('skips someone who opts out after the broadcast starts', function () {
+it('skips someone who opts out after the broadcast starts', function (): void {
     $sms = FakeSmsGateway::swap();
     Queue::fake([SendBroadcastMessages::class]);
     $leaving = Subscriber::factory()->create();
@@ -76,20 +78,20 @@ it('skips someone who opts out after the broadcast starts', function () {
         ->and($broadcast->messages()->where('subscriber_id', $leaving->id)->value('status'))->toBe(SmsStatus::Skipped);
 });
 
-it('opts someone out when Twilio says they replied STOP to it', function () {
+it('opts someone out when Twilio says they replied STOP to it', function (): void {
     $sms = FakeSmsGateway::swap();
     $subscriber = Subscriber::factory()->create();
     $sms->refuse($subscriber->phone, SmsNotSent::RECIPIENT_OPTED_OUT);
 
     app(StartBroadcast::class)(SmsBroadcast::factory()->create());
 
-    $message = SmsMessage::sole();
+    $message = SmsMessage::query()->sole();
     expect($message->status)->toBe(SmsStatus::Failed)
         ->and($message->error_code)->toBe(SmsNotSent::RECIPIENT_OPTED_OUT)
         ->and($subscriber->refresh()->unsubscribed_at)->not->toBeNull();
 });
 
-it('records a refused text and carries on with the rest', function () {
+it('records a refused text and carries on with the rest', function (): void {
     $sms = FakeSmsGateway::swap();
     $wrongNumber = Subscriber::factory()->create();
     $fine = Subscriber::factory()->create();
@@ -104,7 +106,7 @@ it('records a refused text and carries on with the rest', function () {
         ->and($broadcast->refresh()->status())->toBe(BroadcastStatus::Sent);
 });
 
-it('hands over to a new job before the queue’s time limit', function () {
+it('hands over to a new job before the queue’s time limit', function (): void {
     $sms = FakeSmsGateway::swap();
     Queue::fake([SendBroadcastMessages::class]);
     Subscriber::factory()->count(3)->create();

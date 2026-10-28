@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Support\LiveSiteCheck;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Client\Request;
@@ -41,7 +43,7 @@ function serveThisApp(array $broken = [], bool $wwwRedirects = true): void
 
 beforeEach(fn () => $this->withoutVite());
 
-it('passes a production site that keeps every URL and SEO signal', function () {
+it('passes a production site that keeps every URL and SEO signal', function (): void {
     app()->instance('env', 'production');
     serveThisApp();
 
@@ -50,7 +52,7 @@ it('passes a production site that keeps every URL and SEO signal', function () {
     expect($failures)->toBe([]);
 });
 
-it('reports what’s wrong, page by page', function () {
+it('reports what’s wrong, page by page', function (): void {
     app()->instance('env', 'production');
     serveThisApp(['/faq' => 500]);
 
@@ -59,7 +61,7 @@ it('reports what’s wrong, page by page', function () {
     expect($failures->pluck('check')->all())->toContain('/faq loads');
 });
 
-it('catches a www address that serves the site instead of redirecting to the main address', function () {
+it('catches a www address that serves the site instead of redirecting to the main address', function (): void {
     app()->instance('env', 'production');
     serveThisApp(wwwRedirects: false);
 
@@ -68,7 +70,7 @@ it('catches a www address that serves the site instead of redirecting to the mai
     expect($failures->pluck('check')->all())->toBe(['The www address redirects to the main address']);
 });
 
-it('catches a production site still asking search engines not to index it', function () {
+it('catches a production site still asking search engines not to index it', function (): void {
     serveThisApp();
 
     $failures = collect((new LiveSiteCheck('https://fergusonlivestock.com.au'))->run())->reject(fn (array $check): bool => $check['passed']);
@@ -76,7 +78,7 @@ it('catches a production site still asking search engines not to index it', func
     expect($failures->pluck('check')->all())->toContain('/ can be indexed');
 });
 
-it('expects staging to be hidden from search engines', function () {
+it('expects staging to be hidden from search engines', function (): void {
     serveThisApp();
 
     $failures = array_filter((new LiveSiteCheck('https://fergusonlivestock.com.au', staging: true))->run(), fn (array $check): bool => ! $check['passed']);
@@ -84,7 +86,7 @@ it('expects staging to be hidden from search engines', function () {
     expect($failures)->toBe([]);
 });
 
-it('fails the command when anything fails', function () {
+it('fails the command when anything fails', function (): void {
     app()->instance('env', 'production');
     serveThisApp(['/sitemap-0.xml' => 404]);
 

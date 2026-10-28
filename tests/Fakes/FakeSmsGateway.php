@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Fakes;
 
 use App\Exceptions\SmsNotSent;
@@ -19,6 +21,7 @@ final class FakeSmsGateway implements SmsGateway
     /** @var array<string, int> */
     private array $refusals = [];
 
+    /** @var (Closure(): mixed)|null */
     private ?Closure $whileSending = null;
 
     /**
@@ -41,6 +44,9 @@ final class FakeSmsGateway implements SmsGateway
     /**
      * Run a callback as each text is sent, e.g. to move the clock on.
      */
+    /**
+     * @param  Closure(): mixed  $callback
+     */
     public function whileSending(Closure $callback): self
     {
         $this->whileSending = $callback;
@@ -50,7 +56,7 @@ final class FakeSmsGateway implements SmsGateway
 
     public function send(string $to, string $body): SentSms
     {
-        if ($this->whileSending !== null) {
+        if ($this->whileSending instanceof Closure) {
             ($this->whileSending)();
         }
 

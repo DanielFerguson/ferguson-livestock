@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\BroadcastStatus;
 use App\Enums\SmsStatus;
 use App\Filament\Resources\Drops\Pages\EditDrop;
@@ -19,27 +21,27 @@ use Tests\Fakes\FakeSmsGateway;
 
 use function Pest\Livewire\livewire;
 
-beforeEach(function () {
+beforeEach(function (): void {
     // Midday on 1 October 2026, before daylight saving starts on the 4th.
     $this->travelTo(CarbonImmutable::parse('2026-10-01 12:00', 'Australia/Melbourne'));
     config(['shop.admin_email' => 'daniel@example.com', 'shop.admin_phone' => '+61400000001', 'services.twilio.segment_cost' => 8]);
     $this->actingAs(User::factory()->withAppAuthentication()->create(['email' => 'daniel@example.com']));
 });
 
-it('saves a draft with curly quotes and dashes swapped for plain ones', function () {
+it('saves a draft with curly quotes and dashes swapped for plain ones', function (): void {
     livewire(CreateSmsBroadcast::class)
         ->fillForm(['body' => 'It’s back — Saturday.'])
         ->call('create')
         ->assertHasNoFormErrors();
 
-    $broadcast = SmsBroadcast::sole();
+    $broadcast = SmsBroadcast::query()->sole();
     expect($broadcast->body)->toBe("It's back - Saturday.")
         ->and($broadcast->postcodes())->toBe([])
         ->and($broadcast->created_by)->toBe(auth()->id())
         ->and($broadcast->status())->toBe(BroadcastStatus::Draft);
 });
 
-it('shows what subscribers receive, how many texts it takes and what it costs', function () {
+it('shows what subscribers receive, how many texts it takes and what it costs', function (): void {
     Subscriber::factory()->count(3)->create();
 
     livewire(CreateSmsBroadcast::class)
@@ -49,20 +51,20 @@ it('shows what subscribers receive, how many texts it takes and what it costs', 
         ->assertSee('3 subscribers, about $0.48');
 });
 
-it('warns when a character halves the room in each text', function () {
+it('warns when a character halves the room in each text', function (): void {
     livewire(CreateSmsBroadcast::class)
         ->fillForm(['body' => 'See you Saturday 👋'])
         ->assertSee('👋 isn’t in the standard text alphabet, so each text holds 70 characters instead of 160.');
 });
 
-it('warns on the broadcast’s page too', function () {
+it('warns on the broadcast’s page too', function (): void {
     $broadcast = SmsBroadcast::factory()->create(['body' => 'See you Saturday 👋']);
 
     livewire(ViewSmsBroadcast::class, ['record' => $broadcast->id])
         ->assertSee('👋 isn’t in the standard text alphabet, so each text holds 70 characters instead of 160.');
 });
 
-it('goes only to the chosen postcodes', function () {
+it('goes only to the chosen postcodes', function (): void {
     Subscriber::factory()->create(['postcode' => '3350']);
 
     livewire(CreateSmsBroadcast::class)
@@ -70,17 +72,17 @@ it('goes only to the chosen postcodes', function () {
         ->call('create')
         ->assertHasNoFormErrors();
 
-    expect(SmsBroadcast::sole()->postcodes())->toBe(['3350']);
+    expect(SmsBroadcast::query()->sole()->postcodes())->toBe(['3350']);
 });
 
-it('asks which postcodes', function () {
+it('asks which postcodes', function (): void {
     livewire(CreateSmsBroadcast::class)
         ->fillForm(['body' => 'Hi', 'audience_scope' => 'postcodes'])
         ->call('create')
         ->assertHasFormErrors(['audience.postcodes' => 'required']);
 });
 
-it('goes back to everyone when postcodes are no longer wanted', function () {
+it('goes back to everyone when postcodes are no longer wanted', function (): void {
     $broadcast = SmsBroadcast::factory()->forPostcodes(['3350'])->create();
 
     livewire(EditSmsBroadcast::class, ['record' => $broadcast->id])
@@ -92,7 +94,7 @@ it('goes back to everyone when postcodes are no longer wanted', function () {
     expect($broadcast->refresh()->postcodes())->toBe([]);
 });
 
-it('goes only to the chosen subscribers', function () {
+it('goes only to the chosen subscribers', function (): void {
     $tester = Subscriber::factory()->create(['first_name' => 'Daniel']);
     Subscriber::factory()->create();
 
@@ -102,20 +104,20 @@ it('goes only to the chosen subscribers', function () {
         ->call('create')
         ->assertHasNoFormErrors();
 
-    $broadcast = SmsBroadcast::sole();
+    $broadcast = SmsBroadcast::query()->sole();
     expect($broadcast->subscriberIds())->toBe([$tester->id])
         ->and($broadcast->postcodes())->toBe([])
         ->and($broadcast->audienceLabel())->toBe('1 chosen subscriber');
 });
 
-it('asks which subscribers', function () {
+it('asks which subscribers', function (): void {
     livewire(CreateSmsBroadcast::class)
         ->fillForm(['body' => 'Hi', 'audience_scope' => 'subscribers'])
         ->call('create')
         ->assertHasFormErrors(['audience.subscribers' => 'required']);
 });
 
-it('goes back to everyone when chosen subscribers are no longer wanted', function () {
+it('goes back to everyone when chosen subscribers are no longer wanted', function (): void {
     $broadcast = SmsBroadcast::factory()->forSubscribers([Subscriber::factory()->create()->id])->create();
 
     livewire(EditSmsBroadcast::class, ['record' => $broadcast->id])
@@ -127,7 +129,7 @@ it('goes back to everyone when chosen subscribers are no longer wanted', functio
     expect($broadcast->refresh()->subscriberIds())->toBe([]);
 });
 
-it('finds subscribers to choose by name or mobile number, leaving out anyone who has opted out', function () {
+it('finds subscribers to choose by name or mobile number, leaving out anyone who has opted out', function (): void {
     $daniel = Subscriber::factory()->create(['first_name' => 'Daniel', 'phone' => '+61412345678']);
     Subscriber::factory()->unsubscribed()->create(['first_name' => 'Danielle', 'phone' => '+61411111111']);
     Subscriber::factory()->create(['first_name' => 'Sam', 'phone' => '+61422222222']);
@@ -139,7 +141,7 @@ it('finds subscribers to choose by name or mobile number, leaving out anyone who
             && $field->getSearchResults('nobody') === []);
 });
 
-it('texts a test to the admin without recording it', function () {
+it('texts a test to the admin without recording it', function (): void {
     $sms = FakeSmsGateway::swap();
     $broadcast = SmsBroadcast::factory()->create(['body' => 'Hi']);
 
@@ -148,10 +150,10 @@ it('texts a test to the admin without recording it', function () {
         ->assertNotified('Test sent to 0400 000 001');
 
     expect($sms->sent)->toBe([['to' => '+61400000001', 'body' => "Ferguson Livestock: Hi\nReply STOP to opt out"]])
-        ->and(SmsMessage::count())->toBe(0);
+        ->and(SmsMessage::query()->count())->toBe(0);
 });
 
-it('explains how to get test texts when the admin’s number isn’t set', function () {
+it('explains how to get test texts when the admin’s number isn’t set', function (): void {
     $sms = FakeSmsGateway::swap();
     config(['shop.admin_phone' => null]);
     $broadcast = SmsBroadcast::factory()->create();
@@ -163,7 +165,7 @@ it('explains how to get test texts when the admin’s number isn’t set', funct
     expect($sms->sent)->toBe([]);
 });
 
-it('confirms how many people it goes to and the cost before sending', function () {
+it('confirms how many people it goes to and the cost before sending', function (): void {
     Subscriber::factory()->count(2)->create();
     $broadcast = SmsBroadcast::factory()->create(['body' => 'Hi']);
 
@@ -172,7 +174,7 @@ it('confirms how many people it goes to and the cost before sending', function (
         ->assertMountedActionModalSee('It goes to 2 subscribers as 1 text each, about $0.16.');
 });
 
-it('sends now', function () {
+it('sends now', function (): void {
     $sms = FakeSmsGateway::swap();
     Subscriber::factory()->count(2)->create();
     $broadcast = SmsBroadcast::factory()->create();
@@ -186,7 +188,7 @@ it('sends now', function () {
         ->and($broadcast->refresh()->status())->toBe(BroadcastStatus::Sent);
 });
 
-it('won’t send when nobody matches the audience', function () {
+it('won’t send when nobody matches the audience', function (): void {
     $broadcast = SmsBroadcast::factory()->forPostcodes(['3350'])->create();
 
     livewire(ViewSmsBroadcast::class, ['record' => $broadcast->id])
@@ -196,7 +198,7 @@ it('won’t send when nobody matches the audience', function () {
     expect($broadcast->refresh()->status())->toBe(BroadcastStatus::Draft);
 });
 
-it('asks before sending between 8pm and 8am', function () {
+it('asks before sending between 8pm and 8am', function (): void {
     $sms = FakeSmsGateway::swap();
     $this->travelTo(CarbonImmutable::parse('2026-10-01 21:00', 'Australia/Melbourne'));
     Subscriber::factory()->create();
@@ -213,7 +215,7 @@ it('asks before sending between 8pm and 8am', function () {
     expect($sms->sent)->toHaveCount(1);
 });
 
-it('schedules a broadcast in Melbourne time, across the clock change', function () {
+it('schedules a broadcast in Melbourne time, across the clock change', function (): void {
     $broadcast = SmsBroadcast::factory()->create();
 
     livewire(ViewSmsBroadcast::class, ['record' => $broadcast->id])
@@ -224,7 +226,7 @@ it('schedules a broadcast in Melbourne time, across the clock change', function 
         ->and($broadcast->status())->toBe(BroadcastStatus::Scheduled);
 });
 
-it('suggests sending when the drop opens', function () {
+it('suggests sending when the drop opens', function (): void {
     $drop = Drop::factory()->create(['opens_at' => CarbonImmutable::parse('2026-10-10 09:00', 'Australia/Melbourne')->utc()]);
     $broadcast = SmsBroadcast::factory()->create(['drop_id' => $drop->id]);
 
@@ -235,7 +237,7 @@ it('suggests sending when the drop opens', function () {
     expect($broadcast->refresh()->scheduled_for?->equalTo($drop->opens_at))->toBeTrue();
 });
 
-it('won’t schedule a time that has passed', function () {
+it('won’t schedule a time that has passed', function (): void {
     $broadcast = SmsBroadcast::factory()->create();
 
     livewire(ViewSmsBroadcast::class, ['record' => $broadcast->id])
@@ -243,7 +245,7 @@ it('won’t schedule a time that has passed', function () {
         ->assertHasActionErrors(['scheduled_for']);
 });
 
-it('asks before scheduling between 8pm and 8am', function () {
+it('asks before scheduling between 8pm and 8am', function (): void {
     $broadcast = SmsBroadcast::factory()->create();
 
     livewire(ViewSmsBroadcast::class, ['record' => $broadcast->id])
@@ -257,7 +259,7 @@ it('asks before scheduling between 8pm and 8am', function () {
     expect($broadcast->refresh()->status())->toBe(BroadcastStatus::Scheduled);
 });
 
-it('cancels a scheduled send', function () {
+it('cancels a scheduled send', function (): void {
     $broadcast = SmsBroadcast::factory()->scheduledFor(now()->addDay())->create();
 
     livewire(ViewSmsBroadcast::class, ['record' => $broadcast->id])
@@ -266,7 +268,7 @@ it('cancels a scheduled send', function () {
     expect($broadcast->refresh()->status())->toBe(BroadcastStatus::Draft);
 });
 
-it('can’t be changed or sent again once sending has started', function () {
+it('can’t be changed or sent again once sending has started', function (): void {
     $broadcast = SmsBroadcast::factory()->sent()->create();
 
     $this->get(SmsBroadcastResource::getUrl('edit', ['record' => $broadcast]))->assertForbidden();
@@ -278,7 +280,7 @@ it('can’t be changed or sent again once sending has started', function () {
         ->assertActionHidden('delete');
 });
 
-it('shows how the texts went and who got them', function () {
+it('shows how the texts went and who got them', function (): void {
     $broadcast = SmsBroadcast::factory()->sent()->create();
     $delivered = SmsMessage::factory()->count(2)->for($broadcast, 'broadcast')->create(['status' => SmsStatus::Delivered]);
     $failed = SmsMessage::factory()->for($broadcast, 'broadcast')->create(['status' => SmsStatus::Failed, 'error_code' => 21211]);
@@ -291,13 +293,13 @@ it('shows how the texts went and who got them', function () {
         ->assertCanSeeTableRecords([...$delivered, $failed]);
 });
 
-it('drafts an announcement for a drop, with its opening time and the order link', function () {
+it('drafts an announcement for a drop, with its opening time and the order link', function (): void {
     $drop = Drop::factory()->create(['opens_at' => CarbonImmutable::parse('2026-10-10 09:00', 'Australia/Melbourne')->utc()]);
 
     livewire(EditDrop::class, ['record' => $drop->id])
         ->callAction('announce');
 
-    $broadcast = SmsBroadcast::sole();
+    $broadcast = SmsBroadcast::query()->sole();
     expect($broadcast->body)->toBe('Our next beef drop opens Saturday 10 October at 9am. Order at fergusonlivestock.com.au/order')
         ->and($broadcast->drop_id)->toBe($drop->id)
         ->and($broadcast->status())->toBe(BroadcastStatus::Draft);

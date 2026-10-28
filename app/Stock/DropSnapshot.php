@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Stock;
 
 use App\Enums\OrderStatus;
@@ -78,7 +80,7 @@ final class DropSnapshot
     {
         $drop = Drop::announced();
 
-        return $drop === null ? null : ['opens_at' => $drop->opens_at->toIso8601ZuluString(), 'label' => $drop->announcedLabel()];
+        return $drop instanceof Drop ? ['opens_at' => $drop->opens_at->toIso8601ZuluString(), 'label' => $drop->announcedLabel()] : null;
     }
 
     /**

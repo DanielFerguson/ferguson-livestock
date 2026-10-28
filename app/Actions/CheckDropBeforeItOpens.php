@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Actions;
 
 use App\Models\Drop;
@@ -53,7 +55,7 @@ final readonly class CheckDropBeforeItOpens
             return;
         }
 
-        $admin = User::where('email', $email)->first();
+        $admin = User::query()->where('email', $email)->first();
 
         $admin !== null ? $admin->notify($notification) : Notification::route('mail', $email)->notify($notification);
     }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Actions\RunDropPreflight;
 use App\Models\Drop;
 use App\Models\DropItem;
@@ -32,12 +34,12 @@ function readyDrop(FakePaymentGateway $stripe): Drop
     return $drop;
 }
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->stripe = new FakePaymentGateway;
     app()->instance(PaymentGateway::class, $this->stripe);
 });
 
-it('passes a drop that is ready to open, and records when it checked', function () {
+it('passes a drop that is ready to open, and records when it checked', function (): void {
     $this->freezeSecond();
     $drop = readyDrop($this->stripe);
 
@@ -49,7 +51,7 @@ it('passes a drop that is ready to open, and records when it checked', function 
         ->and($drop->preflight_report['passed'] ?? null)->toBeTrue();
 });
 
-it('warns when Cloudflare’s bot check is off outside local development', function (string $missingKey) {
+it('warns when Cloudflare’s bot check is off outside local development', function (string $missingKey): void {
     $drop = readyDrop($this->stripe);
     config(["services.turnstile.{$missingKey}" => null]);
 
@@ -59,15 +61,15 @@ it('warns when Cloudflare’s bot check is off outside local development', funct
         ->and($report['problems'])->toBe(['Cloudflare’s bot check is off, so the order and wait-list forms accept anything. Set TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY in this environment.']);
 })->with(['site_key', 'secret_key']);
 
-it('doesn’t need the bot check when developing locally', function () {
+it('doesn’t need the bot check when developing locally', function (): void {
     $drop = readyDrop($this->stripe);
     config(['services.turnstile.site_key' => null, 'services.turnstile.secret_key' => null]);
-    $this->app->detectEnvironment(fn () => 'local');
+    $this->app->detectEnvironment(fn (): string => 'local');
 
     expect(app(RunDropPreflight::class)($drop)['passed'])->toBeTrue();
 });
 
-it('names the item when its Stripe price is wrong', function () {
+it('names the item when its Stripe price is wrong', function (): void {
     $drop = readyDrop($this->stripe);
     $this->stripe->addPrice('price_box', 15000);
 
@@ -77,7 +79,7 @@ it('names the item when its Stripe price is wrong', function () {
         ->and($report['problems'])->toContain('5kg Beef Box: Stripe charges $150 for this price, but the drop says $160.');
 });
 
-it('finds everything that would stop the drop working', function (Closure $breakIt, string $problem) {
+it('finds everything that would stop the drop working', function (Closure $breakIt, string $problem): void {
     $drop = readyDrop($this->stripe);
     $breakIt($drop, $this->stripe);
 
@@ -91,7 +93,7 @@ it('finds everything that would stop the drop working', function (Closure $break
     'webhook missing' => [fn (Drop $drop, FakePaymentGateway $stripe) => app()->instance(PaymentGateway::class, (new FakePaymentGateway)->addPrice('price_box', 16000)->addPrice('price_delivery', 1500)), 'Stripe isn’t set up to tell the site about payments. Add the webhook endpoint in Stripe.'],
 ]);
 
-it('looks for the webhook at this site’s own address, so staging checks its own endpoint', function () {
+it('looks for the webhook at this site’s own address, so staging checks its own endpoint', function (): void {
     config(['app.url' => 'https://staging.example.test', 'shop.url' => 'https://fergusonlivestock.com.au']);
     $drop = readyDrop($this->stripe);
     app()->instance(PaymentGateway::class, (new FakePaymentGateway)->addPrice('price_box', 16000)->addPrice('price_delivery', 1500)
@@ -101,7 +103,7 @@ it('looks for the webhook at this site’s own address, so staging checks its ow
         ->toBe(['Stripe isn’t set up to tell the site about payments. Add the webhook endpoint in Stripe.']);
 });
 
-it('names the webhook events Stripe isn’t sending', function () {
+it('names the webhook events Stripe isn’t sending', function (): void {
     $drop = readyDrop($this->stripe);
     $stripe = (new FakePaymentGateway)->addPrice('price_box', 16000)->addPrice('price_delivery', 1500)
         ->addWebhookEndpoint(config()->string('app.url').'/api/webhooks/stripe', ['checkout.session.completed']);
@@ -111,7 +113,7 @@ it('names the webhook events Stripe isn’t sending', function () {
         ->toContain('The Stripe webhook doesn’t send checkout.session.expired, checkout.session.async_payment_succeeded, checkout.session.async_payment_failed, charge.refunded.');
 });
 
-it('skips the webhook check locally, where stripe listen forwards events', function () {
+it('skips the webhook check locally, where stripe listen forwards events', function (): void {
     app()->detectEnvironment(fn (): string => 'local');
     $drop = readyDrop($this->stripe);
     app()->instance(PaymentGateway::class, (new FakePaymentGateway)->addPrice('price_box', 16000)->addPrice('price_delivery', 1500));
@@ -119,7 +121,7 @@ it('skips the webhook check locally, where stripe listen forwards events', funct
     expect(app(RunDropPreflight::class)($drop)['problems'])->toBe([]);
 });
 
-it('reports Stripe being unreachable instead of failing', function () {
+it('reports Stripe being unreachable instead of failing', function (): void {
     $drop = readyDrop($this->stripe);
     app()->instance(PaymentGateway::class, (new FakePaymentGateway)->goOffline('Connection timed out'));
 

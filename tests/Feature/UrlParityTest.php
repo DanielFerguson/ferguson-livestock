@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
 |--------------------------------------------------------------------------
 | URL parity
@@ -9,17 +11,17 @@
 |
 */
 
-it('keeps every page URL from the Astro site', function (string $path) {
+it('keeps every page URL from the Astro site', function (string $path): void {
     $this->get($path)->assertOk();
 })->with(['/', '/beef-boxes', '/contact', '/delivery', '/faq', '/our-story', '/privacy', '/thank-you', '/order']);
 
-it('sends the retired refunds page to the refunds section of the delivery page', function () {
+it('sends the retired refunds page to the refunds section of the delivery page', function (): void {
     $this->get('/delivery-and-refunds')->assertStatus(301)->assertRedirect('/delivery#refunds');
 });
 
 it('keeps the order confirmation URL')->todo('Arrives with checkout.');
 
-it('keeps the files crawlers and browsers ask for by name', function (string $file) {
+it('keeps the files crawlers and browsers ask for by name', function (string $file): void {
     expect(public_path($file))->toBeFile();
 })->with([
     'robots.txt',

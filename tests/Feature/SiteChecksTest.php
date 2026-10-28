@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Support\PublicPages;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -49,16 +51,16 @@ function trackingScripts(): array
 
 function renderedPage(TestCase $test, string $path): string
 {
-    return $test->get($path)->assertOk()->getContent() ?: '';
+    return (string) $test->get($path)->assertOk()->getContent();
 }
 
-dataset('pages', fn () => [...PublicPages::indexable(), ...PublicPages::noindex()]);
+dataset('pages', fn (): array => [...PublicPages::indexable(), ...PublicPages::noindex()]);
 
-it('declares Australian English once', function (string $path) {
+it('declares Australian English once', function (string $path): void {
     expect(substr_count(renderedPage($this, $path), '<html lang="en-AU">'))->toBe(1);
 })->with('pages');
 
-it('has exactly one title, description, canonical link and h1', function (string $path) {
+it('has exactly one title, description, canonical link and h1', function (string $path): void {
     $html = renderedPage($this, $path);
 
     expect(preg_match_all('/<title(\s[^>]*)?>/', $html))->toBe(1)
@@ -67,27 +69,27 @@ it('has exactly one title, description, canonical link and h1', function (string
         ->and(preg_match_all('/<h1(\s[^>]*)?>/', $html))->toBe(1);
 })->with('pages');
 
-it('canonicalises to the main address, without www', function (string $path) {
-    $expected = 'https://fergusonlivestock.com.au'.($path === '/' ? '/' : $path);
+it('canonicalises to the main address, without www', function (string $path): void {
+    $expected = 'https://fergusonlivestock.com.au'.($path);
 
     expect(renderedPage($this, $path))->toContain('<link rel="canonical" href="'.$expected.'">');
 })->with('pages');
 
-it('lets search engines index the public pages', function (string $path) {
+it('lets search engines index the public pages', function (string $path): void {
     expect(renderedPage($this, $path))->toContain('<meta name="robots" content="index, follow">');
-})->with(fn () => PublicPages::indexable());
+})->with(fn (): array => PublicPages::indexable());
 
-it('keeps transactional pages out of search results', function (string $path) {
+it('keeps transactional pages out of search results', function (string $path): void {
     expect(renderedPage($this, $path))->toContain('<meta name="robots" content="noindex, follow">');
-})->with(fn () => PublicPages::noindex());
+})->with(fn (): array => PublicPages::noindex());
 
-it('has no duplicate element ids', function (string $path) {
+it('has no duplicate element ids', function (string $path): void {
     preg_match_all('/\sid="([^"]+)"/', renderedPage($this, $path), $matches);
 
     expect(array_diff_assoc($matches[1], array_unique($matches[1])))->toBeEmpty();
 })->with('pages');
 
-it('gives every image alt text', function (string $path) {
+it('gives every image alt text', function (string $path): void {
     preg_match_all('/<img\b[^>]*>/', renderedPage($this, $path), $images);
 
     foreach ($images[0] as $image) {
@@ -95,7 +97,7 @@ it('gives every image alt text', function (string $path) {
     }
 })->with('pages');
 
-it('only contains valid structured data', function (string $path) {
+it('only contains valid structured data', function (string $path): void {
     preg_match_all('#<script type="application/ld\+json">(.*?)</script>#s', renderedPage($this, $path), $schemas);
 
     foreach ($schemas[1] as $schema) {
@@ -103,7 +105,7 @@ it('only contains valid structured data', function (string $path) {
     }
 })->with('pages');
 
-it('marks up the homepage business once and the FAQ only on /faq', function () {
+it('marks up the homepage business once and the FAQ only on /faq', function (): void {
     $home = renderedPage($this, '/');
 
     expect(substr_count($home, '"@type":"LocalBusiness"'))->toBe(1)
@@ -112,7 +114,7 @@ it('marks up the homepage business once and the FAQ only on /faq', function () {
         ->and(renderedPage($this, '/faq'))->toContain('"@type":"FAQPage"');
 });
 
-it('loads no tracking scripts', function (string $path) {
+it('loads no tracking scripts', function (string $path): void {
     $html = renderedPage($this, $path);
 
     foreach (trackingScripts() as $name => $pattern) {
@@ -120,7 +122,7 @@ it('loads no tracking scripts', function (string $path) {
     }
 })->with('pages');
 
-it('makes none of the retired or unapproved claims on any page', function (string $path) {
+it('makes none of the retired or unapproved claims on any page', function (string $path): void {
     $html = renderedPage($this, $path);
 
     foreach (forbiddenCopy() as $claim => $pattern) {
@@ -128,7 +130,7 @@ it('makes none of the retired or unapproved claims on any page', function (strin
     }
 })->with('pages');
 
-it('keeps retired claims out of the source too', function () {
+it('keeps retired claims out of the source too', function (): void {
     $files = collect([resource_path('views'), config_path(), app_path()])
         ->flatMap(fn (string $directory) => File::allFiles($directory));
 
@@ -139,22 +141,22 @@ it('keeps retired claims out of the source too', function () {
     }
 });
 
-it('links only to pages and sections that exist', function (string $path) {
+it('links only to pages and sections that exist', function (string $path): void {
     preg_match_all('/\shref="([^"]+)"/', renderedPage($this, $path), $matches);
 
     $appUrl = url('/');
 
     // Static files (icons, the manifest, built assets) are served by the web server and checked in UrlParityTest.
     $internal = collect($matches[1])
-        ->map(fn (string $href) => Str::startsWith($href, $appUrl) ? (Str::after($href, $appUrl) ?: '/') : $href)
-        ->filter(fn (string $href) => Str::startsWith($href, ['/', '#']) && ! Str::startsWith($href, '//'))
-        ->reject(fn (string $href) => (bool) pathinfo(Str::before(Str::before($href, '#'), '?'), PATHINFO_EXTENSION) && ! Str::endsWith(Str::before($href, '#'), '.xml'))
+        ->map(fn (string $href) => Str::startsWith($href, $appUrl) ? Str::of(Str::after($href, $appUrl))->whenEmpty(fn () => Str::of('/'))->toString() : $href)
+        ->filter(fn (string $href): bool => Str::startsWith($href, ['/', '#']) && ! Str::startsWith($href, '//'))
+        ->reject(fn (string $href): bool => (bool) pathinfo(Str::before(Str::before($href, '#'), '?'), PATHINFO_EXTENSION) && ! Str::endsWith(Str::before($href, '#'), '.xml'))
         ->unique();
 
     foreach ($internal as $href) {
-        $target = Str::before(Str::before($href, '#'), '?') ?: $path;
+        $target = Str::of(Str::before(Str::before($href, '#'), '?'))->whenEmpty(fn () => Str::of($path))->toString();
         $fragment = Str::contains($href, '#') ? Str::after($href, '#') : null;
-        $html = $this->get($target)->assertOk()->getContent() ?: '';
+        $html = (string) $this->get($target)->assertOk()->getContent();
 
         if ($fragment !== null) {
             expect(str_contains($html, 'id="'.$fragment.'"'))->toBeTrue("{$path} links to missing #{$fragment} on {$target}");
@@ -162,8 +164,8 @@ it('links only to pages and sections that exist', function (string $path) {
     }
 })->with('pages');
 
-it('shows a friendly 404 that search engines skip', function () {
-    $html = $this->get('/no-such-paddock')->assertNotFound()->getContent() ?: '';
+it('shows a friendly 404 that search engines skip', function (): void {
+    $html = (string) $this->get('/no-such-paddock')->assertNotFound()->getContent();
 
     expect($html)->toContain('<meta name="robots" content="noindex, follow">')
         ->toContain('This page has wandered off.')

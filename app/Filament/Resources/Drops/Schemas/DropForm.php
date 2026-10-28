@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\Drops\Schemas;
 
 use App\Enums\ProductType;
@@ -60,7 +62,7 @@ class DropForm
                         Toggle::make('announced_at')
                             ->label('Announce the date on the website')
                             ->helperText('Shows “Next drop: {date}” with a link to the wait list. The time, products and prices stay hidden until you publish.')
-                            ->visible(fn (Get $get): bool => ! $get('published_at'))
+                            ->visible(fn (Get $get): bool => ! (bool) $get('published_at'))
                             ->formatStateUsing(fn (mixed $state): bool => $state !== false && filled($state))
                             ->dehydrateStateUsing(fn (bool $state, ?Drop $record): ?CarbonImmutable => $state ? ($record->announced_at ?? now()) : null)
                             ->columnSpanFull(),
@@ -96,7 +98,7 @@ class DropForm
             ->schema([
                 Select::make('product_id')
                     ->label('Product')
-                    ->options(fn (): array => Product::orderBy('sort')->pluck('name', 'id')->all())
+                    ->options(fn (): array => Product::query()->orderBy('sort')->pluck('name', 'id')->all())
                     ->required()
                     ->distinct()
                     ->disableOptionsWhenSelectedInSiblingRepeaterItems()
@@ -137,7 +139,7 @@ class DropForm
                     ->visible(fn (Get $get): bool => self::product($get('product_id'))?->hasOwnStock() ?? false),
                 TextEntry::make('availability')
                     ->label('Left')
-                    ->state(fn (?DropItem $record): ?string => $record?->hasOwnStock()
+                    ->state(fn (?DropItem $record): ?string => $record instanceof DropItem && $record->hasOwnStock()
                         ? "{$record->available} of {$record->quantity} ({$record->committed()} held or sold)"
                         : null)
                     ->visible(fn (?DropItem $record): bool => $record?->hasOwnStock() ?? false)
@@ -175,7 +177,7 @@ class DropForm
         } catch (QuantityBelowCommitted $exception) {
             Notification::make()->title("{$product->name}: {$exception->getMessage()}")->danger()->send();
 
-            throw new Halt;
+            throw new Halt($exception->getMessage(), $exception->getCode(), $exception);
         }
 
         unset($data['quantity'], $data['available']);
@@ -200,6 +202,9 @@ class DropForm
         }
     }
 
+    /**
+     * @return Closure(string, mixed, Closure(string): mixed): void
+     */
     private static function stripePriceMatches(Get $get): Closure
     {
         return function (string $attribute, mixed $value, Closure $fail) use ($get): void {
@@ -221,10 +226,13 @@ class DropForm
         };
     }
 
+    /**
+     * @return Closure(string, mixed, Closure(string): mixed): void
+     */
     private static function noClashingDrop(Get $get, ?Drop $record): Closure
     {
         return function (string $attribute, mixed $value, Closure $fail) use ($get, $record): void {
-            if (! $get('published_at') || ! is_string($value) || $value === '') {
+            if (! (bool) $get('published_at') || ! is_string($value) || $value === '') {
                 return;
             }
 
@@ -237,7 +245,7 @@ class DropForm
                 $record?->id,
             );
 
-            if ($clash !== null) {
+            if ($clash instanceof Drop) {
                 $opens = $clash->opens_at->setTimezone($timezone)->format('g:ia D j M');
                 $fail("This overlaps “{$clash->name}”, which opens at {$opens}. Only one drop can be open at a time.");
             }
@@ -270,7 +278,7 @@ class DropForm
 
         $stockProduct = self::product($product->stock_product_id);
 
-        return $stockProduct === null ? null : "Packed from the {$stockProduct->name} stock, {$product->stock_units} per box.";
+        return $stockProduct instanceof Product ? "Packed from the {$stockProduct->name} stock, {$product->stock_units} per box." : null;
     }
 
     private static function product(mixed $id): ?Product
@@ -283,7 +291,7 @@ class DropForm
      */
     private static function findProduct(int $id): ?Product
     {
-        return once(fn (): ?Product => Product::find($id));
+        return once(fn (): ?Product => Product::query()->find($id));
     }
 
     private static function dollars(int $cents): string

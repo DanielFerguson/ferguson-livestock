@@ -1,6 +1,9 @@
 includes:
     - vendor/larastan/larastan/extension.neon
     - vendor/pestphp/pest-plugin-phpstan/extension.neon
+    - vendor/phpstan/phpstan/conf/bleedingEdge.neon
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
+    - vendor/phpstan/phpstan-deprecation-rules/rules.neon
 
 parameters:
     level: max
@@ -10,3 +13,12 @@ parameters:
         - database
         - routes
         - tests
+    checkMissingCallableSignature: true
+    checkUninitializedProperties: true
+    checkTooWideReturnTypesInProtectedAndPublicMethods: true
+    reportUnmatchedIgnoredErrors: true
+    treatPhpDocTypesAsCertain: false
+    strictRules:
+        # Eloquent builders and Livewire's test chains forward calls to static-looking methods, which this rule
+        # flags on nearly every query and every test. Every other strict rule stays on.
+        dynamicCallOnStaticMethod: false

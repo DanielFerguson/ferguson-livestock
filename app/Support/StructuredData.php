@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Support;
 
 use Illuminate\Support\Facades\Vite;
@@ -145,7 +147,7 @@ final class StructuredData
         return [
             '@context' => 'https://schema.org',
             '@type' => 'FAQPage',
-            'mainEntity' => array_map(fn (array $faq) => [
+            'mainEntity' => array_map(fn (array $faq): array => [
                 '@type' => 'Question',
                 'name' => $faq['question'],
                 'acceptedAnswer' => ['@type' => 'Answer', 'text' => $faq['answer']],

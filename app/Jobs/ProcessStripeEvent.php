@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Jobs;
 
 use App\Checkout\HandleStripeEvent;
@@ -31,7 +33,7 @@ class ProcessStripeEvent implements ShouldBeUnique, ShouldQueue
 
     public function handle(HandleStripeEvent $handle): void
     {
-        $event = StripeEvent::find($this->eventId);
+        $event = StripeEvent::query()->find($this->eventId);
 
         if ($event === null || $event->processed_at !== null) {
             return;

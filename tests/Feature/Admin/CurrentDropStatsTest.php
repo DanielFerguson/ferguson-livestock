@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Checkout\OrderPayments;
 use App\Enums\DeliveryMethod;
 use App\Filament\Widgets\CurrentDropStats;
@@ -11,7 +13,7 @@ use Tests\Fixtures\StockedDrop;
 
 use function Pest\Livewire\livewire;
 
-it('shows what’s sold, at checkout and left of each item in the current drop', function () {
+it('shows what’s sold, at checkout and left of each item in the current drop', function (): void {
     Mail::fake();
     config(['shop.admin_email' => 'daniel@example.com']);
     $this->actingAs(User::factory()->withAppAuthentication()->create(['email' => 'daniel@example.com']));
@@ -31,7 +33,7 @@ it('shows what’s sold, at checkout and left of each item in the current drop',
         ->assertTableColumnStateSet('revenue', '$24', $shop->mince);
 });
 
-it('points to creating a drop when there is no current drop', function () {
+it('points to creating a drop when there is no current drop', function (): void {
     config(['shop.admin_email' => 'daniel@example.com']);
     $this->actingAs(User::factory()->withAppAuthentication()->create(['email' => 'daniel@example.com']));
 
@@ -40,7 +42,7 @@ it('points to creating a drop when there is no current drop', function () {
         ->assertSee('Create a drop');
 });
 
-it('does not offer to create a drop while one is current', function () {
+it('does not offer to create a drop while one is current', function (): void {
     config(['shop.admin_email' => 'daniel@example.com']);
     $this->actingAs(User::factory()->withAppAuthentication()->create(['email' => 'daniel@example.com']));
     $shop = StockedDrop::create(boxes: 5, mince: 10);

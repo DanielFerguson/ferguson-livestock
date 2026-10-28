@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Seeders;
 
 use App\Models\Drop;
@@ -14,14 +16,14 @@ class DemoDropSeeder extends Seeder
 {
     public function run(): void
     {
-        $drop = Drop::create([
+        $drop = Drop::query()->create([
             'name' => 'Demo drop',
             'opens_at' => now()->subHour(),
             'published_at' => now(),
             'delivery_days' => [now()->next('Saturday')->toDateString()],
         ]);
 
-        foreach (Product::orderBy('sort')->get() as $product) {
+        foreach (Product::query()->orderBy('sort')->get() as $product) {
             $drop->items()->create([
                 'product_id' => $product->id,
                 'price' => config()->integer("catalogue.products.{$product->slug}.price"),

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Factories;
 
 use App\Enums\SmsDirection;
@@ -25,7 +27,7 @@ class SmsMessageFactory extends Factory
             'subscriber_id' => Subscriber::factory(),
             'sms_broadcast_id' => SmsBroadcast::factory()->sent(),
             'direction' => SmsDirection::Outbound,
-            'to' => fn (array $attributes): string => (is_int($attributes['subscriber_id']) ? Subscriber::find($attributes['subscriber_id'])?->phone : null) ?? '+614'.fake()->unique()->numerify('########'),
+            'to' => fn (array $attributes): string => (is_int($attributes['subscriber_id']) ? Subscriber::query()->find($attributes['subscriber_id'])?->phone : null) ?? '+614'.fake()->unique()->numerify('########'),
             'from' => '+61400000000',
             'body' => "Ferguson Livestock: Our next beef drop opens Saturday at 9am.\nReply STOP to opt out",
             'status' => SmsStatus::Sent,
@@ -40,11 +42,11 @@ class SmsMessageFactory extends Factory
      */
     public function reply(string $body = 'Thanks!'): static
     {
-        return $this->state(fn () => [
+        return $this->state(fn (): array => [
             'sms_broadcast_id' => null,
             'direction' => SmsDirection::Inbound,
             'to' => '+61400000000',
-            'from' => fn (array $attributes): string => (is_int($attributes['subscriber_id']) ? Subscriber::find($attributes['subscriber_id'])?->phone : null) ?? '+614'.fake()->numerify('########'),
+            'from' => fn (array $attributes): string => (is_int($attributes['subscriber_id']) ? Subscriber::query()->find($attributes['subscriber_id'])?->phone : null) ?? '+614'.fake()->numerify('########'),
             'body' => $body,
             'status' => SmsStatus::Received,
             'segments' => 1,
