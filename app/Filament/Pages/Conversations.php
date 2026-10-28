@@ -3,8 +3,10 @@
 namespace App\Filament\Pages;
 
 use App\Actions\SendReply;
+use App\Enums\ConversationFilter;
 use App\Enums\SmsStatus;
 use App\Exceptions\CannotReply;
+use App\Models\ConversationState;
 use App\Models\SmsMessage;
 use App\Models\Subscriber;
 use App\Sms\BroadcastPreview;
@@ -39,11 +41,14 @@ class Conversations extends Page
 
     public string $search = '';
 
+    #[Url]
+    public string $filter = 'all';
+
     public string $draft = '';
 
     public static function getNavigationBadge(): ?string
     {
-        $unread = ConversationList::unreadCount();
+        $unread = ConversationList::attentionCount();
 
         return $unread > 0 ? (string) $unread : null;
     }
@@ -96,11 +101,65 @@ class Conversations extends Page
     }
 
     /**
-     * @return Collection<int, array{phone: string, name: ?string, last: SmsMessage, unread: int, optedOut: bool}>
+     * Flag the open conversation to come back to. It counts as unread until it's ticked off as done.
+     */
+    public function followUp(): void
+    {
+        if ($this->phone !== null) {
+            ConversationState::followUp($this->phone);
+        }
+    }
+
+    public function clearFollowUp(): void
+    {
+        if ($this->phone !== null) {
+            ConversationState::clearFollowUp($this->phone);
+        }
+    }
+
+    /**
+     * Tick the open conversation off. A new text from them reopens it.
+     */
+    public function done(): void
+    {
+        if ($this->phone !== null) {
+            ConversationState::markDone($this->phone);
+            ConversationList::markRead($this->phone);
+        }
+    }
+
+    /**
+     * @return Collection<int, array{phone: string, name: ?string, last: SmsMessage, unread: int, optedOut: bool, followUp: bool, needsReply: bool, attention: bool}>
      */
     public function conversations(): Collection
     {
-        return ConversationList::summaries($this->search);
+        return ConversationList::summaries($this->search, ConversationFilter::tryFrom($this->filter) ?? ConversationFilter::All);
+    }
+
+    /**
+     * The filter choices, each with how many conversations it would show.
+     *
+     * @return array<string, string>
+     */
+    public function filterOptions(): array
+    {
+        $counts = ConversationList::counts($this->search);
+
+        return collect(ConversationFilter::cases())
+            ->mapWithKeys(fn (ConversationFilter $filter): array => [$filter->value => "{$filter->getLabel()} ({$counts[$filter->value]})"])
+            ->all();
+    }
+
+    /**
+     * Where the open conversation stands: flagged, waiting for a reply, or neither.
+     *
+     * @return array{followUp: bool, needsReply: bool, attention: bool}|null
+     */
+    public function standing(): ?array
+    {
+        $summary = $this->phone === null ? null : ConversationList::summary($this->phone);
+
+        return $summary === null ? null : ['followUp' => $summary['followUp'], 'needsReply' => $summary['needsReply'], 'attention' => $summary['attention']];
     }
 
     /**

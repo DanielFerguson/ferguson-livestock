@@ -13,7 +13,12 @@
     <style>
         .chat { display: grid; grid-template-columns: minmax(0, 20rem) minmax(0, 1fr); gap: 1rem; align-items: start; }
         .chat-list, .chat-thread { border: 1px solid rgb(0 0 0 / 0.1); border-radius: 0.75rem; background: white; }
-        .chat-list-search { padding: 0.75rem; border-bottom: 1px solid rgb(0 0 0 / 0.08); }
+        .chat-list-search { display: flex; gap: 0.5rem; padding: 0.75rem; border-bottom: 1px solid rgb(0 0 0 / 0.08); }
+        .chat-search-box { flex: 1 1 auto; min-width: 0; }
+        .chat-filter-box { flex: none; width: 9.5rem; }
+        .chat-flag { flex: none; color: rgb(180 83 9); font-size: 0.75rem; font-weight: 400; }
+        .chat-head-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; }
+        .chat-head-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
         .chat-person { display: block; width: 100%; text-align: left; padding: 0.75rem 1rem; border: 0; border-bottom: 1px solid rgb(0 0 0 / 0.06); background: transparent; cursor: pointer; }
         .chat-person:hover, .chat-person-open { background: rgb(0 0 0 / 0.04); }
         .chat-person-top { display: flex; justify-content: space-between; gap: 0.5rem; font-weight: 600; }
@@ -40,8 +45,15 @@
     <div class="chat" wire:poll.10s="refreshOpen">
         <div class="chat-list">
             <div class="chat-list-search">
-                <x-filament::input.wrapper>
-                    <x-filament::input type="search" wire:model.live.debounce.400ms="search" placeholder="Search by name or number" />
+                <x-filament::input.wrapper class="chat-search-box">
+                    <x-filament::input type="search" wire:model.live.debounce.400ms="search" placeholder="Search" />
+                </x-filament::input.wrapper>
+                <x-filament::input.wrapper class="chat-filter-box">
+                    <x-filament::input.select wire:model.live="filter" aria-label="Show">
+                        @foreach ($this->filterOptions() as $value => $label)
+                            <option value="{{ $value }}">{{ $label }}</option>
+                        @endforeach
+                    </x-filament::input.select>
                 </x-filament::input.wrapper>
             </div>
 
@@ -51,6 +63,10 @@
                         <span>{{ $conversation['name'] ?? AustralianMobile::format($conversation['phone']) }}</span>
                         @if ($conversation['unread'] > 0)
                             <span class="chat-dot">{{ $conversation['unread'] }}</span>
+                        @elseif ($conversation['followUp'])
+                            <span class="chat-flag">Come back to</span>
+                        @elseif ($conversation['needsReply'])
+                            <span class="chat-flag">Needs reply</span>
                         @elseif ($conversation['optedOut'])
                             <span class="chat-tag">Opted out</span>
                         @endif
@@ -58,7 +74,7 @@
                     <span class="chat-person-last">{{ $conversation['last']->direction === SmsDirection::Outbound ? 'You: ' : '' }}{{ $conversation['last']->body }}</span>
                 </button>
             @empty
-                <p class="chat-empty">{{ $search === '' ? 'Nobody has texted yet. Replies to your broadcasts show up here.' : 'No conversations match that.' }}</p>
+                <p class="chat-empty">{{ $search === '' && $filter === 'all' ? 'Nobody has texted yet. Replies to your broadcasts show up here.' : 'No conversations match that.' }}</p>
             @endforelse
         </div>
 
@@ -67,14 +83,30 @@
                 <p class="chat-empty">Choose a conversation to read it and answer.</p>
             @else
                 @php($messages = $this->thread($phone))
+                @php($standing = $this->standing())
                 <div class="chat-head">
-                    {{ $this->subscriber()?->first_name ?? AustralianMobile::format($phone) }}
-                    @if ($optedOut) <span class="chat-tag">Opted out</span> @endif
-                    @if ($this->subscriber()?->first_name !== null)
-                        <small>{{ AustralianMobile::format($phone) }}</small>
-                    @endif
+                    <div class="chat-head-top">
+                        <div>
+                            {{ $this->subscriber()?->first_name ?? AustralianMobile::format($phone) }}
+                            @if ($optedOut) <span class="chat-tag">Opted out</span> @endif
+                            @if ($this->subscriber()?->first_name !== null)
+                                <small>{{ AustralianMobile::format($phone) }}</small>
+                            @endif
+                        </div>
+                        <div class="chat-head-actions">
+                            @if ($standing['followUp'] ?? false)
+                                <x-filament::button size="sm" color="gray" wire:click="clearFollowUp">Clear flag</x-filament::button>
+                            @else
+                                <x-filament::button size="sm" color="gray" icon="heroicon-o-flag" wire:click="followUp">Come back to</x-filament::button>
+                            @endif
+                            @if ($standing['attention'] ?? false)
+                                <x-filament::button size="sm" icon="heroicon-o-check" wire:click="done">Done</x-filament::button>
+                            @endif
+                        </div>
+                    </div>
                 </div>
 
+                @php($messages = $this->thread($phone))
                 <div class="chat-messages" wire:key="thread-{{ $phone }}-{{ $messages->count() }}" x-data x-init="$nextTick(() => $el.scrollTop = $el.scrollHeight)">
                     @foreach ($messages as $message)
                         @php($inbound = $message->direction === SmsDirection::Inbound)
