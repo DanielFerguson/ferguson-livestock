@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\SmsBroadcasts\Actions;
 
-use App\Actions\StartBroadcast;
+use App\Actions\Broadcasts\ScheduleBroadcast;
+use App\Actions\Broadcasts\SendBroadcastNow;
+use App\Actions\Broadcasts\SendBroadcastTest;
+use App\Actions\Broadcasts\UnscheduleBroadcast;
 use App\Enums\BroadcastStatus;
-use App\Exceptions\SmsNotSent;
+use App\Exceptions\CannotChangeBroadcast;
 use App\Filament\Forms\LocalDateTimePicker;
 use App\Models\SmsBroadcast;
 use App\Sms\BroadcastPreview;
 use App\Sms\QuietHours;
-use App\Sms\SmsGateway;
 use App\Support\AustralianMobile;
 use Carbon\CarbonImmutable;
 use Closure;
+use DateTimeInterface;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
 use Filament\Notifications\Notification;
@@ -34,23 +37,11 @@ final class BroadcastActions
             ->icon(Heroicon::OutlinedDevicePhoneMobile)
             ->color('gray')
             ->visible(fn (SmsBroadcast $record): bool => $record->status()->isEditable())
-            ->action(function (SmsBroadcast $record, SmsGateway $sms): void {
-                $phone = config('shop.admin_phone');
-
-                if (! is_string($phone) || $phone === '') {
-                    Notification::make()
-                        ->title('Add your mobile number first')
-                        ->body('Set SHOP_ADMIN_PHONE to your mobile, like +61412345678, to get test texts.')
-                        ->warning()
-                        ->send();
-
-                    return;
-                }
-
+            ->action(function (SmsBroadcast $record, SendBroadcastTest $test): void {
                 try {
-                    $sms->send($phone, $record->text()->text);
-                } catch (SmsNotSent $exception) {
-                    Notification::make()->title('The test didn’t send')->body($exception->getMessage())->danger()->send();
+                    $phone = $test($record);
+                } catch (CannotChangeBroadcast $exception) {
+                    Notification::make()->title($exception->title)->body($exception->getMessage())->warning()->send();
 
                     return;
                 }
@@ -70,18 +61,16 @@ final class BroadcastActions
             ->modalDescription(fn (SmsBroadcast $record): string => BroadcastPreview::of($record)->confirmation())
             ->modalSubmitActionLabel('Send')
             ->schema(fn (): array => QuietHours::contains(now()) ? [self::quietHoursCheckbox()] : [])
-            ->action(function (SmsBroadcast $record): void {
-                if ($record->recipients()->doesntExist()) {
-                    Notification::make()->title('Nobody to send to')->body('No one subscribed matches this audience.')->warning()->send();
+            ->action(function (SmsBroadcast $record, array $data): void {
+                try {
+                    $queued = app(SendBroadcastNow::class)($record, (bool) ($data['send_during_quiet_hours'] ?? false));
+                } catch (CannotChangeBroadcast $exception) {
+                    Notification::make()->title($exception->title)->body($exception->getMessage())->warning()->send();
 
                     return;
                 }
 
-                $queued = app(StartBroadcast::class)($record);
-
-                $queued === null
-                    ? Notification::make()->title('This broadcast had already started sending')->warning()->send()
-                    : Notification::make()->title('Sending to '.Number::format($queued).' '.str('subscriber')->plural($queued))->success()->send();
+                Notification::make()->title('Sending to '.Number::format($queued).' '.str('subscriber')->plural($queued))->success()->send();
             });
     }
 
@@ -105,7 +94,15 @@ final class BroadcastActions
                     ->visible(fn (Get $get): bool => self::isQuietTime($get('scheduled_for'))),
             ])
             ->action(function (SmsBroadcast $record, array $data): void {
-                $record->update(['scheduled_for' => $data['scheduled_for']]);
+                $at = CarbonImmutable::parse(is_string($data['scheduled_for']) || $data['scheduled_for'] instanceof DateTimeInterface ? $data['scheduled_for'] : 'now', 'UTC');
+
+                try {
+                    app(ScheduleBroadcast::class)($record, $at, (bool) ($data['send_during_quiet_hours'] ?? false));
+                } catch (CannotChangeBroadcast $exception) {
+                    Notification::make()->title($exception->title)->body($exception->getMessage())->warning()->send();
+
+                    return;
+                }
 
                 Notification::make()
                     ->title('Scheduled for '.$record->scheduled_for?->setTimezone(QuietHours::TIMEZONE)->format('D j M, g:ia'))
@@ -125,7 +122,7 @@ final class BroadcastActions
             ->modalHeading('Cancel the scheduled send?')
             ->modalDescription('It goes back to being a draft. Nothing is sent.')
             ->action(function (SmsBroadcast $record): void {
-                $record->update(['scheduled_for' => null]);
+                app(UnscheduleBroadcast::class)($record);
 
                 Notification::make()->title('Back to a draft')->success()->send();
             });

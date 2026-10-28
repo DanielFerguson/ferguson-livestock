@@ -170,6 +170,22 @@ class Drop extends Model
     }
 
     /**
+     * Why this drop can't be deleted, or null when it can: only a drop that hasn't opened, with nothing held or sold.
+     */
+    public function whyItCantBeDeleted(): ?string
+    {
+        if (! in_array($this->status(), [DropStatus::Draft, DropStatus::Announced, DropStatus::Scheduled], true)) {
+            return 'Only a drop that has not opened yet can be deleted. Close it instead.';
+        }
+
+        if ($this->items->contains(fn (DropItem $item): bool => $item->committed() > 0) || $this->orders()->exists()) {
+            return 'Customers have orders on this drop, so it has to stay.';
+        }
+
+        return null;
+    }
+
+    /**
      * Stop orders now. Customers already in checkout can still pay for what they're holding.
      */
     public function closeNow(): void

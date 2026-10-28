@@ -88,6 +88,23 @@ class DropItem extends Model
     }
 
     /**
+     * Why this item can't be taken off its drop, or null when it can: not while customers hold or have bought it,
+     * and not once it's on any order, since orders keep their lines.
+     */
+    public function whyItCantBeRemoved(): ?string
+    {
+        if ($this->committed() > 0) {
+            return "{$this->committed()} units are held or sold. Set its stock to that number instead.";
+        }
+
+        if ($this->orderItems()->exists()) {
+            return 'It’s on past orders, so it stays on this drop. To stop selling it, set its stock to 0.';
+        }
+
+        return null;
+    }
+
+    /**
      * Change the quantity, moving `available` by the same difference in one conditional update.
      *
      * @throws QuantityBelowCommitted when fewer units than customers already hold or bought.
