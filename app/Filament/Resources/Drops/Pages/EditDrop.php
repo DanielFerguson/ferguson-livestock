@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Drops\Pages;
 
-use App\Enums\DropStatus;
 use App\Filament\Resources\Drops\Actions\DropActions;
 use App\Filament\Resources\Drops\DropResource;
 use App\Models\Drop;
@@ -28,9 +27,7 @@ class EditDrop extends EditRecord
             DropActions::duplicate(),
             DropActions::closeNow(),
             DeleteAction::make()
-                ->visible(fn (Drop $record): bool => in_array($record->status(), [DropStatus::Draft, DropStatus::Announced, DropStatus::Scheduled], true)
-                    && $record->items->every(fn (DropItem $item): bool => $item->committed() === 0)
-                    && ! $record->orders()->exists()),
+                ->visible(fn (Drop $record): bool => $record->whyItCantBeDeleted() === null),
         ];
     }
 
@@ -48,14 +45,12 @@ class EditDrop extends EditRecord
 
         $removed = $this->record->items()->with('product')->get()->reject(fn (DropItem $item): bool => $kept->contains($item->id));
 
-        $blocked = $removed->first(fn (DropItem $item): bool => $item->committed() > 0 || $item->orderItems()->exists());
+        $blocked = $removed->first(fn (DropItem $item): bool => $item->whyItCantBeRemoved() !== null);
 
         if ($blocked !== null) {
             Notification::make()
                 ->title("{$blocked->product->name} can’t be removed")
-                ->body($blocked->committed() > 0
-                    ? "{$blocked->committed()} units are held or sold. Set its stock to that number instead."
-                    : 'It’s on past orders, so it stays on this drop. To stop selling it, set its stock to 0.')
+                ->body($blocked->whyItCantBeRemoved())
                 ->danger()
                 ->send();
 

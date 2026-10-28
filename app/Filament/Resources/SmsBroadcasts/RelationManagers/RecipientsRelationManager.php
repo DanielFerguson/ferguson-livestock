@@ -6,6 +6,7 @@ namespace App\Filament\Resources\SmsBroadcasts\RelationManagers;
 
 use App\Enums\SmsStatus;
 use App\Models\SmsBroadcast;
+use App\Sms\TwilioErrors;
 use App\Support\AustralianMobile;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
@@ -21,20 +22,6 @@ class RecipientsRelationManager extends RelationManager
     protected static string $relationship = 'messages';
 
     protected static ?string $title = 'Recipients';
-
-    /**
-     * Twilio's error codes that come up with Australian mobiles, in plain English.
-     */
-    private const array ERRORS = [
-        21211 => 'Not a valid number',
-        21610 => 'They replied STOP to Twilio',
-        21614 => 'Not a mobile number',
-        30003 => 'Phone off or out of range',
-        30005 => 'Number no longer in use',
-        30006 => 'Can’t receive texts',
-        30007 => 'Blocked by their phone company as spam',
-        30008 => 'Unknown problem at their phone company',
-    ];
 
     public static function canViewForRecord(Model $ownerRecord, string $pageClass): bool
     {
@@ -58,7 +45,7 @@ class RecipientsRelationManager extends RelationManager
                 TextColumn::make('status')->badge(),
                 TextColumn::make('error_code')
                     ->label('Why')
-                    ->formatStateUsing(fn (int $state): string => self::ERRORS[$state] ?? "Twilio error {$state}")
+                    ->formatStateUsing(fn (int $state): string => TwilioErrors::explain($state) ?? '')
                     ->placeholder(''),
                 TextColumn::make('sent_at')->dateTime('g:ia', $timezone)->placeholder('—'),
                 TextColumn::make('delivered_at')->dateTime('g:ia', $timezone)->placeholder('—'),

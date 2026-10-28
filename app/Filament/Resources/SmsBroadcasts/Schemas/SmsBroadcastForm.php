@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\SmsBroadcasts\Schemas;
 
+use App\Actions\Broadcasts\SaveBroadcast;
 use App\Models\Drop;
 use App\Models\SmsBroadcast;
 use App\Models\Subscriber;
@@ -97,21 +98,7 @@ class SmsBroadcastForm
      */
     public static function withAudience(array $data): array
     {
-        $audience = is_array($data['audience'] ?? null) ? $data['audience'] : [];
-
-        $postcodes = array_filter(
-            is_array($audience['postcodes'] ?? null) ? $audience['postcodes'] : [],
-            fn (mixed $postcode): bool => is_string($postcode) || is_int($postcode),
-        );
-        $subscribers = array_filter(
-            is_array($audience['subscribers'] ?? null) ? $audience['subscribers'] : [],
-            fn (mixed $id): bool => is_int($id) || (is_string($id) && ctype_digit($id)),
-        );
-
-        return [...$data, 'audience' => [
-            'postcodes' => array_values(array_map(strval(...), $postcodes)),
-            'subscribers' => array_values(array_map(intval(...), $subscribers)),
-        ]];
+        return [...$data, 'audience' => SaveBroadcast::audience(is_array($data['audience'] ?? null) ? $data['audience'] : [])];
     }
 
     /**

@@ -9,6 +9,7 @@ use App\Filament\Resources\Drops\DropResource;
 use App\Filament\Resources\SmsBroadcasts\SmsBroadcastResource;
 use App\Models\Drop;
 use App\Models\SmsBroadcast;
+use App\Sms\DropAnnouncement;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
@@ -65,7 +66,7 @@ final class DropActions
             ->color('gray')
             ->action(function (Drop $record): void {
                 $broadcast = SmsBroadcast::query()->create([
-                    'body' => self::announcement($record),
+                    'body' => DropAnnouncement::bodyFor($record),
                     'drop_id' => $record->id,
                     'created_by' => auth()->id(),
                 ]);
@@ -98,17 +99,5 @@ final class DropActions
 
                 $notification->send();
             });
-    }
-
-    /**
-     * "Our next beef drop opens Saturday 10 October at 9am. Order at fergusonlivestock.com.au/order"
-     */
-    private static function announcement(Drop $drop): string
-    {
-        $opensAt = $drop->opens_at->setTimezone(config()->string('shop.timezone'));
-        $time = $opensAt->minute === 0 ? $opensAt->format('ga') : $opensAt->format('g:ia');
-        $site = preg_replace('#^https?://(www\.)?#', '', rtrim(config()->string('shop.url'), '/'));
-
-        return "Our next beef drop opens {$opensAt->format('l j F')} at {$time}. Order at {$site}".route('order', absolute: false);
     }
 }

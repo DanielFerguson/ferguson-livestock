@@ -64,6 +64,20 @@ final readonly class SendReply
     }
 
     /**
+     * Why a reply to this number can't go out, or null when it can. Nothing is sent or stored.
+     */
+    public function blocker(string $phone, string $body): ?CannotReply
+    {
+        try {
+            $this->guard($phone, SmsText::tidy($body), Subscriber::query()->firstWhere('phone', $phone));
+        } catch (CannotReply $exception) {
+            return $exception;
+        }
+
+        return null;
+    }
+
+    /**
      * @throws CannotReply
      */
     private function guard(string $phone, string $text, ?Subscriber $subscriber): void
