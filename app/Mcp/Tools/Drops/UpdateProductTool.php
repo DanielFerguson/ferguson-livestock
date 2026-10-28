@@ -18,7 +18,7 @@ use Laravel\Mcp\Server\Tool;
 use Laravel\Mcp\Server\Tools\Annotations\IsDestructive;
 use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
 
-#[Description('Edit a catalogue product\'s name, description, sort order, box details or stock source. Only the fields you pass change. Slug and type cannot be changed.')]
+#[Description('Edit a catalogue product\'s name, description, sort order, box details, or what it is a bundle of. Only the fields you pass change. Slug and type cannot be changed.')]
 #[IsDestructive(false)]
 #[IsIdempotent]
 final class UpdateProductTool extends Tool
@@ -35,8 +35,9 @@ final class UpdateProductTool extends Tool
             'box_freezer_guidance' => ['nullable', 'string', 'max:300'],
             'box_contents' => ['nullable', 'array', 'max:30'],
             'box_contents.*' => ['string', 'max:100'],
-            'stock_product_id' => ['nullable', 'integer'],
-            'stock_units' => ['nullable', 'integer', 'min:1'],
+            'bundle_of_product_id' => ['nullable', 'integer'],
+            'bundle_units' => ['nullable', 'integer', 'min:1'],
+            'remove_bundle' => ['nullable', 'boolean'],
         ]);
 
         $product = Product::query()->find($arguments->requireInteger('product_id'));
@@ -54,16 +55,21 @@ final class UpdateProductTool extends Tool
         $name = $arguments->string('name');
         $description = $arguments->string('description');
         $sort = $arguments->integer('sort');
-        $stockProductId = $arguments->integer('stock_product_id');
-        $stockUnits = $arguments->integer('stock_units');
+        $bundleOf = $arguments->integer('bundle_of_product_id') === null ? null : Product::query()->find($arguments->integer('bundle_of_product_id'));
+        $bundleUnits = $arguments->integer('bundle_units');
+        $removeBundle = $arguments->boolean('remove_bundle');
 
-        if ([$name, $description, $sort, $stockProductId, $stockUnits] === [null, null, null, null, null] && $details === []) {
+        if ($arguments->integer('bundle_of_product_id') !== null && ! $bundleOf instanceof Product) {
+            return Response::error('There is no product with that bundle_of_product_id. Use list-products.');
+        }
+
+        if ([$name, $description, $sort, $bundleOf, $bundleUnits] === [null, null, null, null, null] && $details === [] && ! $removeBundle) {
             return Response::error('Nothing to change.');
         }
 
         return Changes::run('update-product', $request->all(), fn (): ResponseFactory => Response::structured([
             'updated' => true,
-            'product_id' => $save($product, name: $name, description: $description, sort: $sort, boxDetails: $details === [] ? null : $details, stockProductId: $stockProductId, stockUnits: $stockUnits)->id,
+            'product_id' => $save($product, name: $name, description: $description, sort: $sort, boxDetails: $details === [] ? null : $details, bundleOf: $bundleOf, bundleUnits: $bundleUnits, removeBundle: $removeBundle)->id,
         ]));
     }
 
@@ -81,8 +87,9 @@ final class UpdateProductTool extends Tool
             'box_best_for' => $schema->string()->description('Boxes only: who it suits.'),
             'box_freezer_guidance' => $schema->string()->description('Boxes only.'),
             'box_contents' => $schema->array()->items($schema->string())->description('Boxes only: what is in it.'),
-            'stock_product_id' => $schema->integer()->description('Boxes only: borrow stock from this other box (e.g. the 10kg box from the 5kg box).'),
-            'stock_units' => $schema->integer()->description('Units of that stock each one uses.'),
+            'bundle_of_product_id' => $schema->integer()->description('Make this a bundle of that product (or change which one).'),
+            'bundle_units' => $schema->integer()->description('How many of the component each one uses.'),
+            'remove_bundle' => $schema->boolean()->description('Stop this being a bundle so it has stock of its own. Not allowed while it is on a drop.'),
         ];
     }
 }

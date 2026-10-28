@@ -8,6 +8,7 @@ use App\Actions\Products\SaveProduct;
 use App\Enums\ProductType;
 use App\Mcp\Support\Arguments;
 use App\Mcp\Support\Changes;
+use App\Models\Product;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
 use Illuminate\Validation\Rule;
@@ -18,7 +19,7 @@ use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Tool;
 use Laravel\Mcp\Server\Tools\Annotations\IsDestructive;
 
-#[Description('Add a new product to the catalogue (a box, an extra or the delivery fee). Its slug and type can never change afterwards. Boxes need weight, best_for, freezer guidance and contents. A product only sells once it is added to a drop with set-drop-item.')]
+#[Description('Add a new product to the catalogue (a box, an extra or the delivery fee). Its slug and type can never change afterwards. Boxes need weight, best_for, freezer guidance and contents. A bundle (e.g. a 5kg mince pack made of ten 500g packs) is created with bundle_of_product_id and bundle_units. A product only sells once it is added to a drop with set-drop-item.')]
 #[IsDestructive(false)]
 final class CreateProductTool extends Tool
 {
@@ -35,8 +36,8 @@ final class CreateProductTool extends Tool
             'box_freezer_guidance' => ['nullable', 'string', 'max:300'],
             'box_contents' => ['nullable', 'array', 'max:30'],
             'box_contents.*' => ['string', 'max:100'],
-            'stock_product_id' => ['nullable', 'integer'],
-            'stock_units' => ['nullable', 'integer', 'min:1'],
+            'bundle_of_product_id' => ['nullable', 'integer'],
+            'bundle_units' => ['nullable', 'integer', 'min:1'],
         ]);
 
         $details = array_filter([
@@ -45,6 +46,12 @@ final class CreateProductTool extends Tool
             'freezer_guidance' => $arguments->string('box_freezer_guidance'),
             'contents' => $arguments->strings('box_contents'),
         ], fn (mixed $value): bool => $value !== null);
+
+        $bundleOf = $arguments->integer('bundle_of_product_id') === null ? null : Product::query()->find($arguments->integer('bundle_of_product_id'));
+
+        if ($arguments->integer('bundle_of_product_id') !== null && ! $bundleOf instanceof Product) {
+            return Response::error('There is no product with that bundle_of_product_id. Use list-products.');
+        }
 
         return Changes::run('create-product', $request->all(), fn (): ResponseFactory => Response::structured([
             'created' => true,
@@ -56,8 +63,8 @@ final class CreateProductTool extends Tool
                 description: $arguments->requireString('description'),
                 sort: $arguments->integer('sort'),
                 boxDetails: $details === [] ? null : $details,
-                stockProductId: $arguments->integer('stock_product_id'),
-                stockUnits: $arguments->integer('stock_units'),
+                bundleOf: $bundleOf,
+                bundleUnits: $arguments->integer('bundle_units'),
             )->id,
         ]));
     }
@@ -77,8 +84,8 @@ final class CreateProductTool extends Tool
             'box_best_for' => $schema->string()->description('Boxes only: who it suits.'),
             'box_freezer_guidance' => $schema->string()->description('Boxes only.'),
             'box_contents' => $schema->array()->items($schema->string())->description('Boxes only: what is in it.'),
-            'stock_product_id' => $schema->integer()->description('Boxes only: borrow stock from this other box (e.g. the 10kg box from the 5kg box).'),
-            'stock_units' => $schema->integer()->description('Units of that stock each one uses.'),
+            'bundle_of_product_id' => $schema->integer()->description('Make this a bundle of that product, e.g. a 5kg mince pack is a bundle of the 500g mince. Its stock is then the component\'s stock.'),
+            'bundle_units' => $schema->integer()->description('How many of the component each one uses, e.g. 10.'),
         ];
     }
 }

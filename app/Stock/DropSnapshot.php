@@ -6,6 +6,7 @@ namespace App\Stock;
 
 use App\Enums\OrderStatus;
 use App\Enums\ProductType;
+use App\Models\Bundle;
 use App\Models\Drop;
 use App\Models\DropItem;
 use Illuminate\Support\Facades\Cache;
@@ -41,7 +42,7 @@ final class DropSnapshot
      */
     private static function build(): array
     {
-        $drop = Drop::featured()?->load('items.product');
+        $drop = Drop::featured()?->load('items.product.bundle');
 
         if ($drop === null) {
             return ['drop' => null, 'announced' => self::announced(), 'items' => [], 'held' => 0];
@@ -93,12 +94,14 @@ final class DropSnapshot
             return (int) $item->available;
         }
 
-        if ($item->product->type === ProductType::Delivery || $item->product->stock_product_id === null) {
+        $bundle = $item->product->bundle;
+
+        if ($item->product->type === ProductType::Delivery || ! $bundle instanceof Bundle) {
             return null;
         }
 
-        $stock = $drop->items->firstWhere('product_id', $item->product->stock_product_id);
+        $stock = $drop->items->firstWhere('product_id', $bundle->component_product_id);
 
-        return $stock instanceof DropItem ? intdiv((int) $stock->available, max(1, $item->product->stock_units)) : 0;
+        return $stock instanceof DropItem ? intdiv((int) $stock->available, max(1, $bundle->units)) : 0;
     }
 }

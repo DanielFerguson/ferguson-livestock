@@ -16,7 +16,7 @@ I designed and built the site end to end, including the visual system, content s
 
 ## Highlights
 
-- **Stock-aware ordering:** live availability is shared across beef boxes and individual cuts, including 10 kg bundles that consume two 5 kg stock units. Every page polls a one-second snapshot of the drop (about 1 KB of JavaScript, no framework), so counts, countdowns and sold-out states update without a reload, and the order form trims a customer's choices, saying what changed, the moment stock runs out.
+- **Stock-aware ordering:** live availability is shared across beef boxes and individual cuts, including bundles (the 10 kg box is two 5 kg boxes; a 5 kg mince pack is ten 500 g packs) that use up their component's stock. Every page polls a one-second snapshot of the drop (about 1 KB of JavaScript, no framework), so counts, countdowns and sold-out states update without a reload, and the order form trims a customer's choices, saying what changed, the moment stock runs out.
 - **Safe checkout reservations:** a single database transaction reserves every cart item together, preventing partial reservations and overselling during limited drops.
 - **Resilient stock recovery:** cancelled and expired Stripe sessions release reserved stock exactly once, webhooks are stored and de-duplicated by event ID, and a scheduled sweep settles any checkout whose webhook is late or lost. A concurrency test races twenty buyers for the last five boxes.
 - **Orders admin:** paid orders with a printable delivery run sorted by suburb, a CSV export, bulk "mark fulfilled", and a log of every Stripe event with a retry button.

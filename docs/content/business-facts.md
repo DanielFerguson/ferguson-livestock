@@ -9,7 +9,7 @@ These values currently drive checkout and are treated as authoritative until Dan
 | Fact | Current value | Source |
 |---|---:|---|
 | 5kg beef box | $160 ($32/kg) | `src/config/products.ts` |
-| 10kg beef box | $275 ($27.50/kg) | `src/config/products.ts` bundle |
+| 10kg beef box | $275 ($27.50/kg) | `config/catalogue.php`: a bundle of two 5kg boxes |
 | Ballarat-region delivery | $15 flat fee | `src/config/products.ts` |
 | Farm pickup | Free | Current order flow |
 | Farm locality | Snake Valley, Victoria 3351 | Existing public site and business schema |

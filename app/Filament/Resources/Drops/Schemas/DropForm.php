@@ -7,6 +7,7 @@ namespace App\Filament\Resources\Drops\Schemas;
 use App\Enums\ProductType;
 use App\Exceptions\QuantityBelowCommitted;
 use App\Filament\Forms\LocalDateTimePicker;
+use App\Models\Bundle;
 use App\Models\Drop;
 use App\Models\DropItem;
 use App\Models\Product;
@@ -155,7 +156,7 @@ class DropForm
                 TextEntry::make('shared_stock')
                     ->label('Stock')
                     ->state(fn (Get $get): ?string => self::sharedStockNote(self::product($get('product_id'))))
-                    ->visible(fn (Get $get): bool => self::product($get('product_id'))?->stock_product_id !== null)
+                    ->visible(fn (Get $get): bool => self::product($get('product_id'))?->isBundle() === true)
                     ->columnSpan(3),
             ])
             ->mutateRelationshipDataBeforeSaveUsing(fn (array $data, DropItem $record): array => self::applyQuantityChange($data, $record));
@@ -307,17 +308,13 @@ class DropForm
     }
 
     /**
-     * Boxes like the 10kg box have no stock of their own: each one sold takes units from another box's stock.
+     * A bundle has no stock of its own: each one sold uses up some of its component's.
      */
     private static function sharedStockNote(?Product $product): ?string
     {
-        if ($product?->stock_product_id === null) {
-            return null;
-        }
+        $bundle = $product?->bundle;
 
-        $stockProduct = self::product($product->stock_product_id);
-
-        return $stockProduct instanceof Product ? "Packed from the {$stockProduct->name} stock, {$product->stock_units} per box." : null;
+        return $bundle instanceof Bundle ? "A bundle of {$bundle->units} × {$bundle->component->name}. It uses that product's stock, so add {$bundle->component->name} to this drop too." : null;
     }
 
     private static function product(mixed $id): ?Product
@@ -330,7 +327,7 @@ class DropForm
      */
     private static function findProduct(int $id): ?Product
     {
-        return once(fn (): ?Product => Product::query()->find($id));
+        return once(fn (): ?Product => Product::query()->with('bundle.component')->find($id));
     }
 
     private static function dollars(int $cents): string

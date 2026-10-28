@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions;
 
 use App\Enums\ProductType;
+use App\Models\Bundle;
 use App\Models\Drop;
 use App\Models\DropItem;
 use App\Payments\PaymentGateway;
@@ -29,7 +30,7 @@ final readonly class RunDropPreflight
      */
     public function __invoke(Drop $drop): array
     {
-        $drop->loadMissing('items.product');
+        $drop->loadMissing('items.product.bundle');
 
         $problems = [...$this->stockProblems($drop), ...$this->deliveryProblems($drop), ...$this->botCheckProblems(), ...$this->infrastructureProblems()];
 
@@ -57,6 +58,14 @@ final readonly class RunDropPreflight
 
         $problems = [];
         $hasOpened = now()->gte($drop->opens_at);
+
+        foreach ($drop->items as $item) {
+            $bundle = $item->product->bundle;
+
+            if ($bundle instanceof Bundle && $drop->items->doesntContain(fn (DropItem $other): bool => $other->product_id === $bundle->component_product_id && $other->hasOwnStock())) {
+                $problems[] = "{$item->product->name} is sold from {$bundle->component->name} stock, but {$bundle->component->name} isn't on this drop with a quantity.";
+            }
+        }
 
         foreach ($drop->items->filter(fn (DropItem $item): bool => $item->hasOwnStock()) as $item) {
             if ($item->quantity === 0) {

@@ -97,8 +97,14 @@ class DropItem extends Model
             return "{$this->committed()} units are held or sold. Set its stock to that number instead.";
         }
 
-        if ($this->orderItems()->exists()) {
+        if ($this->orderItems()->exists() || OrderItem::query()->where('stock_drop_item_id', $this->id)->exists()) {
             return 'It’s on past orders, so it stays on this drop. To stop selling it, set its stock to 0.';
+        }
+
+        $dependent = $this->drop->items()->whereHas('product.bundle', fn ($query) => $query->where('component_product_id', $this->product_id))->with('product')->first();
+
+        if ($dependent instanceof self) {
+            return "{$dependent->product->name} is sold from its stock. Remove {$dependent->product->name} from this drop first.";
         }
 
         return null;

@@ -10,6 +10,7 @@ use App\Exceptions\CannotChangeDrop;
 use App\Mcp\Support\Arguments;
 use App\Mcp\Support\Changes;
 use App\Mcp\Support\Presenter;
+use App\Models\Bundle;
 use App\Models\Drop;
 use App\Models\Product;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -57,7 +58,11 @@ final class CreateDropTool extends Tool
                     'announced' => $arguments->boolean('announce_date') ? true : null,
                 ], fn (mixed $value): bool => $value !== null));
 
-                foreach ($this->lines($items) as $line) {
+                $lines = $this->lines($items);
+                $bundled = Bundle::query()->whereIn('product_id', array_column($lines, 'product_id'))->pluck('product_id')->all();
+                usort($lines, fn (array $a, array $b): int => in_array($a['product_id'], $bundled, true) <=> in_array($b['product_id'], $bundled, true));
+
+                foreach ($lines as $line) {
                     $product = Product::query()->find($line['product_id']);
 
                     if (! $product instanceof Product) {
@@ -113,7 +118,7 @@ final class CreateDropTool extends Tool
                 'product_id' => $schema->integer()->description('From list-products.')->required(),
                 'stripe_price_id' => $schema->string()->description('From list-stripe-prices.')->required(),
                 'price_cents' => $schema->integer()->description('Defaults to the Stripe price amount. Must match Stripe.'),
-                'quantity' => $schema->integer()->description('Units for sale. Only for products with their own stock; leave out for delivery and boxes that borrow stock.'),
+                'quantity' => $schema->integer()->description('Units for sale. Only for products with their own stock; leave out for the delivery fee and for bundles, which use the stock of what they are a bundle of.'),
                 'max_per_order' => $schema->integer()->description('Limit per order. Defaults to 10.'),
             ]))->description('Products on this drop.'),
         ];

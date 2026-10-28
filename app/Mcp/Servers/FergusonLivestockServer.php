@@ -71,6 +71,7 @@ Conventions
 - Money is integer cents (AUD). Times are in Australia/Melbourne; send ISO-8601 and leave off the offset to mean Melbourne wall-clock time.
 - A drop's status is derived: Draft (not published), Announced, Scheduled (published, before it opens), Live, SoldOut, Closed. "Going live" means publishing; the drop opens at its opens_at.
 - Stock lives on a drop's items. Raising or lowering an item's quantity never takes it below what customers have already bought or are checking out.
+- A bundle is a product sold as N units of another product (10kg box = 2 × 5kg box). It has no stock of its own: put its component on the drop with a quantity, then add the bundle with its own Stripe price.
 
 Irreversible actions (texting subscribers, scheduling a broadcast, publishing or deleting a drop, sending a reply) are two steps. Call the matching prepare/preview tool, show the owner exactly what will happen (recipients, the message, cost, any warnings) and wait for their yes in the conversation. Only then call the action tool with the confirmation_token. Never reuse or invent a token; if anything is edited after the preview, prepare again.
 

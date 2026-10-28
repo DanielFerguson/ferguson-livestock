@@ -69,7 +69,7 @@ php artisan make:filament-user --name="Daniel Ferguson" --email=<SHOP_ADMIN_EMAI
 
 The command runner isn’t interactive, so the password goes on the command line: generate it in your password manager.
 
-The seeder adds the boxes, extras and delivery fee without prices; each drop sets its own. Re-running it doesn't overwrite edits made in the admin.
+The seeder adds the boxes, extras, bundles (the 10kg box and the mince packs, each made of another product's stock) and delivery fee without prices; each drop sets its own. Re-running it doesn't overwrite edits made in the admin.
 
 Then sign in at `/admin`. Filament asks you to set up an authenticator app on first sign-in; keep the recovery codes somewhere safe. Only the `SHOP_ADMIN_EMAIL` account can sign in, even if other users exist.
 

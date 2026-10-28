@@ -23,7 +23,7 @@ class DemoDropSeeder extends Seeder
             'delivery_days' => [now()->next('Saturday')->toDateString()],
         ]);
 
-        foreach (Product::query()->orderBy('sort')->get() as $product) {
+        foreach (Product::query()->with('bundle')->orderBy('sort')->get() as $product) {
             $drop->items()->create([
                 'product_id' => $product->id,
                 'price' => config()->integer("catalogue.products.{$product->slug}.price"),

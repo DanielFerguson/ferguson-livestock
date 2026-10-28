@@ -42,9 +42,8 @@ return [
             'description' => 'A larger balanced mix of steaks, slow-cook cuts, roasts, sausages and mince.',
             'type' => 'box',
             'price' => 27500,
-            // Uses two units of the 5kg box's stock.
-            'stock_product' => 'beef-box-5kg',
-            'stock_units' => 2,
+            // A bundle: sold as two 5kg boxes, so it uses two units of the 5kg box's stock.
+            'bundle' => ['of' => 'beef-box-5kg', 'units' => 2],
             'box' => [
                 'weight_kg' => 10,
                 'contents' => [
@@ -64,6 +63,23 @@ return [
             'description' => 'Versatile Murray Grey beef mince.',
             'type' => 'extra',
             'price' => 1200,
+        ],
+
+        'beef-mince-5kg' => [
+            'name' => '5kg Mince Pack',
+            'description' => 'Ten 500g packs of Murray Grey beef mince, at a bulk discount.',
+            'type' => 'extra',
+            'price' => 11000,
+            // A bundle of ten 500g packs: it uses ten units of the 500g mince stock.
+            'bundle' => ['of' => 'beef-mince-500g', 'units' => 10],
+        ],
+
+        'beef-mince-10kg' => [
+            'name' => '10kg Mince Pack',
+            'description' => 'Twenty 500g packs of Murray Grey beef mince, at a bulk discount.',
+            'type' => 'extra',
+            'price' => 22000,
+            'bundle' => ['of' => 'beef-mince-500g', 'units' => 20],
         ],
 
         'beef-bones-2kg' => [

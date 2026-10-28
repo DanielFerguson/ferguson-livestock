@@ -6,6 +6,7 @@ namespace App\Actions\Drops;
 
 use App\Exceptions\CannotChangeDrop;
 use App\Exceptions\QuantityBelowCommitted;
+use App\Models\Bundle;
 use App\Models\Drop;
 use App\Models\DropItem;
 use App\Models\Product;
@@ -31,7 +32,15 @@ final readonly class SetDropItem
      */
     public function __invoke(Drop $drop, Product $product, ?string $stripePriceId = null, ?int $priceCents = null, ?int $quantity = null, ?int $maxPerOrder = null): DropItem
     {
+        $product->loadMissing('bundle.component');
+
         $item = $drop->items()->where('product_id', $product->id)->first();
+
+        $bundle = $product->bundle;
+
+        if ($bundle instanceof Bundle && ! $drop->items()->where('product_id', $bundle->component_product_id)->whereNotNull('quantity')->exists()) {
+            throw new CannotChangeDrop("{$product->name} is sold from {$bundle->component->name} stock. Add {$bundle->component->name} (with a quantity) to this drop first.");
+        }
 
         $stripePriceId ??= $item?->stripe_price_id;
 
@@ -60,7 +69,9 @@ final readonly class SetDropItem
         }
 
         if (! $product->hasOwnStock() && $quantity !== null) {
-            throw new CannotChangeDrop("{$product->name} has no stock of its own (it is sold from another product's stock or is a fee), so it has no quantity to set.");
+            throw new CannotChangeDrop($bundle instanceof Bundle
+                ? "{$product->name} is sold from {$bundle->component->name} stock ({$bundle->units} each), so it has no quantity of its own. Set {$bundle->component->name}'s quantity instead."
+                : "{$product->name} is a fee with no stock, so it has no quantity to set.");
         }
 
         return DB::transaction(function () use ($drop, $product, $item, $stripePriceId, $priceCents, $quantity, $maxPerOrder): DropItem {
@@ -72,7 +83,7 @@ final readonly class SetDropItem
                     'quantity' => $quantity,
                     'available' => $quantity,
                     'max_per_order' => $maxPerOrder ?? 10,
-                ])->load('product');
+                ])->load('product.bundle.component');
             }
 
             $item->update(array_filter([
@@ -89,7 +100,7 @@ final readonly class SetDropItem
                 }
             }
 
-            return $item->refresh()->load('product');
+            return $item->refresh()->load('product.bundle.component');
         });
     }
 
