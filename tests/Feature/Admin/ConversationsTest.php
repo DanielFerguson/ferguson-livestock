@@ -114,6 +114,7 @@ it('doesn’t offer a reply box for someone who has opted out', function () {
 
     livewire(Conversations::class)
         ->call('open', $jane->phone)
+        ->assertSee('Opted out')
         ->assertSee('They’ve opted out of texts')
         ->assertDontSee('Send')
         ->set('draft', 'Wait!')

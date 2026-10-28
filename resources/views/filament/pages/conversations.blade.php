@@ -18,11 +18,12 @@
         .chat-person:hover, .chat-person-open { background: rgb(0 0 0 / 0.04); }
         .chat-person-top { display: flex; justify-content: space-between; gap: 0.5rem; font-weight: 600; }
         .chat-person-last { display: block; margin-top: 0.125rem; color: rgb(107 114 128); font-size: 0.875rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .chat-tag { flex: none; padding: 0 0.5rem; border-radius: 9999px; background: rgb(0 0 0 / 0.08); color: rgb(75 85 99); font-size: 0.75rem; font-weight: 400; line-height: 1.25rem; }
         .chat-dot { flex: none; min-width: 1.25rem; padding: 0 0.375rem; border-radius: 9999px; background: rgb(217 119 6); color: white; font-size: 0.75rem; line-height: 1.25rem; text-align: center; }
         .chat-empty { padding: 1.5rem 1rem; color: rgb(107 114 128); }
         .chat-head { padding: 0.875rem 1rem; border-bottom: 1px solid rgb(0 0 0 / 0.08); font-weight: 600; }
         .chat-head small { display: block; font-weight: 400; color: rgb(107 114 128); }
-        .chat-messages { display: flex; flex-direction: column; gap: 0.625rem; max-height: 32rem; overflow-y: auto; padding: 1rem; }
+        .chat-messages { display: flex; flex-direction: column; gap: 0.625rem; max-height: min(36rem, 60vh); min-height: 8rem; overflow-y: auto; padding: 1rem; }
         .chat-bubble { max-width: 80%; padding: 0.5rem 0.75rem; border-radius: 0.75rem; text-align: left; overflow-wrap: anywhere; }
         .chat-text { display: block; white-space: pre-wrap; }
         .chat-in { align-self: flex-start; background: rgb(0 0 0 / 0.06); }
@@ -50,6 +51,8 @@
                         <span>{{ $conversation['name'] ?? AustralianMobile::format($conversation['phone']) }}</span>
                         @if ($conversation['unread'] > 0)
                             <span class="chat-dot">{{ $conversation['unread'] }}</span>
+                        @elseif ($conversation['optedOut'])
+                            <span class="chat-tag">Opted out</span>
                         @endif
                     </span>
                     <span class="chat-person-last">{{ $conversation['last']->direction === SmsDirection::Outbound ? 'You: ' : '' }}{{ $conversation['last']->body }}</span>
@@ -63,15 +66,17 @@
             @if ($phone === null)
                 <p class="chat-empty">Choose a conversation to read it and answer.</p>
             @else
+                @php($messages = $this->thread($phone))
                 <div class="chat-head">
                     {{ $this->subscriber()?->first_name ?? AustralianMobile::format($phone) }}
+                    @if ($optedOut) <span class="chat-tag">Opted out</span> @endif
                     @if ($this->subscriber()?->first_name !== null)
                         <small>{{ AustralianMobile::format($phone) }}</small>
                     @endif
                 </div>
 
-                <div class="chat-messages">
-                    @foreach ($this->thread($phone) as $message)
+                <div class="chat-messages" wire:key="thread-{{ $phone }}-{{ $messages->count() }}" x-data x-init="$nextTick(() => $el.scrollTop = $el.scrollHeight)">
+                    @foreach ($messages as $message)
                         @php($inbound = $message->direction === SmsDirection::Inbound)
                         <div wire:key="message-{{ $message->id }}" @class(['chat-bubble', 'chat-in' => $inbound, 'chat-out' => ! $inbound])>
                             <span class="chat-text">{{ $message->body }}</span>
