@@ -354,12 +354,12 @@ it('lists drops with Melbourne times and their status', function (): void {
         ->assertSee('Scheduled');
 });
 
-it('explains where a box that borrows stock gets it from', function (): void {
-    $large = Product::factory()->drawsStockFrom($this->box, 2)->create(['name' => '10kg Beef Box']);
+it('explains that a bundle uses another product’s stock', function (): void {
+    $large = Product::factory()->box(10)->bundleOf($this->box, 2)->create(['name' => '10kg Beef Box']);
     $drop = Drop::factory()->create();
     DropItem::factory()->for($drop)->for($this->box)->create();
     DropItem::factory()->for($drop)->for($large)->withoutStock()->create();
 
     livewire(EditDrop::class, ['record' => $drop->id])
-        ->assertSee('Packed from the 5kg Beef Box stock, 2 per box.');
+        ->assertSee('A bundle of 2 × 5kg Beef Box.');
 });

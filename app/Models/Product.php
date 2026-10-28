@@ -11,8 +11,8 @@ use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * Something that can be sold in a drop. Prices and stock live on each drop's items.
@@ -22,15 +22,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $name
  * @property string $description
  * @property ProductType $type
- * @property int|null $stock_product_id
- * @property int $stock_units
  * @property array{weight_kg: int, contents: list<string>, best_for: string, freezer_guidance: string}|null $box_details
  * @property int $sort
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
- * @property-read Product|null $stockProduct
+ * @property-read Bundle|null $bundle
  */
-#[Fillable(['slug', 'name', 'description', 'type', 'stock_product_id', 'stock_units', 'box_details', 'sort'])]
+#[Fillable(['slug', 'name', 'description', 'type', 'box_details', 'sort'])]
 class Product extends Model
 {
     use ClearsResponseCache;
@@ -39,13 +37,13 @@ class Product extends Model
     use HasFactory;
 
     /**
-     * The product whose stock this one draws on, e.g. the 5kg box for the 10kg box.
+     * What this product is a bundle of, if it is one: the 10kg box is two 5kg boxes.
      *
-     * @return BelongsTo<Product, $this>
+     * @return HasOne<Bundle, $this>
      */
-    public function stockProduct(): BelongsTo
+    public function bundle(): HasOne
     {
-        return $this->belongsTo(Product::class, 'stock_product_id');
+        return $this->hasOne(Bundle::class);
     }
 
     /**
@@ -56,12 +54,18 @@ class Product extends Model
         return $this->hasMany(DropItem::class);
     }
 
+    public function isBundle(): bool
+    {
+        return $this->bundle !== null;
+    }
+
     /**
-     * Whether a drop tracks a quantity for this product. Delivery and products that borrow stock don't.
+     * Whether a drop tracks a quantity for this product. Delivery and bundles don't: a bundle uses its
+     * component's stock.
      */
     public function hasOwnStock(): bool
     {
-        return $this->type !== ProductType::Delivery && $this->stock_product_id === null;
+        return $this->type !== ProductType::Delivery && ! $this->isBundle();
     }
 
     /**
@@ -72,7 +76,6 @@ class Product extends Model
         return [
             'type' => ProductType::class,
             'box_details' => 'array',
-            'stock_units' => 'integer',
             'sort' => 'integer',
         ];
     }

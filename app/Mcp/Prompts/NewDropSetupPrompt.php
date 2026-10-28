@@ -24,7 +24,7 @@ final class NewDropSetupPrompt extends Prompt
 
         1. get-overview and list-drops: is there already a draft or upcoming drop I should reuse or copy (duplicate-drop)?
         2. Ask for the name and opening time (and closing time if any). Remember times are Melbourne time.
-        3. list-products and list-stripe-prices: match each product to its Stripe price, and ask me how many of each I'm selling. Delivery is a product with a Stripe price and no stock.
+        3. list-products and list-stripe-prices: match each product to its Stripe price, and ask me how many of each I'm selling. Delivery is a product with a Stripe price and no stock. A bundle (e.g. the 10kg box, a mince pack) has no quantity of its own: set its component's quantity and add the component first.
         4. Ask for the delivery days.
         5. create-drop (or update-drop and set-drop-item on a copy). Show me the result with each item's price and stock.
         6. run-drop-preflight and fix or explain anything it finds.

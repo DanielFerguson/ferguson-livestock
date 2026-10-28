@@ -17,7 +17,7 @@ it('lists boxes and individual cuts in catalogue order', function (): void {
     $catalogue = Catalogue::fromDatabase();
 
     expect($catalogue->boxes()->map(fn (CatalogueEntry $box): string => $box->slug)->all())->toBe(['beef-box-5kg', 'beef-box-10kg'])
-        ->and($catalogue->extras())->toHaveCount(6)
+        ->and($catalogue->extras())->toHaveCount(8)
         ->and($catalogue->find('beef-box-5kg')?->box?->bestFor)->toBe('Couples and smaller households');
 });
 

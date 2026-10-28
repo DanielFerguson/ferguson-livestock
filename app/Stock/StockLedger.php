@@ -9,6 +9,7 @@ use App\Enums\OrderStatus;
 use App\Enums\ProductType;
 use App\Exceptions\DropNotOpen;
 use App\Exceptions\InsufficientStock;
+use App\Models\Bundle;
 use App\Models\Drop;
 use App\Models\DropItem;
 use App\Models\Order;
@@ -36,7 +37,7 @@ final class StockLedger
     public function reserve(Drop $drop, array $quantities, DeliveryMethod $deliveryMethod, ?CarbonImmutable $deliveryDay, string $sessionFingerprint, CarbonImmutable $expiresAt): Order
     {
         $order = DB::transaction(function () use ($drop, $quantities, $deliveryMethod, $deliveryDay, $sessionFingerprint, $expiresAt): Order {
-            $drop = Drop::query()->with('items.product')->findOrFail($drop->id);
+            $drop = Drop::query()->with('items.product.bundle')->findOrFail($drop->id);
 
             if (! $drop->status()->isOpen()) {
                 throw new DropNotOpen;
@@ -125,9 +126,11 @@ final class StockLedger
                 throw new InvalidArgumentException("Drop item {$dropItemId} isn’t in this drop.");
             }
 
+            $bundle = $item->product->bundle;
+
             $stock = match (true) {
                 $item->hasOwnStock() => $item,
-                $item->product->stock_product_id !== null => $drop->items->firstWhere('product_id', $item->product->stock_product_id),
+                $bundle instanceof Bundle => $drop->items->firstWhere('product_id', $bundle->component_product_id),
                 default => null,
             };
 
@@ -137,7 +140,7 @@ final class StockLedger
                 throw new InsufficientStock([$item->id => 0]);
             }
 
-            $lines[] = new StockLine($item, $quantity, $stock instanceof DropItem ? $stock : null, $stock === null ? 0 : $item->product->stock_units);
+            $lines[] = new StockLine($item, $quantity, $stock instanceof DropItem ? $stock : null, $stock === null ? 0 : ($bundle->units ?? 1));
         }
 
         return $lines;

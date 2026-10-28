@@ -23,8 +23,10 @@ use App\Mcp\Tools\Drops\CreateProductTool;
 use App\Mcp\Tools\Drops\UpdateProductTool;
 use App\Mcp\Tools\Stripe\RetryStripeEventTool;
 use App\Mcp\Tools\Subscribers\OptOutSubscriberTool;
+use App\Models\Bundle;
 use App\Models\ConversationState;
 use App\Models\Drop;
+use App\Models\DropItem;
 use App\Models\Product;
 use App\Models\SmsBroadcast;
 use App\Models\SmsMessage;
@@ -336,7 +338,7 @@ describe('subscribers, stripe and products', function (): void {
         $this->server->tool(UpdateProductTool::class, ['product_id' => $product->id])->assertHasErrors();
     });
 
-    it('creates a box with details, and a bigger box that borrows its stock', function (): void {
+    it('creates a box with details, and a bigger box that is a bundle of it', function (): void {
         $this->server->tool(CreateProductTool::class, [
             'slug' => '5kg-box', 'type' => 'box', 'name' => '5kg Box', 'description' => 'Starter',
             'box_weight_kg' => 5, 'box_best_for' => 'Couples', 'box_freezer_guidance' => 'One drawer', 'box_contents' => ['Mince', 'Steak'],
@@ -346,9 +348,49 @@ describe('subscribers, stripe and products', function (): void {
         $this->server->tool(CreateProductTool::class, [
             'slug' => '10kg-box', 'type' => 'box', 'name' => '10kg Box', 'description' => 'Family',
             'box_weight_kg' => 10, 'box_best_for' => 'Families', 'box_freezer_guidance' => 'Two drawers', 'box_contents' => ['Mince', 'Steak'],
-            'stock_product_id' => $small->id, 'stock_units' => 2,
+            'bundle_of_product_id' => $small->id, 'bundle_units' => 2,
         ])->assertOk();
 
-        expect(Product::query()->where('slug', '10kg-box')->sole()->stock_product_id)->toBe($small->id);
+        $large = Product::query()->where('slug', '10kg-box')->with('bundle')->sole();
+
+        expect(data_get($large, 'bundle.component_product_id'))->toBe($small->id)->and(data_get($large, 'bundle.units'))->toBe(2)->and($large->hasOwnStock())->toBeFalse();
+    });
+
+    it('makes an extra a bundle of another extra, and refuses the invalid shapes', function (): void {
+        $mince = Product::factory()->create(['name' => '500g Mince', 'slug' => 'mince-500g']);
+        $delivery = Product::factory()->delivery()->create(['slug' => 'delivery']);
+
+        $this->server->tool(CreateProductTool::class, ['slug' => 'mince-5kg', 'type' => 'extra', 'name' => '5kg Mince Pack', 'description' => 'Ten packs.', 'bundle_of_product_id' => $mince->id, 'bundle_units' => 10])->assertOk();
+        $pack = Product::query()->where('slug', 'mince-5kg')->with('bundle')->sole();
+        expect(data_get($pack, 'bundle.units'))->toBe(10)->and($pack->hasOwnStock())->toBeFalse();
+
+        // Not of the delivery fee, not of another bundle, not a delivery bundle, and no half-specified bundle.
+        $this->server->tool(CreateProductTool::class, ['slug' => 'bad-1', 'type' => 'extra', 'name' => 'x', 'description' => 'x', 'bundle_of_product_id' => $delivery->id, 'bundle_units' => 2])->assertHasErrors();
+        $this->server->tool(CreateProductTool::class, ['slug' => 'bad-2', 'type' => 'extra', 'name' => 'x', 'description' => 'x', 'bundle_of_product_id' => $pack->id, 'bundle_units' => 2])->assertHasErrors();
+        $this->server->tool(CreateProductTool::class, ['slug' => 'bad-3', 'type' => 'delivery', 'name' => 'x', 'description' => 'x', 'bundle_of_product_id' => $mince->id, 'bundle_units' => 2])->assertHasErrors();
+        $this->server->tool(CreateProductTool::class, ['slug' => 'bad-4', 'type' => 'extra', 'name' => 'x', 'description' => 'x', 'bundle_of_product_id' => $mince->id])->assertHasErrors();
+
+        expect(Product::query()->whereIn('slug', ['bad-1', 'bad-2', 'bad-3', 'bad-4'])->count())->toBe(0);
+
+        // The 500g mince is a component, so it cannot become a bundle itself.
+        $other = Product::factory()->create(['slug' => 'other']);
+        $this->server->tool(UpdateProductTool::class, ['product_id' => $mince->id, 'bundle_of_product_id' => $other->id, 'bundle_units' => 2])->assertHasErrors();
+    });
+
+    it('changes and removes a bundle, but not while it is on a drop', function (): void {
+        $mince = Product::factory()->create(['slug' => 'mince-500g']);
+        $pack = Product::factory()->bundleOf($mince, 10)->create(['slug' => 'mince-5kg']);
+
+        $this->server->tool(UpdateProductTool::class, ['product_id' => $pack->id, 'bundle_units' => 12])->assertOk();
+        expect(Bundle::query()->where('product_id', $pack->id)->sole()->units)->toBe(12);
+
+        $drop = Drop::factory()->draft()->create();
+        DropItem::factory()->for($drop)->for($pack)->withoutStock()->create();
+
+        $this->server->tool(UpdateProductTool::class, ['product_id' => $pack->id, 'remove_bundle' => true])->assertHasErrors();
+
+        $drop->delete();
+        $this->server->tool(UpdateProductTool::class, ['product_id' => $pack->id, 'remove_bundle' => true])->assertOk();
+        expect(Bundle::query()->where('product_id', $pack->id)->exists())->toBeFalse();
     });
 });

@@ -71,7 +71,7 @@ final class SetDropItemTool extends Tool
             'product_id' => $schema->integer()->description('From list-products.')->required(),
             'stripe_price_id' => $schema->string()->description('From list-stripe-prices. Required when adding; the price amount must match Stripe.'),
             'price_cents' => $schema->integer()->description('Price in cents. Defaults to the Stripe price amount.'),
-            'quantity' => $schema->integer()->description('Total units for sale (not units to add). Only for products with their own stock.'),
+            'quantity' => $schema->integer()->description('Total units for sale (not units to add). Only for products with their own stock (not bundles or the delivery fee).'),
             'max_per_order' => $schema->integer()->description('Limit per order.'),
         ];
     }

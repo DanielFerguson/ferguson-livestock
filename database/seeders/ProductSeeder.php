@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Models\Bundle;
 use App\Models\Product;
 use Illuminate\Database\Seeder;
 
@@ -14,7 +15,7 @@ class ProductSeeder extends Seeder
 {
     public function run(): void
     {
-        /** @var array<string, array{name: string, description: string, type: string, box?: array{weight_kg: int, contents: list<string>, best_for: string, freezer_guidance: string}, stock_product?: string, stock_units?: int}> $catalogue */
+        /** @var array<string, array{name: string, description: string, type: string, box?: array{weight_kg: int, contents: list<string>, best_for: string, freezer_guidance: string}, bundle?: array{of: string, units: int}}> $catalogue */
         $catalogue = config()->array('catalogue.products');
 
         $sort = 0;
@@ -24,17 +25,17 @@ class ProductSeeder extends Seeder
                 'description' => $product['description'],
                 'type' => $product['type'],
                 'box_details' => $product['box'] ?? null,
-                'stock_units' => $product['stock_units'] ?? 1,
                 'sort' => $sort++,
             ]);
         }
 
-        // Linked once every product exists, since a product can draw on one listed after it.
+        // Linked once every product exists, since a bundle can be of a product listed after it.
         foreach ($catalogue as $slug => $product) {
-            if (isset($product['stock_product'])) {
-                Product::query()->where('slug', $slug)->whereNull('stock_product_id')->update([
-                    'stock_product_id' => Product::query()->where('slug', $product['stock_product'])->value('id'),
-                ]);
+            if (isset($product['bundle'])) {
+                Bundle::query()->firstOrCreate(
+                    ['product_id' => Product::query()->where('slug', $slug)->value('id')],
+                    ['component_product_id' => Product::query()->where('slug', $product['bundle']['of'])->value('id'), 'units' => $product['bundle']['units']],
+                );
             }
         }
     }

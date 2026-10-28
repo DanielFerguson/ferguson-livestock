@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Database\Factories;
 
 use App\Enums\ProductType;
+use App\Models\Bundle;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
@@ -28,8 +29,6 @@ class ProductFactory extends Factory
             'name' => Str::title($name),
             'description' => fake()->sentence(),
             'type' => ProductType::Extra,
-            'stock_product_id' => null,
-            'stock_units' => 1,
             'box_details' => null,
             'sort' => 0,
         ];
@@ -54,10 +53,12 @@ class ProductFactory extends Factory
     }
 
     /**
-     * A box that uses another product's stock, like the 10kg box using two 5kg-box units.
+     * A bundle: sold as several of another product, like the 10kg box using two 5kg-box units.
      */
-    public function drawsStockFrom(Product $product, int $units): static
+    public function bundleOf(Product $component, int $units): static
     {
-        return $this->box()->state(fn (): array => ['stock_product_id' => $product->id, 'stock_units' => $units]);
+        return $this->afterCreating(function (Product $product) use ($component, $units): void {
+            Bundle::factory()->create(['product_id' => $product->id, 'component_product_id' => $component->id, 'units' => $units]);
+        });
     }
 }

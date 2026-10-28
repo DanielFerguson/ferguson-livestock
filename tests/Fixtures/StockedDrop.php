@@ -32,7 +32,7 @@ final readonly class StockedDrop
 
         $items = [
             'box' => DropItem::factory()->for($model)->for($boxProduct)->create(['price' => 16000, 'stripe_price_id' => 'price_box', 'quantity' => $boxes, 'max_per_order' => 1]),
-            'largeBox' => DropItem::factory()->for($model)->for(Product::factory()->drawsStockFrom($boxProduct, 2)->create(['name' => '10kg Beef Box']))
+            'largeBox' => DropItem::factory()->for($model)->for(Product::factory()->box(10)->bundleOf($boxProduct, 2)->create(['name' => '10kg Beef Box']))
                 ->withoutStock()->create(['price' => 27500, 'stripe_price_id' => 'price_large_box', 'max_per_order' => 1]),
             'mince' => DropItem::factory()->for($model)->for(Product::factory()->create(['name' => '500g Beef Mince']))
                 ->create(['price' => 1200, 'stripe_price_id' => 'price_mince', 'quantity' => $mince]),

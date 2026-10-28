@@ -45,7 +45,7 @@ final class Presenter
      */
     public static function drop(Drop $drop, bool $withItems = false): array
     {
-        $drop->loadMissing('items.product');
+        $drop->loadMissing('items.product.bundle.component');
 
         $report = $drop->preflight_report;
 
@@ -89,6 +89,7 @@ final class Presenter
             'price' => self::money($item->price),
             'stripe_price_id' => $item->stripe_price_id,
             'has_own_stock' => $item->hasOwnStock(),
+            'bundle' => $item->product->bundle === null ? null : ['of' => $item->product->bundle->component->name, 'units' => $item->product->bundle->units],
             'quantity' => $item->quantity,
             'available' => $item->available,
             'committed' => $item->hasOwnStock() ? $item->committed() : null,
