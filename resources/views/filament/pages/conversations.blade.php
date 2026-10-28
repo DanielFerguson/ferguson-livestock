@@ -17,13 +17,14 @@
         .chat-person { display: block; width: 100%; text-align: left; padding: 0.75rem 1rem; border: 0; border-bottom: 1px solid rgb(0 0 0 / 0.06); background: transparent; cursor: pointer; }
         .chat-person:hover, .chat-person-open { background: rgb(0 0 0 / 0.04); }
         .chat-person-top { display: flex; justify-content: space-between; gap: 0.5rem; font-weight: 600; }
-        .chat-person-last { margin-top: 0.125rem; color: rgb(107 114 128); font-size: 0.875rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .chat-person-last { display: block; margin-top: 0.125rem; color: rgb(107 114 128); font-size: 0.875rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .chat-dot { flex: none; min-width: 1.25rem; padding: 0 0.375rem; border-radius: 9999px; background: rgb(217 119 6); color: white; font-size: 0.75rem; line-height: 1.25rem; text-align: center; }
         .chat-empty { padding: 1.5rem 1rem; color: rgb(107 114 128); }
         .chat-head { padding: 0.875rem 1rem; border-bottom: 1px solid rgb(0 0 0 / 0.08); font-weight: 600; }
         .chat-head small { display: block; font-weight: 400; color: rgb(107 114 128); }
         .chat-messages { display: flex; flex-direction: column; gap: 0.625rem; max-height: 32rem; overflow-y: auto; padding: 1rem; }
-        .chat-bubble { max-width: 80%; padding: 0.5rem 0.75rem; border-radius: 0.75rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+        .chat-bubble { max-width: 80%; padding: 0.5rem 0.75rem; border-radius: 0.75rem; text-align: left; overflow-wrap: anywhere; }
+        .chat-text { display: block; white-space: pre-wrap; }
         .chat-in { align-self: flex-start; background: rgb(0 0 0 / 0.06); }
         .chat-out { align-self: flex-end; background: rgb(209 224 212); }
         .chat-meta { margin-top: 0.25rem; color: rgb(107 114 128); font-size: 0.75rem; }
@@ -73,7 +74,7 @@
                     @foreach ($this->thread($phone) as $message)
                         @php($inbound = $message->direction === SmsDirection::Inbound)
                         <div wire:key="message-{{ $message->id }}" @class(['chat-bubble', 'chat-in' => $inbound, 'chat-out' => ! $inbound])>
-                            {{ $message->body }}
+                            <span class="chat-text">{{ $message->body }}</span>
                             <div class="chat-meta">
                                 {{ $message->created_at->timezone($timezone)->format('D j M, g:ia') }}
                                 @if ($message->sms_broadcast_id !== null) · Broadcast @endif
