@@ -124,18 +124,24 @@ Check again on a new environment, or if the domain's Cloudflare proxying changes
 
 ## Twilio (wait-list texts)
 
-Texts go out from one Australian 04xx number, so people can reply. In the Twilio console:
+Texts go out from one Australian 04xx number, so people can reply. The number is **+61 485 048 980**, bought on 28 October 2026 on the live Twilio account (not the test credentials), under the approved Australia Mobile Business regulatory bundle "FLC Compliance Registration". It costs about US$8.25 a month, plus about US$0.05 per text segment sent and US$0.0075 per reply received.
+
+To set up a number the same way:
 
 1. Under the number's **Messaging configuration**, set **A message comes in** to a webhook, `https://<host>/api/webhooks/twilio/inbound`, method **POST**. Delivery reports need no setup: each text asks Twilio to report to `/api/webhooks/twilio/status`.
-2. Keep Twilio's **Advanced Opt-Out** on. It blocks anyone who replies STOP, as a safety net behind the app's own opt-outs.
+2. Under Messaging → Settings → **Geo permissions**, allow Australia.
+3. Leave the number out of any Messaging Service: the app sends from the number directly (`TWILIO_FROM_NUMBER`), and Twilio's Advanced Opt-Out is a Messaging Service setting, so it doesn't apply. The app keeps its own opt-out list, which stops texts to anyone who replied STOP, and also opts people out when Twilio reports error 21610.
+4. Set `TWILIO_ACCOUNT_SID` (the live one), `TWILIO_AUTH_TOKEN` and `TWILIO_FROM_NUMBER` in the environment, and redeploy.
 
 Both webhooks check Twilio's signature against `TWILIO_AUTH_TOKEN` and the address Twilio called, so the console must use the environment's own address (the same as `APP_URL`). Unsigned requests get a 403.
 
-Twilio's test credentials don't send texts or call webhooks, so staging uses the real account. Keep staging's subscriber list to your own number, and use **Send a test to me** (which texts `SHOP_ADMIN_PHONE`) before sending a broadcast.
+Twilio's test credentials don't send texts or call webhooks, so any other environment would have to use the real account too. Use **Send a test to me** (which texts `SHOP_ADMIN_PHONE`) before sending a broadcast.
 
-There's one number, so replies go to whichever environment its incoming-message webhook points at. Point it at production from the switch-over on (see section 7 of `docs/switch-over.md`): otherwise customers' STOP and START replies reach staging, and production never records their opt-out or opt-in.
+There's one number, so replies go to whichever environment its incoming-message webhook points at. It points at production, which records customers' STOP and START replies. Don't point it anywhere else.
 
-`TWILIO_AUTH_TOKEN` is also the key both environments use to check Twilio's signatures, so anyone who reads it can forge replies to production. Keep it out of anywhere less trusted than staging, such as preview environments.
+Checked on 28 October 2026: a test text sent from production was delivered, and a reply from the admin phone was stored as an inbound message (and opted nobody out).
+
+`TWILIO_AUTH_TOKEN` is also the key the app uses to check Twilio's signatures, so anyone who reads it can forge replies to production. Keep it out of anywhere less trusted than production, such as preview environments.
 
 The app sends a broadcast one text at a time from the queue, and Twilio queues them and sends them at the number's rate. A big list can take several minutes to go out, so schedule a drop announcement a few minutes before the drop opens.
 
