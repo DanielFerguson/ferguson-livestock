@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Checkout\CheckoutRequest;
 use App\Checkout\StartCheckout;
 use App\Enums\DeliveryMethod;

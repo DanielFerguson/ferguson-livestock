@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\BroadcastStatus;
 use App\Jobs\StartBroadcastWhenDue;
 use App\Models\SmsBroadcast;

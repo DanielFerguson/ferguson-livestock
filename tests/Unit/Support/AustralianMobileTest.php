@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Support\AustralianMobile;
 
 it('converts the ways people write a mobile number to international format', function (string $typed) {

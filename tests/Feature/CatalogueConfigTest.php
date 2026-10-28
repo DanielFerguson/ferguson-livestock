@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 // config/catalogue.php seeds the products and suggests prices for new drops; keep it in line with
 // the confirmed facts in docs/content/business-facts.md.
 it('suggests the confirmed prices from the business facts', function () {

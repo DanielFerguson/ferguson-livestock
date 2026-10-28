@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Payments\Price;
 use App\Payments\PriceCheck;
 

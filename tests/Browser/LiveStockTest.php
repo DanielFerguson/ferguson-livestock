@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\Drop;
 use App\Models\DropItem;
 use App\Stock\DropSnapshot;

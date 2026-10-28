@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Http\ResponseCache\StripCookies;
 use App\Models\Product;
 use Database\Seeders\ProductSeeder;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Checkout\OrderPayments;
 use App\Enums\DeliveryMethod;
 use App\Enums\OrderStatus;

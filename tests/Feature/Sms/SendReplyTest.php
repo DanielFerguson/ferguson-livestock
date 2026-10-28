@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Actions\SendReply;
 use App\Enums\SmsDirection;
 use App\Enums\SmsStatus;

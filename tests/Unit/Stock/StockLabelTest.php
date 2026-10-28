@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Stock\StockLabel;
 
 it('describes what’s left the way the live script does', function (int $available, string $label) {

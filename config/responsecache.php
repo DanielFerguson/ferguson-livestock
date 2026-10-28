@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Http\ResponseCache\MarketingPagesProfile;
 use App\Http\ResponseCache\OriginHasher;
 use App\Http\ResponseCache\StripCookies;

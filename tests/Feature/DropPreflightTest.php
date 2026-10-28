@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Actions\RunDropPreflight;
 use App\Models\Drop;
 use App\Models\DropItem;

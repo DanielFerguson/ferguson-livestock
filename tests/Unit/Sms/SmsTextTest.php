@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Sms\SmsText;
 
 it('fits 160 plain characters in one text, then 153 per text', function (int $length, int $segments) {

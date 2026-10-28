@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Rules\ExistingLocalTime;
 use Illuminate\Translation\ArrayLoader;
 use Illuminate\Translation\PotentiallyTranslatedString;

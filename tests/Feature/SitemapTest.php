@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 it('points the sitemap index at the page sitemap', function () {
     $this->get('/sitemap-index.xml')
         ->assertOk()

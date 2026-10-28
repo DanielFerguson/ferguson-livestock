@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Filament\Imports\SubscriberImporter;
 use App\Models\Subscriber;
 use Carbon\CarbonImmutable;

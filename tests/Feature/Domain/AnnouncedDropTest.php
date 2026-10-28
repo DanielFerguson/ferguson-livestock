@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\Drop;
 
 it('finds the next unpublished drop with its date announced', function () {

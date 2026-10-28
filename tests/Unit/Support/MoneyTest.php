@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Support\Money;
 
 it('formats whole dollar amounts without cents', function () {

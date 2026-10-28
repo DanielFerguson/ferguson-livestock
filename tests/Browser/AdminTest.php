@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Filament\Pages\Conversations;
 use App\Filament\Resources\Orders\OrderResource;
 use App\Filament\Resources\SmsBroadcasts\SmsBroadcastResource;

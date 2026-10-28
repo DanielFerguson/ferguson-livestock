@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Support\PublicPages;
 
 it('renders every public page in a real browser without errors', function (string $path) {

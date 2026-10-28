@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\DeliveryMethod;
 use App\Models\Drop;
 use App\Stock\StockLedger;

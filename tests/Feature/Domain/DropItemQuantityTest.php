@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Exceptions\QuantityBelowCommitted;
 use App\Models\DropItem;
 use Illuminate\Database\QueryException;

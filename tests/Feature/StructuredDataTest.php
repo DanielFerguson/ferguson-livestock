@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Support\Catalogue;
 use App\Support\Faqs;
 use App\Support\StructuredData;

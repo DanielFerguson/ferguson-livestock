@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * Classes that dev tools built on Laravel Zero, such as Pint and the Cloud CLI, put in the App namespace from vendor.
  *

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Filament\Resources\StripeEvents\Pages\ListStripeEvents;
 use App\Jobs\ProcessStripeEvent;
 use App\Models\StripeEvent;

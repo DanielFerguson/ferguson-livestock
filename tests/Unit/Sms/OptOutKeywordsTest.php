@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Sms\OptOutKeywords;
 
 it('recognises replies asking to stop', function (string $reply) {

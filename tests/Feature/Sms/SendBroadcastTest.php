@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Actions\StartBroadcast;
 use App\Enums\BroadcastStatus;
 use App\Enums\SmsStatus;
