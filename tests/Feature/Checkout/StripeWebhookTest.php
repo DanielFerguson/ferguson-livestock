@@ -57,7 +57,7 @@ function sendStripeEvent(string $type, array $object, string $id = 'evt_1', ?str
     return call('POST', route('webhooks.stripe'), server: ['HTTP_STRIPE_SIGNATURE' => $signature, 'CONTENT_TYPE' => 'application/json'], content: $payload);
 }
 
-it('moves the order on for each checkout event', function (string $type, array $session, OrderStatus $status, int $boxesLeft) {
+it('moves the order on for each checkout event', function (string $type, array $session, OrderStatus $status, int $boxesLeft): void {
     Mail::fake();
     $shop = StockedDrop::create(boxes: 5);
     $order = heldOrder($shop);
@@ -66,14 +66,14 @@ it('moves the order on for each checkout event', function (string $type, array $
 
     expect($order->refresh()->status)->toBe($status)
         ->and($shop->box->refresh()->available)->toBe($boxesLeft)
-        ->and(StripeEvent::sole()->processed_at)->not->toBeNull();
+        ->and(StripeEvent::query()->sole()->processed_at)->not->toBeNull();
 })->with([
     'paid' => ['checkout.session.completed', [], OrderStatus::Paid, 4],
     'bank payment started' => ['checkout.session.completed', ['payment_status' => 'unpaid'], OrderStatus::Processing, 4],
     'payment page expired' => ['checkout.session.expired', ['status' => 'expired', 'payment_status' => 'unpaid'], OrderStatus::Expired, 5],
 ]);
 
-it('marks a bank payment paid, or puts the stock back if it fails', function (string $type, OrderStatus $status, int $boxesLeft) {
+it('marks a bank payment paid, or puts the stock back if it fails', function (string $type, OrderStatus $status, int $boxesLeft): void {
     Mail::fake();
     $shop = StockedDrop::create(boxes: 5);
     $order = heldOrder($shop);
@@ -88,7 +88,7 @@ it('marks a bank payment paid, or puts the stock back if it fails', function (st
     'failed' => ['checkout.session.async_payment_failed', OrderStatus::Failed, 5],
 ]);
 
-it('records a refund', function () {
+it('records a refund', function (): void {
     Mail::fake();
     $order = heldOrder(StockedDrop::create());
     sendStripeEvent('checkout.session.completed', sessionObject($order), 'evt_paid');
@@ -98,40 +98,40 @@ it('records a refund', function () {
     expect($order->refresh()->amount_refunded)->toBe(5000);
 });
 
-it('handles an event once, however many times Stripe sends it', function () {
+it('handles an event once, however many times Stripe sends it', function (): void {
     Mail::fake();
     $order = heldOrder(StockedDrop::create());
 
     sendStripeEvent('checkout.session.completed', sessionObject($order))->assertOk();
     sendStripeEvent('checkout.session.completed', sessionObject($order))->assertOk();
 
-    expect(StripeEvent::count())->toBe(1)
-        ->and(StripeEvent::sole()->attempts)->toBe(1);
+    expect(StripeEvent::query()->count())->toBe(1)
+        ->and(StripeEvent::query()->sole()->attempts)->toBe(1);
     Mail::assertQueued(OrderConfirmation::class, 1);
 });
 
-it('tries again when Stripe resends an event that failed earlier', function () {
+it('tries again when Stripe resends an event that failed earlier', function (): void {
     Mail::fake();
     $order = heldOrder(StockedDrop::create());
     $event = ['id' => 'evt_1', 'object' => 'event', 'type' => 'checkout.session.completed', 'data' => ['object' => sessionObject($order)]];
-    StripeEvent::create(['id' => 'evt_1', 'type' => 'checkout.session.completed', 'payload' => $event, 'received_at' => now()->subMinute(), 'attempts' => 1, 'last_error' => 'Database went away']);
+    StripeEvent::query()->create(['id' => 'evt_1', 'type' => 'checkout.session.completed', 'payload' => $event, 'received_at' => now()->subMinute(), 'attempts' => 1, 'last_error' => 'Database went away']);
 
     sendStripeEvent('checkout.session.completed', sessionObject($order))->assertOk();
 
     expect($order->refresh()->status)->toBe(OrderStatus::Paid)
-        ->and(StripeEvent::sole()->only('attempts', 'last_error'))->toBe(['attempts' => 2, 'last_error' => null]);
+        ->and(StripeEvent::query()->sole()->only('attempts', 'last_error'))->toBe(['attempts' => 2, 'last_error' => null]);
 });
 
-it('acknowledges events it has nothing to do with', function (string $type, array $object) {
+it('acknowledges events it has nothing to do with', function (string $type, array $object): void {
     sendStripeEvent($type, $object)->assertOk();
 
-    expect(StripeEvent::sole()->processed_at)->not->toBeNull();
+    expect(StripeEvent::query()->sole()->processed_at)->not->toBeNull();
 })->with([
     'another shop’s session' => ['checkout.session.completed', ['id' => 'cs_elsewhere', 'object' => 'checkout.session', 'status' => 'complete', 'payment_status' => 'paid']],
     'an event it doesn’t use' => ['customer.created', ['id' => 'cus_1', 'object' => 'customer']],
 ]);
 
-it('ignores a session the shop didn’t start, even when it names one of the shop’s orders', function (string $field) {
+it('ignores a session the shop didn’t start, even when it names one of the shop’s orders', function (string $field): void {
     Mail::fake();
     $shop = StockedDrop::create(boxes: 5);
     $order = heldOrder($shop);
@@ -143,14 +143,14 @@ it('ignores a session the shop didn’t start, even when it names one of the sho
     expect($order->refresh()->status)->toBe(OrderStatus::Pending)
         ->and($order->stripe_payment_intent_id)->toBeNull()
         ->and($shop->box->refresh()->available)->toBe(4)
-        ->and(StripeEvent::sole()->processed_at)->not->toBeNull();
+        ->and(StripeEvent::query()->sole()->processed_at)->not->toBeNull();
     Mail::assertNothingQueued();
 })->with([
     'by client_reference_id' => 'client_reference_id',
     'by order_id metadata' => 'metadata.order_id',
 ]);
 
-it('still finds an order by its ID when its payment page was never recorded against it', function () {
+it('still finds an order by its ID when its payment page was never recorded against it', function (): void {
     Mail::fake();
     $order = heldOrder(StockedDrop::create());
     $order->update(['stripe_checkout_session_id' => null]);
@@ -160,12 +160,12 @@ it('still finds an order by its ID when its payment page was never recorded agai
     expect($order->refresh()->status)->toBe(OrderStatus::Paid);
 });
 
-it('refuses events Stripe didn’t sign', function (?string $signature) {
+it('refuses events Stripe didn’t sign', function (?string $signature): void {
     $order = heldOrder(StockedDrop::create());
 
     sendStripeEvent('checkout.session.completed', sessionObject($order), signature: $signature ?? '')->assertBadRequest();
 
-    expect(StripeEvent::count())->toBe(0)
+    expect(StripeEvent::query()->count())->toBe(0)
         ->and($order->refresh()->status)->toBe(OrderStatus::Pending);
 })->with([
     'unsigned' => [null],

@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-it('points the sitemap index at the page sitemap', function () {
+it('points the sitemap index at the page sitemap', function (): void {
     $this->get('/sitemap-index.xml')
         ->assertOk()
         ->assertHeader('Content-Type', 'application/xml')
         ->assertSee('<sitemap><loc>https://fergusonlivestock.com.au/sitemap-0.xml</loc></sitemap>', false);
 });
 
-it('lists the same public pages as the Astro sitemap', function () {
+it('lists the same public pages as the Astro sitemap', function (): void {
     $xml = (string) $this->get('/sitemap-0.xml')->assertOk()->assertHeader('Content-Type', 'application/xml')->getContent();
 
     preg_match_all('#<loc>(.*?)</loc>#', $xml, $locations);
@@ -25,14 +25,14 @@ it('lists the same public pages as the Astro sitemap', function () {
     ]);
 });
 
-it('is valid XML', function () {
+it('is valid XML', function (): void {
     $xml = (string) $this->get('/sitemap-0.xml')->getContent();
 
     expect(simplexml_load_string($xml))->not->toBeFalse()
         ->and($xml)->toStartWith('<?xml version="1.0" encoding="UTF-8"?>');
 });
 
-it('tells crawlers where the sitemap is and keeps them out of the API and admin', function () {
+it('tells crawlers where the sitemap is and keeps them out of the API and admin', function (): void {
     $robots = (string) file_get_contents(public_path('robots.txt'));
 
     expect($robots)->toContain('Sitemap: https://fergusonlivestock.com.au/sitemap-index.xml')
@@ -40,7 +40,7 @@ it('tells crawlers where the sitemap is and keeps them out of the API and admin'
         ->toContain('Disallow: /admin');
 });
 
-it('keeps the web app manifest identity and brand colours', function () {
+it('keeps the web app manifest identity and brand colours', function (): void {
     /** @var array{name: string, short_name: string, background_color: string, theme_color: string} $manifest */
     $manifest = json_decode((string) file_get_contents(public_path('site.webmanifest')), true);
 

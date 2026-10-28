@@ -98,7 +98,7 @@ class DropForm
             ->schema([
                 Select::make('product_id')
                     ->label('Product')
-                    ->options(fn (): array => Product::orderBy('sort')->pluck('name', 'id')->all())
+                    ->options(fn (): array => Product::query()->orderBy('sort')->pluck('name', 'id')->all())
                     ->required()
                     ->distinct()
                     ->disableOptionsWhenSelectedInSiblingRepeaterItems()
@@ -139,7 +139,7 @@ class DropForm
                     ->visible(fn (Get $get): bool => self::product($get('product_id'))?->hasOwnStock() ?? false),
                 TextEntry::make('availability')
                     ->label('Left')
-                    ->state(fn (?DropItem $record): ?string => $record !== null && $record->hasOwnStock()
+                    ->state(fn (?DropItem $record): ?string => $record instanceof DropItem && $record->hasOwnStock()
                         ? "{$record->available} of {$record->quantity} ({$record->committed()} held or sold)"
                         : null)
                     ->visible(fn (?DropItem $record): bool => $record?->hasOwnStock() ?? false)
@@ -177,7 +177,7 @@ class DropForm
         } catch (QuantityBelowCommitted $exception) {
             Notification::make()->title("{$product->name}: {$exception->getMessage()}")->danger()->send();
 
-            throw new Halt;
+            throw new Halt($exception->getMessage(), $exception->getCode(), $exception);
         }
 
         unset($data['quantity'], $data['available']);
@@ -245,7 +245,7 @@ class DropForm
                 $record?->id,
             );
 
-            if ($clash !== null) {
+            if ($clash instanceof Drop) {
                 $opens = $clash->opens_at->setTimezone($timezone)->format('g:ia D j M');
                 $fail("This overlaps “{$clash->name}”, which opens at {$opens}. Only one drop can be open at a time.");
             }
@@ -278,7 +278,7 @@ class DropForm
 
         $stockProduct = self::product($product->stock_product_id);
 
-        return $stockProduct === null ? null : "Packed from the {$stockProduct->name} stock, {$product->stock_units} per box.";
+        return $stockProduct instanceof Product ? "Packed from the {$stockProduct->name} stock, {$product->stock_units} per box." : null;
     }
 
     private static function product(mixed $id): ?Product
@@ -291,7 +291,7 @@ class DropForm
      */
     private static function findProduct(int $id): ?Product
     {
-        return once(fn (): ?Product => Product::find($id));
+        return once(fn (): ?Product => Product::query()->find($id));
     }
 
     private static function dollars(int $cents): string

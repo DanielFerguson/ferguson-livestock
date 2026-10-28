@@ -17,10 +17,10 @@ class TwilioStatusController extends Controller
 {
     public function __invoke(Request $request): Response
     {
-        $message = SmsMessage::firstWhere('twilio_sid', $request->string('MessageSid')->value());
+        $message = SmsMessage::query()->firstWhere('twilio_sid', $request->string('MessageSid')->value());
         $status = SmsStatus::fromTwilio($request->string('MessageStatus')->value());
 
-        if ($message !== null && $status !== null) {
+        if ($message !== null && $status instanceof SmsStatus) {
             $message->recordStatus($status, $request->filled('ErrorCode') ? $request->integer('ErrorCode') : null);
         }
 

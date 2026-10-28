@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('drops', function (Blueprint $table) {
+        Schema::table('drops', function (Blueprint $table): void {
             // Set while a draft drop's date is announced on the website, before its stock is known.
             $table->timestamp('announced_at')->nullable()->after('published_at');
         });
@@ -24,7 +24,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('drops', function (Blueprint $table) {
+        Schema::table('drops', function (Blueprint $table): void {
             $table->dropColumn('announced_at');
         });
     }

@@ -17,6 +17,7 @@ use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Number;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -75,14 +76,14 @@ final class OrderActions
             ->color('gray')
             ->schema([self::dropSelect()])
             ->modalSubmitActionLabel('Open')
-            ->action(fn (array $data) => redirect(OrderResource::getUrl('delivery-run', ['drop' => $data['drop']])));
+            ->action(fn (array $data): RedirectResponse => redirect()->to(OrderResource::getUrl('delivery-run', ['drop' => $data['drop']])));
     }
 
     private static function dropSelect(): Select
     {
         return Select::make('drop')
             ->label('Drop')
-            ->options(fn (): array => Drop::query()->orderByDesc('opens_at')->limit(12)->pluck('name', 'id')->all())
+            ->options(fn (): array => Drop::query()->latest('opens_at')->limit(12)->pluck('name', 'id')->all())
             ->default(fn (): ?int => Drop::featured()?->id)
             ->required();
     }

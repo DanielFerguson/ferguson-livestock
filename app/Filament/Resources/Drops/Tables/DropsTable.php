@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Drops\Tables;
 
+use App\Enums\DropStatus;
 use App\Filament\Resources\Drops\Actions\DropActions;
 use App\Models\Drop;
 use Filament\Actions\ActionGroup;
@@ -28,7 +29,7 @@ class DropsTable
                     ->dateTime('D j M Y, g:ia T', $timezone)
                     ->sortable(),
                 TextColumn::make('status')
-                    ->state(fn (Drop $record) => $record->status())
+                    ->state(fn (Drop $record): DropStatus => $record->status())
                     ->badge(),
                 TextColumn::make('preflight')
                     ->label('Pre-flight')

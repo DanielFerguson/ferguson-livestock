@@ -174,7 +174,7 @@ class Conversations extends Page
 
     public function subscriber(): ?Subscriber
     {
-        return $this->phone === null ? null : Subscriber::firstWhere('phone', $this->phone);
+        return $this->phone === null ? null : Subscriber::query()->firstWhere('phone', $this->phone);
     }
 
     public function hasOptedOut(): bool

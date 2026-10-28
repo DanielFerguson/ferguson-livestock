@@ -55,7 +55,7 @@ final readonly class RunDropPreflight
         $problems = [];
         $hasOpened = now()->gte($drop->opens_at);
 
-        foreach ($drop->items->filter(fn (DropItem $item) => $item->hasOwnStock()) as $item) {
+        foreach ($drop->items->filter(fn (DropItem $item): bool => $item->hasOwnStock()) as $item) {
             if ($item->quantity === 0) {
                 $problems[] = "{$item->product->name} has no stock. Set a quantity.";
             } elseif (! $hasOpened && $item->committed() > 0) {
@@ -73,7 +73,7 @@ final readonly class RunDropPreflight
     {
         $problems = [];
 
-        if (! $drop->items->contains(fn (DropItem $item) => $item->product->type === ProductType::Delivery)) {
+        if ($drop->items->doesntContain(fn (DropItem $item): bool => $item->product->type === ProductType::Delivery)) {
             $problems[] = 'Add the delivery fee to this drop.';
         }
 

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use App\Sms\SmsText;
 
-it('fits 160 plain characters in one text, then 153 per text', function (int $length, int $segments) {
+it('fits 160 plain characters in one text, then 153 per text', function (int $length, int $segments): void {
     expect((new SmsText(str_repeat('a', $length)))->segments())->toBe($segments);
 })->with([
     [160, 1],
@@ -13,14 +13,14 @@ it('fits 160 plain characters in one text, then 153 per text', function (int $le
     [307, 3],
 ]);
 
-it('counts the characters that take two places in the alphabet twice', function () {
+it('counts the characters that take two places in the alphabet twice', function (): void {
     $text = new SmsText('€{}');
 
     expect($text->isGsm())->toBeTrue()
         ->and($text->length())->toBe(6);
 });
 
-it('fits only 70 characters in one text, then 67, once a character is outside the alphabet', function (int $length, int $segments) {
+it('fits only 70 characters in one text, then 67, once a character is outside the alphabet', function (int $length, int $segments): void {
     expect((new SmsText(str_repeat('a', $length - 1).'ā'))->segments())->toBe($segments);
 })->with([
     [70, 1],
@@ -29,7 +29,7 @@ it('fits only 70 characters in one text, then 67, once a character is outside th
     [135, 3],
 ]);
 
-it('counts an emoji as two characters', function () {
+it('counts an emoji as two characters', function (): void {
     $text = new SmsText('Hi 👋');
 
     expect($text->isGsm())->toBeFalse()
@@ -37,11 +37,11 @@ it('counts an emoji as two characters', function () {
         ->and($text->charactersOutsideAlphabet())->toBe(['👋']);
 });
 
-it('swaps curly quotes, dashes and ellipses for plain ones', function () {
+it('swaps curly quotes, dashes and ellipses for plain ones', function (): void {
     expect(SmsText::tidy("  “Rump” – it’s back…\r\n "))->toBe('"Rump" - it\'s back...');
 });
 
-it('names the sender first and ends with how to opt out', function () {
+it('names the sender first and ends with how to opt out', function (): void {
     expect(SmsText::forBroadcast('The next drop opens Saturday.')->text)
         ->toBe("Ferguson Livestock: The next drop opens Saturday.\nReply STOP to opt out");
 });

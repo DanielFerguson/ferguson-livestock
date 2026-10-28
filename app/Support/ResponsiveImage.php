@@ -18,7 +18,7 @@ final readonly class ResponsiveImage
     public function srcset(string $format): string
     {
         return collect($this->files[$format] ?? [])
-            ->map(fn (string $url, int $width) => "{$url} {$width}w")
+            ->map(fn (string $url, int $width): string => "{$url} {$width}w")
             ->implode(', ');
     }
 

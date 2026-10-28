@@ -54,7 +54,7 @@ final class SubscriberActions
 
                 fputcsv($file, self::CSV_COLUMNS, escape: '');
 
-                Subscriber::query()->orderBy('id')->lazy()->each(fn (Subscriber $subscriber) => fputcsv($file, self::csvRow($subscriber), escape: ''));
+                Subscriber::query()->orderBy('id')->lazy()->each(fn (Subscriber $subscriber): int|false => fputcsv($file, self::csvRow($subscriber), escape: ''));
 
                 fclose($file);
             }, 'subscribers-'.now()->toDateString().'.csv', ['Content-Type' => 'text/csv']));

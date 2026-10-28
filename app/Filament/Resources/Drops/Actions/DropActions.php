@@ -64,7 +64,7 @@ final class DropActions
             ->icon(Heroicon::OutlinedMegaphone)
             ->color('gray')
             ->action(function (Drop $record): void {
-                $broadcast = SmsBroadcast::create([
+                $broadcast = SmsBroadcast::query()->create([
                     'body' => self::announcement($record),
                     'drop_id' => $record->id,
                     'created_by' => auth()->id(),

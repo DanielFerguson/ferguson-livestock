@@ -66,7 +66,7 @@ final readonly class Faqs
      */
     private function boxPrices(): string
     {
-        $priced = $this->catalogue->boxes()->filter(fn (CatalogueEntry $box): bool => $box->price !== null && $box->box !== null);
+        $priced = $this->catalogue->boxes()->filter(fn (CatalogueEntry $box): bool => $box->price !== null && $box->box instanceof BoxDetails);
 
         if ($priced->isEmpty()) {
             return 'Prices are set for each drop and shown on the order page before you pay.';

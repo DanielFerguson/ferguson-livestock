@@ -17,11 +17,11 @@ class OrderPageController extends Controller
     public function __invoke(): View
     {
         $drop = Drop::featured();
-        $drop = $drop !== null && $drop->status() !== DropStatus::Closed ? $drop : null;
+        $drop = $drop instanceof Drop && $drop->status() !== DropStatus::Closed ? $drop : null;
 
         return view('pages.order', [
             'drop' => $drop,
-            'announcedLabel' => $drop === null ? Drop::announced()?->announcedLabel() : null,
+            'announcedLabel' => $drop instanceof Drop ? null : Drop::announced()?->announcedLabel(),
         ]);
     }
 }

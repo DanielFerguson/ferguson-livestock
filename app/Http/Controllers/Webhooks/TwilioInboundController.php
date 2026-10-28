@@ -24,10 +24,10 @@ class TwilioInboundController extends Controller
     {
         $from = $request->string('From')->value();
         $body = $request->string('Body')->value();
-        $subscriber = Subscriber::firstWhere('phone', $from);
+        $subscriber = Subscriber::query()->firstWhere('phone', $from);
 
         // Twilio sends a reply again if we're slow to answer, so each one is stored once, by its ID.
-        SmsMessage::createOrFirst(['twilio_sid' => $request->string('MessageSid')->value()], [
+        SmsMessage::query()->createOrFirst(['twilio_sid' => $request->string('MessageSid')->value()], [
             'subscriber_id' => $subscriber?->id,
             'direction' => SmsDirection::Inbound,
             'to' => $request->string('To')->value(),

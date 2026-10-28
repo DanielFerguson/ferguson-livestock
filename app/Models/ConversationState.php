@@ -21,7 +21,7 @@ class ConversationState extends Model
 {
     public static function followUp(string $phone): void
     {
-        self::updateOrCreate(['contact_phone' => $phone], ['follow_up_at' => now(), 'done_at' => null]);
+        self::query()->updateOrCreate(['contact_phone' => $phone], ['follow_up_at' => now(), 'done_at' => null]);
     }
 
     public static function clearFollowUp(string $phone): void
@@ -31,7 +31,7 @@ class ConversationState extends Model
 
     public static function markDone(string $phone): void
     {
-        self::updateOrCreate(['contact_phone' => $phone], ['follow_up_at' => null, 'done_at' => now()]);
+        self::query()->updateOrCreate(['contact_phone' => $phone], ['follow_up_at' => null, 'done_at' => now()]);
     }
 
     /**

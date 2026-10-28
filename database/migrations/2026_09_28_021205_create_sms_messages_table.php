@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sms_messages', function (Blueprint $table) {
+        Schema::create('sms_messages', function (Blueprint $table): void {
             $table->id();
             // Null for replies from numbers that aren't subscribers.
             $table->foreignId('subscriber_id')->nullable()->constrained()->nullOnDelete();

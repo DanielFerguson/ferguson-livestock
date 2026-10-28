@@ -8,7 +8,7 @@ use App\Support\StructuredData;
 use Database\Seeders\DemoDropSeeder;
 use Database\Seeders\ProductSeeder;
 
-it('describes the farm as one LocalBusiness node on the homepage', function () {
+it('describes the farm as one LocalBusiness node on the homepage', function (): void {
     $home = StructuredData::home('Title', 'Description');
 
     expect(data_get($home, '@graph.*.@type'))->toBe(['LocalBusiness', 'WebSite', 'WebPage'])
@@ -18,7 +18,7 @@ it('describes the farm as one LocalBusiness node on the homepage', function () {
         ->and(data_get($home, '@graph.0.contactPoint.contactType'))->toBe('sales');
 });
 
-it('links the website and homepage back to the business', function () {
+it('links the website and homepage back to the business', function (): void {
     $home = StructuredData::home('Title', 'Description');
 
     expect(data_get($home, '@graph.1.publisher.@id'))->toBe('https://fergusonlivestock.com.au/#organization')
@@ -26,7 +26,7 @@ it('links the website and homepage back to the business', function () {
         ->and(data_get($home, '@graph.2.url'))->toBe('https://fergusonlivestock.com.au/');
 });
 
-it('describes a page with its canonical URL', function () {
+it('describes a page with its canonical URL', function (): void {
     $page = StructuredData::webPage('/our-story', 'Meet us', 'About the farm', 'AboutPage');
 
     expect($page)->toMatchArray([
@@ -39,7 +39,7 @@ it('describes a page with its canonical URL', function () {
     ]);
 });
 
-it('offers both boxes at the featured drop’s prices, sold by the business', function () {
+it('offers both boxes at the featured drop’s prices, sold by the business', function (): void {
     $this->seed([ProductSeeder::class, DemoDropSeeder::class]);
 
     $schemas = StructuredData::beefBoxes('Title', 'Description', app(Catalogue::class));
@@ -52,7 +52,7 @@ it('offers both boxes at the featured drop’s prices, sold by the business', fu
         ]);
 });
 
-it('marks up every frequently asked question', function () {
+it('marks up every frequently asked question', function (): void {
     $faqs = app(Faqs::class)->all();
     $schema = StructuredData::faq($faqs);
 
@@ -61,13 +61,13 @@ it('marks up every frequently asked question', function () {
         ->and(data_get($schema, 'mainEntity.0.acceptedAnswer.text'))->toBe($faqs[0]['answer']);
 });
 
-it('leaves product offers out until a drop sets prices', function () {
+it('leaves product offers out until a drop sets prices', function (): void {
     $this->seed(ProductSeeder::class);
 
     expect(StructuredData::beefBoxes('Title', 'Description', app(Catalogue::class)))->toHaveCount(1);
 });
 
-it('prices the FAQ answers from the featured drop', function () {
+it('prices the FAQ answers from the featured drop', function (): void {
     $this->seed([ProductSeeder::class, DemoDropSeeder::class]);
 
     $answers = collect(app(Faqs::class)->all())->pluck('answer')->implode(' ');
@@ -77,7 +77,7 @@ it('prices the FAQ answers from the featured drop', function () {
         ->toContain('Delivery is $15 per order');
 });
 
-it('explains how prices work before any drop sets them', function () {
+it('explains how prices work before any drop sets them', function (): void {
     $this->seed(ProductSeeder::class);
 
     $answers = collect(app(Faqs::class)->all())->pluck('answer')->implode(' ');

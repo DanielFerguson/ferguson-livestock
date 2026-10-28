@@ -33,7 +33,7 @@ class SmsBroadcastFactory extends Factory
      */
     public function forPostcodes(array $postcodes): static
     {
-        return $this->state(fn () => ['audience' => ['postcodes' => $postcodes]]);
+        return $this->state(fn (): array => ['audience' => ['postcodes' => $postcodes]]);
     }
 
     /**
@@ -41,16 +41,16 @@ class SmsBroadcastFactory extends Factory
      */
     public function forSubscribers(array $subscriberIds): static
     {
-        return $this->state(fn () => ['audience' => ['postcodes' => [], 'subscribers' => $subscriberIds]]);
+        return $this->state(fn (): array => ['audience' => ['postcodes' => [], 'subscribers' => $subscriberIds]]);
     }
 
     public function scheduledFor(mixed $moment): static
     {
-        return $this->state(fn () => ['scheduled_for' => $moment]);
+        return $this->state(fn (): array => ['scheduled_for' => $moment]);
     }
 
     public function sent(): static
     {
-        return $this->state(fn () => ['started_at' => now()->subHour(), 'finished_at' => now()->subMinutes(50)]);
+        return $this->state(fn (): array => ['started_at' => now()->subHour(), 'finished_at' => now()->subMinutes(50)]);
     }
 }

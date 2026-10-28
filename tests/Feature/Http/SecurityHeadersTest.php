@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
 
-it('sends the security headers on every response', function (string $uri) {
+it('sends the security headers on every response', function (string $uri): void {
     $this->get($uri)
         ->assertHeader('X-Content-Type-Options', 'nosniff')
         ->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
@@ -16,12 +16,12 @@ it('sends the security headers on every response', function (string $uri) {
     'the health check' => '/up',
 ]);
 
-it('tells browsers to use https for the next two years', function () {
+it('tells browsers to use https for the next two years', function (): void {
     $this->get('/')->assertHeader('Strict-Transport-Security', 'max-age=63072000');
 });
 
-it('adds security headers to API responses', function () {
-    Route::get('/api/example', fn () => ['ok' => true]);
+it('adds security headers to API responses', function (): void {
+    Route::get('/api/example', fn (): array => ['ok' => true]);
 
     $this->getJson('/api/example')->assertHeader('X-Frame-Options', 'DENY');
 });

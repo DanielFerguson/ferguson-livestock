@@ -14,7 +14,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('drops', function (Blueprint $table) {
+        Schema::create('drops', function (Blueprint $table): void {
             $table->id();
             $table->string('name');
             // All times are UTC; the admin enters and reads them in Melbourne time.

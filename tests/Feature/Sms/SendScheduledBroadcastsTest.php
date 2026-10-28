@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Queue;
 use Tests\Fakes\FakeSmsGateway;
 
-it('starts scheduled broadcasts once their time comes', function () {
+it('starts scheduled broadcasts once their time comes', function (): void {
     app()->instance(SmsGateway::class, $sms = new FakeSmsGateway);
     Subscriber::factory()->create();
     $due = SmsBroadcast::factory()->scheduledFor(now()->subMinute())->create();
@@ -27,7 +27,7 @@ it('starts scheduled broadcasts once their time comes', function () {
         ->and($sms->sent)->toHaveCount(1);
 });
 
-it('times the start of a broadcast scheduled within the hour', function () {
+it('times the start of a broadcast scheduled within the hour', function (): void {
     Queue::fake();
 
     $broadcast = SmsBroadcast::factory()->scheduledFor(now()->addMinutes(30))->create();
@@ -35,7 +35,7 @@ it('times the start of a broadcast scheduled within the hour', function () {
     Queue::assertPushed(StartBroadcastWhenDue::class, fn (StartBroadcastWhenDue $job): bool => $job->broadcastId === $broadcast->id);
 });
 
-it('times the start of broadcasts scheduled within the next hour each time it runs', function () {
+it('times the start of broadcasts scheduled within the next hour each time it runs', function (): void {
     $broadcast = SmsBroadcast::factory()->scheduledFor(now()->addMinutes(50))->create();
     Queue::fake();
 
@@ -44,7 +44,7 @@ it('times the start of broadcasts scheduled within the next hour each time it ru
     Queue::assertPushed(StartBroadcastWhenDue::class, fn (StartBroadcastWhenDue $job): bool => $job->broadcastId === $broadcast->id);
 });
 
-it('starts a timed broadcast when its time comes', function () {
+it('starts a timed broadcast when its time comes', function (): void {
     app()->instance(SmsGateway::class, $sms = new FakeSmsGateway);
     Subscriber::factory()->create();
     $broadcast = SmsBroadcast::factory()->scheduledFor(now()->addMinutes(30))->create();
@@ -56,8 +56,8 @@ it('starts a timed broadcast when its time comes', function () {
         ->and($sms->sent)->toHaveCount(1);
 });
 
-it('checks for scheduled broadcasts every hour, as a safety net for timed starts that went missing', function () {
-    $event = collect(app(Schedule::class)->events())->first(fn ($event) => str_contains((string) $event->command, 'sms:send-scheduled'));
+it('checks for scheduled broadcasts every hour, as a safety net for timed starts that went missing', function (): void {
+    $event = collect(app(Schedule::class)->events())->first(fn ($event): bool => str_contains((string) $event->command, 'sms:send-scheduled'));
 
     expect($event?->expression)->toBe('0 * * * *');
 });

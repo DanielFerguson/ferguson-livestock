@@ -19,7 +19,7 @@ class ProductSeeder extends Seeder
 
         $sort = 0;
         foreach ($catalogue as $slug => $product) {
-            Product::firstOrCreate(['slug' => $slug], [
+            Product::query()->firstOrCreate(['slug' => $slug], [
                 'name' => $product['name'],
                 'description' => $product['description'],
                 'type' => $product['type'],
@@ -32,8 +32,8 @@ class ProductSeeder extends Seeder
         // Linked once every product exists, since a product can draw on one listed after it.
         foreach ($catalogue as $slug => $product) {
             if (isset($product['stock_product'])) {
-                Product::where('slug', $slug)->whereNull('stock_product_id')->update([
-                    'stock_product_id' => Product::where('slug', $product['stock_product'])->value('id'),
+                Product::query()->where('slug', $slug)->whereNull('stock_product_id')->update([
+                    'stock_product_id' => Product::query()->where('slug', $product['stock_product'])->value('id'),
                 ]);
             }
         }

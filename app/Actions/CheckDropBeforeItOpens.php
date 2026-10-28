@@ -55,7 +55,7 @@ final readonly class CheckDropBeforeItOpens
             return;
         }
 
-        $admin = User::where('email', $email)->first();
+        $admin = User::query()->where('email', $email)->first();
 
         $admin !== null ? $admin->notify($notification) : Notification::route('mail', $email)->notify($notification);
     }

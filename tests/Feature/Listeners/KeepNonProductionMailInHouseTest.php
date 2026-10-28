@@ -32,14 +32,14 @@ function sendToStranger(): array
     ];
 }
 
-it('sends every email to the shop’s own inbox outside production', function (string $environment) {
-    $this->app->detectEnvironment(fn () => $environment);
+it('sends every email to the shop’s own inbox outside production', function (string $environment): void {
+    $this->app->detectEnvironment(fn (): string => $environment);
 
     expect(sendToStranger())->toBe(['to' => [config()->string('shop.email')], 'cc' => []]);
 })->with(['staging', 'preview']);
 
-it('sends email where it was addressed in production and locally', function (string $environment) {
-    $this->app->detectEnvironment(fn () => $environment);
+it('sends email where it was addressed in production and locally', function (string $environment): void {
+    $this->app->detectEnvironment(fn (): string => $environment);
 
     expect(sendToStranger())->toBe(['to' => ['stranger@example.test'], 'cc' => ['another@example.test']]);
 })->with(['production', 'local']);

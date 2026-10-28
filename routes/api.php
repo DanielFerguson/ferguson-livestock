@@ -14,7 +14,7 @@ Route::get('drop', DropStatusController::class)->name('drop-status');
 // Same path as the Astro site, so the Stripe endpoint's URL doesn't change at the switch-over.
 Route::post('webhooks/stripe', StripeWebhookController::class)->name('webhooks.stripe');
 
-Route::prefix('webhooks/twilio')->name('webhooks.twilio.')->middleware(ValidateTwilioSignature::class)->group(function () {
+Route::prefix('webhooks/twilio')->name('webhooks.twilio.')->middleware(ValidateTwilioSignature::class)->group(function (): void {
     Route::post('status', TwilioStatusController::class)->name('status');
     Route::post('inbound', TwilioInboundController::class)->name('inbound');
 });

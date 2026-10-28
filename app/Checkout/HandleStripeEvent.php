@@ -29,7 +29,7 @@ final readonly class HandleStripeEvent
         $session = CheckoutSession::fromStripe($object);
         $order = $this->orderFor($session);
 
-        if ($order === null) {
+        if (! $order instanceof Order) {
             return;
         }
 

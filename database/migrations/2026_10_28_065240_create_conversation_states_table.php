@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('conversation_states', function (Blueprint $table) {
+        Schema::create('conversation_states', function (Blueprint $table): void {
             $table->id();
             // The other person's number, as on sms_messages: people who aren't subscribers have conversations too.
             $table->string('contact_phone', 16)->unique();

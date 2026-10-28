@@ -37,7 +37,7 @@ class DropItemFactory extends Factory
      */
     public function withoutStock(): static
     {
-        return $this->state(fn () => ['quantity' => null, 'available' => null]);
+        return $this->state(fn (): array => ['quantity' => null, 'available' => null]);
     }
 
     /**
@@ -45,6 +45,6 @@ class DropItemFactory extends Factory
      */
     public function delivery(): static
     {
-        return $this->withoutStock()->state(fn () => ['product_id' => Product::factory()->delivery()]);
+        return $this->withoutStock()->state(fn (): array => ['product_id' => Product::factory()->delivery()]);
     }
 }

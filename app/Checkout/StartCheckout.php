@@ -22,6 +22,7 @@ use App\Payments\NewCheckoutSession;
 use App\Payments\PaymentGateway;
 use App\Stock\StockLedger;
 use App\Support\Turnstile;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\RateLimiter;
 
 /**
@@ -170,7 +171,7 @@ final readonly class StartCheckout
      */
     private function deliveryFee(Drop $drop, CheckoutRequest $request): DropItem
     {
-        if ($request->deliveryDay === null) {
+        if (! $request->deliveryDay instanceof CarbonImmutable) {
             throw new InvalidCheckout('Choose a delivery day.');
         }
 

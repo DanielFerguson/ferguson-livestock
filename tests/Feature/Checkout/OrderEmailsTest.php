@@ -27,7 +27,7 @@ function paidDelivery(string $name = 'Sam Buyer', string $line1 = '1 Main St'): 
     return $order->refresh();
 }
 
-it('confirms the order to the customer, with what they bought and when it arrives', function () {
+it('confirms the order to the customer, with what they bought and when it arrives', function (): void {
     $order = paidDelivery();
     $mail = new OrderConfirmation($order);
 
@@ -36,7 +36,7 @@ it('confirms the order to the customer, with what they bought and when it arrive
         ->assertSeeInOrderInHtml(['Thanks, Sam!', $order->reference(), '5kg Beef Box', '$160', 'Delivery', '$15', '$175', 'Saturday 10 October', '1 Main St', 'Ballarat 3350']);
 });
 
-it('tells the farm who ordered and where it’s going', function () {
+it('tells the farm who ordered and where it’s going', function (): void {
     $order = paidDelivery();
 
     (new NewOrderNotification($order))
@@ -44,7 +44,7 @@ it('tells the farm who ordered and where it’s going', function () {
         ->assertSeeInOrderInHtml(['Sam Buyer', 'buyer@example.test', '+61400000002', '5kg Beef Box', 'Saturday 10 October', '1 Main St, Ballarat 3350']);
 });
 
-it('shows Markdown in what the buyer typed as plain text, not links or images', function () {
+it('shows Markdown in what the buyer typed as plain text, not links or images', function (): void {
     $order = paidDelivery('[Track your order](https://phish.test/track)', '![](https://phish.test/pixel.png) 1 Main St');
 
     foreach ([new OrderConfirmation($order), new NewOrderNotification($order)] as $mail) {
@@ -56,7 +56,7 @@ it('shows Markdown in what the buyer typed as plain text, not links or images', 
     }
 });
 
-it('escapes names in both emails', function () {
+it('escapes names in both emails', function (): void {
     $order = paidDelivery('<b onclick="x()">Sam</b>');
 
     foreach ([new OrderConfirmation($order), new NewOrderNotification($order)] as $mail) {

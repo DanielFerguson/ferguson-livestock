@@ -52,7 +52,7 @@ class OrderFactory extends Factory
      */
     public function pending(): static
     {
-        return $this->state(fn () => [
+        return $this->state(fn (): array => [
             'status' => OrderStatus::Pending,
             'customer_name' => null,
             'email' => null,
@@ -65,6 +65,6 @@ class OrderFactory extends Factory
 
     public function pickup(): static
     {
-        return $this->state(fn () => ['delivery_method' => DeliveryMethod::Pickup, 'delivery_day' => null, 'shipping_address' => null]);
+        return $this->state(fn (): array => ['delivery_method' => DeliveryMethod::Pickup, 'delivery_day' => null, 'shipping_address' => null]);
     }
 }

@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sms_broadcasts', function (Blueprint $table) {
+        Schema::create('sms_broadcasts', function (Blueprint $table): void {
             $table->id();
             $table->text('body');
             // Who it goes to: {"postcodes": []} is everyone subscribed.

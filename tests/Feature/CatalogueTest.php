@@ -11,17 +11,17 @@ use App\Support\CatalogueEntry;
 use Database\Seeders\DemoDropSeeder;
 use Database\Seeders\ProductSeeder;
 
-it('lists boxes and individual cuts in catalogue order', function () {
+it('lists boxes and individual cuts in catalogue order', function (): void {
     $this->seed(ProductSeeder::class);
 
     $catalogue = Catalogue::fromDatabase();
 
-    expect($catalogue->boxes()->map(fn (CatalogueEntry $box) => $box->slug)->all())->toBe(['beef-box-5kg', 'beef-box-10kg'])
+    expect($catalogue->boxes()->map(fn (CatalogueEntry $box): string => $box->slug)->all())->toBe(['beef-box-5kg', 'beef-box-10kg'])
         ->and($catalogue->extras())->toHaveCount(6)
         ->and($catalogue->find('beef-box-5kg')?->box?->bestFor)->toBe('Couples and smaller households');
 });
 
-it('prices products from the featured drop', function () {
+it('prices products from the featured drop', function (): void {
     $this->seed([ProductSeeder::class, DemoDropSeeder::class]);
 
     $catalogue = Catalogue::fromDatabase();
@@ -33,7 +33,7 @@ it('prices products from the featured drop', function () {
         ->and($catalogue->deliveryFee())->toBe(1500);
 });
 
-it('uses the next scheduled drop’s prices between drops', function () {
+it('uses the next scheduled drop’s prices between drops', function (): void {
     $box = Product::factory()->box()->create();
     DropItem::factory()->for(Drop::factory()->closed())->for($box)->create(['price' => 15000]);
     DropItem::factory()->for(Drop::factory()->state(['opens_at' => now()->addWeek()]))->for($box)->create(['price' => 17000]);
@@ -41,7 +41,7 @@ it('uses the next scheduled drop’s prices between drops', function () {
     expect(Catalogue::fromDatabase()->boxes()->first()?->price)->toBe(17000);
 });
 
-it('has no prices until a drop sets them', function () {
+it('has no prices until a drop sets them', function (): void {
     $this->seed(ProductSeeder::class);
 
     $catalogue = Catalogue::fromDatabase();
@@ -52,7 +52,7 @@ it('has no prices until a drop sets them', function () {
         ->and($catalogue->deliveryFee())->toBeNull();
 });
 
-it('leaves a product unpriced when the drop doesn’t include it', function () {
+it('leaves a product unpriced when the drop doesn’t include it', function (): void {
     $fiveKg = Product::factory()->box()->create();
     $tenKg = Product::factory()->box(10)->create();
     DropItem::factory()->for(Drop::factory()->open())->for($fiveKg)->create(['price' => 16000]);

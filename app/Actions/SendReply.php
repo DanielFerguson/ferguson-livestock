@@ -33,11 +33,11 @@ final readonly class SendReply
     public function __invoke(string $phone, string $body): SmsMessage
     {
         $text = SmsText::tidy($body);
-        $subscriber = Subscriber::firstWhere('phone', $phone);
+        $subscriber = Subscriber::query()->firstWhere('phone', $phone);
 
         $this->guard($phone, $text, $subscriber);
 
-        $message = SmsMessage::create([
+        $message = SmsMessage::query()->create([
             'subscriber_id' => $subscriber?->id,
             'direction' => SmsDirection::Outbound,
             'to' => $phone,

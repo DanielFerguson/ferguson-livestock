@@ -25,7 +25,7 @@ final readonly class Catalogue
         /** @var Collection<int, int> $prices */
         $prices = Drop::featured()?->items()->pluck('price', 'product_id') ?? collect();
 
-        return new self(Product::orderBy('sort')->orderBy('id')->get()->map(function (Product $product) use ($prices): CatalogueEntry {
+        return new self(Product::query()->orderBy('sort')->orderBy('id')->get()->map(function (Product $product) use ($prices): CatalogueEntry {
             $price = $prices->get($product->id);
             $details = $product->box_details;
 

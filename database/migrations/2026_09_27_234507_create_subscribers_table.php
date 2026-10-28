@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('subscribers', function (Blueprint $table) {
+        Schema::create('subscribers', function (Blueprint $table): void {
             $table->id();
             $table->string('first_name', 60);
             // E.164, e.g. +61412345678. One entry per mobile number.

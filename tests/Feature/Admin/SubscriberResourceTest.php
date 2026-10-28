@@ -13,13 +13,13 @@ use Filament\Actions\Testing\TestAction;
 
 use function Pest\Livewire\livewire;
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->travelTo(CarbonImmutable::parse('2026-10-01 12:00', 'Australia/Melbourne'));
     config(['shop.admin_email' => 'daniel@example.com']);
     $this->actingAs(User::factory()->withAppAuthentication()->create(['email' => 'daniel@example.com']));
 });
 
-it('finds subscribers by name, postcode or mobile number as it’s usually written', function (string $search) {
+it('finds subscribers by name, postcode or mobile number as it’s usually written', function (string $search): void {
     $jane = Subscriber::factory()->create(['first_name' => 'Jane', 'phone' => '+61412345678', 'postcode' => '3363']);
     $other = Subscriber::factory()->create(['first_name' => 'Bob', 'phone' => '+61498765432', 'postcode' => '3350']);
 
@@ -29,7 +29,7 @@ it('finds subscribers by name, postcode or mobile number as it’s usually writt
         ->assertCanNotSeeTableRecords([$other]);
 })->with(['Jane', '3363', '0412 345 678', '+61412345678']);
 
-it('shows only the people who opted out', function () {
+it('shows only the people who opted out', function (): void {
     $subscribed = Subscriber::factory()->create();
     $optedOut = Subscriber::factory()->unsubscribed()->create();
 
@@ -39,7 +39,7 @@ it('shows only the people who opted out', function () {
         ->assertCanNotSeeTableRecords([$subscribed]);
 });
 
-it('opts someone out by hand', function () {
+it('opts someone out by hand', function (): void {
     $subscriber = Subscriber::factory()->create();
 
     livewire(ListSubscribers::class)
@@ -48,7 +48,7 @@ it('opts someone out by hand', function () {
     expect($subscriber->refresh()->isSubscribed())->toBeFalse();
 });
 
-it('saves a corrected mobile number in the international format', function () {
+it('saves a corrected mobile number in the international format', function (): void {
     $subscriber = Subscriber::factory()->create();
 
     livewire(EditSubscriber::class, ['record' => $subscriber->id])
@@ -59,7 +59,7 @@ it('saves a corrected mobile number in the international format', function () {
     expect($subscriber->refresh()->phone)->toBe('+61412345678');
 });
 
-it('only accepts an Australian mobile number that isn’t already on the list', function (string $phone, string $message) {
+it('only accepts an Australian mobile number that isn’t already on the list', function (string $phone, string $message): void {
     Subscriber::factory()->create(['phone' => '+61412345678']);
     $subscriber = Subscriber::factory()->create();
 
@@ -72,7 +72,7 @@ it('only accepts an Australian mobile number that isn’t already on the list', 
     'already on the list' => ['0412 345 678', 'Someone on the list already has this number.'],
 ]);
 
-it('shows the evidence of consent', function () {
+it('shows the evidence of consent', function (): void {
     $subscriber = Subscriber::factory()->create(['consent_ip' => '203.0.113.9', 'consent_source' => 'website wait list']);
 
     livewire(EditSubscriber::class, ['record' => $subscriber->id])
@@ -82,7 +82,7 @@ it('shows the evidence of consent', function () {
         ->assertSee('1 Oct 2026, 12:00pm');
 });
 
-it('lists the texts sent to and received from someone', function () {
+it('lists the texts sent to and received from someone', function (): void {
     $subscriber = Subscriber::factory()->create();
     $sent = SmsMessage::factory()->for($subscriber)->create();
     $reply = SmsMessage::factory()->for($subscriber)->reply()->create();
@@ -93,7 +93,7 @@ it('lists the texts sent to and received from someone', function () {
         ->assertCanNotSeeTableRecords([$someoneElses]);
 });
 
-it('downloads the list with the evidence of consent', function () {
+it('downloads the list with the evidence of consent', function (): void {
     Subscriber::factory()->create(['first_name' => 'Jane', 'phone' => '+61412345678', 'postcode' => '3363', 'consent_ip' => '203.0.113.9']);
 
     livewire(ListSubscribers::class)
@@ -105,7 +105,7 @@ it('downloads the list with the evidence of consent', function () {
         ]));
 });
 
-it('stops spreadsheet formulas in names from running when the list is opened', function () {
+it('stops spreadsheet formulas in names from running when the list is opened', function (): void {
     Subscriber::factory()->create(['first_name' => '=HYPERLINK("https://example.com")', 'phone' => '+61412345678', 'postcode' => '3363', 'consent_ip' => null]);
 
     livewire(ListSubscribers::class)

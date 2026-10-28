@@ -32,13 +32,10 @@ class AdminUserSeeder extends Seeder
             $password = 'password';
         }
 
-        User::updateOrCreate(
-            ['email' => $email],
-            [
-                'name' => 'Admin',
-                'password' => $password,
-                'email_verified_at' => now(),
-            ],
-        );
+        User::query()->updateOrCreate(['email' => $email], [
+            'name' => 'Admin',
+            'password' => $password,
+            'email_verified_at' => now(),
+        ]);
     }
 }

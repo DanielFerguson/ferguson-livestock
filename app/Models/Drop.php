@@ -9,6 +9,7 @@ use App\Jobs\RunDropPreflightWhenDue;
 use App\Models\Concerns\ClearsResponseCache;
 use Carbon\CarbonImmutable;
 use Database\Factories\DropFactory;
+use DateTimeInterface;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
@@ -106,7 +107,7 @@ class Drop extends Model
             ->whereNull('published_at')
             ->whereNotNull('announced_at')
             ->where('opens_at', '>', now())
-            ->orderBy('opens_at')
+            ->oldest('opens_at')
             ->first();
     }
 
@@ -130,7 +131,7 @@ class Drop extends Model
             ->when($ignoring !== null, fn (Builder $query) => $query->whereKeyNot($ignoring))
             ->where(fn (Builder $query) => $query
                 ->where('opens_at', $opensAt)
-                ->when($closesAt !== null, fn (Builder $query) => $query->orWhere(fn (Builder $query) => $query
+                ->when($closesAt instanceof CarbonImmutable, fn (Builder $query) => $query->orWhere(fn (Builder $query) => $query
                     ->where('opens_at', '>', $opensAt)
                     ->where('opens_at', '<', $closesAt)))
                 ->orWhere(fn (Builder $query) => $query
@@ -152,11 +153,11 @@ class Drop extends Model
 
         $closesAt = $this->effectiveClosesAt();
 
-        if ($closesAt !== null && now()->gte($closesAt)) {
+        if ($closesAt instanceof CarbonImmutable && now()->gte($closesAt)) {
             return DropStatus::Closed;
         }
 
-        $inStock = $this->items->contains(fn (DropItem $item) => $item->hasOwnStock() && $item->available > 0);
+        $inStock = $this->items->contains(fn (DropItem $item): bool => $item->hasOwnStock() && $item->available > 0);
 
         return $inStock ? DropStatus::Live : DropStatus::SoldOut;
     }
@@ -210,7 +211,7 @@ class Drop extends Model
         $candidates = array_filter([
             $this->closed_at,
             $this->closes_at,
-            is_string($nextOpensAt) || $nextOpensAt instanceof \DateTimeInterface ? CarbonImmutable::parse($nextOpensAt) : null,
+            is_string($nextOpensAt) || $nextOpensAt instanceof DateTimeInterface ? CarbonImmutable::parse($nextOpensAt) : null,
         ]);
 
         return $candidates === [] ? null : min($candidates);

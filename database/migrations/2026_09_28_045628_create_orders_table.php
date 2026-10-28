@@ -14,7 +14,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('orders', function (Blueprint $table) {
+        Schema::create('orders', function (Blueprint $table): void {
             $table->id();
             // Shown to customers and sent to Stripe, so order numbers can't be guessed.
             $table->ulid('public_id')->unique();

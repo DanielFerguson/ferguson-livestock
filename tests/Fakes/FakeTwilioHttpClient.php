@@ -19,7 +19,7 @@ final class FakeTwilioHttpClient implements Client
     /**
      * @param  array<string, mixed>  $body
      */
-    public function __construct(private int $status, private array $body) {}
+    public function __construct(private readonly int $status, private readonly array $body) {}
 
     /**
      * @param  array<mixed>  $params

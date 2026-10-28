@@ -24,7 +24,7 @@ afterEach(fn () => ApiRequestor::setHttpClient(new CurlClient));
 
 beforeEach(fn () => config(['services.stripe.secret' => 'sk_test_fake']));
 
-it('reads the parts of a price that matter for a drop', function () {
+it('reads the parts of a price that matter for a drop', function (): void {
     fakeStripeHttp([
         'GET /v1/prices/price_5kg' => [200, [
             'id' => 'price_5kg', 'object' => 'price', 'active' => true, 'type' => 'one_time',
@@ -42,13 +42,13 @@ it('reads the parts of a price that matter for a drop', function () {
         ->and($price?->productName)->toBe('5kg Beef Box');
 });
 
-it('returns nothing for a price Stripe does not have', function () {
+it('returns nothing for a price Stripe does not have', function (): void {
     fakeStripeHttp([]);
 
     expect(StripePaymentGateway::fromConfig()->retrievePrice('price_missing'))->toBeNull();
 });
 
-it('pins the Stripe API version', function () {
+it('pins the Stripe API version', function (): void {
     $http = fakeStripeHttp([]);
 
     StripePaymentGateway::fromConfig()->retrievePrice('price_missing');
@@ -56,7 +56,7 @@ it('pins the Stripe API version', function () {
     expect(collect($http->requests[0]['headers'])->contains('Stripe-Version: '.StripePaymentGateway::API_VERSION))->toBeTrue();
 });
 
-it('asks Stripe once, then answers from the cache', function () {
+it('asks Stripe once, then answers from the cache', function (): void {
     $http = fakeStripeHttp([]);
     $gateway = StripePaymentGateway::fromConfig();
 
@@ -66,7 +66,7 @@ it('asks Stripe once, then answers from the cache', function () {
     expect($http->requests)->toHaveCount(1);
 });
 
-it('lists webhook endpoints and whether they are enabled', function () {
+it('lists webhook endpoints and whether they are enabled', function (): void {
     fakeStripeHttp([
         'GET /v1/webhook_endpoints' => [200, [
             'object' => 'list', 'has_more' => false, 'url' => '/v1/webhook_endpoints',
@@ -100,7 +100,7 @@ function stripeSession(array $overrides = []): array
     ], $overrides);
 }
 
-it('starts a Checkout Session that can only be created once per order', function () {
+it('starts a Checkout Session that can only be created once per order', function (): void {
     $http = fakeStripeHttp(['POST /v1/checkout/sessions' => [200, stripeSession()]]);
 
     $session = StripePaymentGateway::fromConfig()->createCheckoutSession(new NewCheckoutSession(
@@ -129,7 +129,7 @@ it('starts a Checkout Session that can only be created once per order', function
         ]);
 });
 
-it('doesn’t ask for an address for farm pickup', function () {
+it('doesn’t ask for an address for farm pickup', function (): void {
     $http = fakeStripeHttp(['POST /v1/checkout/sessions' => [200, stripeSession()]]);
 
     StripePaymentGateway::fromConfig()->createCheckoutSession(new NewCheckoutSession('01J9ORDER', [['price' => 'price_box', 'quantity' => 1]], false, now()->addMinutes(31)->toImmutable(), 'https://example.test/s', 'https://example.test/c'));
@@ -137,7 +137,7 @@ it('doesn’t ask for an address for farm pickup', function () {
     expect($http->requests[0]['params'])->not->toHaveKey('shipping_address_collection');
 });
 
-it('reads who paid and where to deliver from a completed session', function () {
+it('reads who paid and where to deliver from a completed session', function (): void {
     fakeStripeHttp(['GET /v1/checkout/sessions/cs_test_123' => [200, stripeSession([
         'status' => 'complete', 'payment_status' => 'paid', 'payment_intent' => 'pi_123',
         'customer_details' => ['name' => 'Jane Citizen', 'email' => 'jane@example.com', 'phone' => '+61412345678'],
@@ -157,7 +157,7 @@ it('reads who paid and where to deliver from a completed session', function () {
         ->and($session->shippingAddress)->toBe(['line1' => '1 Main St', 'line2' => null, 'city' => 'Ballarat', 'state' => 'VIC', 'postal_code' => '3350', 'country' => 'AU']);
 });
 
-it('expires an open session', function () {
+it('expires an open session', function (): void {
     $http = fakeStripeHttp([
         'GET /v1/checkout/sessions/cs_test_123' => [200, stripeSession()],
         'POST /v1/checkout/sessions/cs_test_123/expire' => [200, stripeSession(['status' => 'expired'])],
@@ -167,14 +167,14 @@ it('expires an open session', function () {
         ->and($http->requests)->toHaveCount(2);
 });
 
-it('leaves a session that’s already complete, and says so', function () {
+it('leaves a session that’s already complete, and says so', function (): void {
     $http = fakeStripeHttp(['GET /v1/checkout/sessions/cs_test_123' => [200, stripeSession(['status' => 'complete', 'payment_status' => 'paid'])]]);
 
     expect(StripePaymentGateway::fromConfig()->expireCheckoutSession('cs_test_123')->isPaid())->toBeTrue()
         ->and($http->requests)->toHaveCount(1);
 });
 
-it('reports Stripe being unreachable', function () {
+it('reports Stripe being unreachable', function (): void {
     fakeStripeHttp(['POST /v1/checkout/sessions' => [500, ['error' => ['type' => 'api_error', 'message' => 'Something went wrong']]]]);
 
     StripePaymentGateway::fromConfig()->createCheckoutSession(new NewCheckoutSession('01J9ORDER', [['price' => 'price_box', 'quantity' => 1]], false, now()->addMinutes(31)->toImmutable(), 'https://example.test/s', 'https://example.test/c'));

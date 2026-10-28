@@ -61,7 +61,7 @@ class SubscriberForm
                 return;
             }
 
-            if (Subscriber::where('phone', $phone)->when($record !== null, fn ($query) => $query->whereKeyNot($record?->id))->exists()) {
+            if (Subscriber::query()->where('phone', $phone)->when($record instanceof Subscriber, fn ($query) => $query->whereKeyNot($record?->id))->exists()) {
                 $fail('Someone on the list already has this number.');
             }
         };

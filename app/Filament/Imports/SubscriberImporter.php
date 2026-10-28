@@ -65,7 +65,7 @@ class SubscriberImporter extends Importer
     {
         $phone = $this->data['phone'] ?? null;
 
-        if (! $this->hasSmsConsent() || (is_string($phone) && Subscriber::where('phone', $phone)->exists())) {
+        if (! $this->hasSmsConsent() || (is_string($phone) && Subscriber::query()->where('phone', $phone)->exists())) {
             return null;
         }
 

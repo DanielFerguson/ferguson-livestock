@@ -27,7 +27,7 @@ function postFromTwilio(string $route, array $data): TestResponse
     return post($url, $data, ['X-Twilio-Signature' => (new RequestValidator('twilio-auth-token'))->computeSignature($url, $data)]);
 }
 
-it('refuses requests Twilio didn’t sign', function (string $route, ?string $signature) {
+it('refuses requests Twilio didn’t sign', function (string $route, ?string $signature): void {
     $message = SmsMessage::factory()->create();
 
     $headers = $signature === null ? [] : ['X-Twilio-Signature' => $signature];
@@ -35,7 +35,7 @@ it('refuses requests Twilio didn’t sign', function (string $route, ?string $si
         ->assertForbidden();
 
     expect($message->refresh()->status)->toBe(SmsStatus::Sent)
-        ->and(SmsMessage::count())->toBe(1);
+        ->and(SmsMessage::query()->count())->toBe(1);
 })->with([
     'status, unsigned' => ['webhooks.twilio.status', null],
     'status, wrong signature' => ['webhooks.twilio.status', 'bm90IHRoZSByaWdodCBzaWduYXR1cmU='],
@@ -43,7 +43,7 @@ it('refuses requests Twilio didn’t sign', function (string $route, ?string $si
     'inbound, wrong signature' => ['webhooks.twilio.inbound', 'bm90IHRoZSByaWdodCBzaWduYXR1cmU='],
 ]);
 
-it('refuses every request until the Twilio auth token is set', function () {
+it('refuses every request until the Twilio auth token is set', function (): void {
     config(['services.twilio.token' => null]);
     $message = SmsMessage::factory()->create();
 
@@ -51,7 +51,7 @@ it('refuses every request until the Twilio auth token is set', function () {
         ->assertForbidden();
 });
 
-it('records when a text is delivered', function () {
+it('records when a text is delivered', function (): void {
     $this->freezeTime();
     $message = SmsMessage::factory()->create();
 
@@ -62,7 +62,7 @@ it('records when a text is delivered', function () {
         ->and($message->delivered_at?->toDateTimeString())->toBe(now()->toDateTimeString());
 });
 
-it('keeps the latest status when Twilio’s updates arrive out of order', function () {
+it('keeps the latest status when Twilio’s updates arrive out of order', function (): void {
     $message = SmsMessage::factory()->create(['status' => SmsStatus::Delivered]);
 
     postFromTwilio('webhooks.twilio.status', ['MessageSid' => (string) $message->twilio_sid, 'MessageStatus' => 'sent'])
@@ -71,7 +71,7 @@ it('keeps the latest status when Twilio’s updates arrive out of order', functi
     expect($message->refresh()->status)->toBe(SmsStatus::Delivered);
 });
 
-it('records why a text wasn’t delivered', function () {
+it('records why a text wasn’t delivered', function (): void {
     $message = SmsMessage::factory()->create();
 
     postFromTwilio('webhooks.twilio.status', ['MessageSid' => (string) $message->twilio_sid, 'MessageStatus' => 'undelivered', 'ErrorCode' => '30007']);
@@ -80,12 +80,12 @@ it('records why a text wasn’t delivered', function () {
         ->and($message->error_code)->toBe(30007);
 });
 
-it('ignores status updates for texts it didn’t send', function () {
+it('ignores status updates for texts it didn’t send', function (): void {
     postFromTwilio('webhooks.twilio.status', ['MessageSid' => 'SMunknown', 'MessageStatus' => 'delivered'])
         ->assertNoContent();
 });
 
-it('stores a reply against the subscriber who sent it', function () {
+it('stores a reply against the subscriber who sent it', function (): void {
     $subscriber = Subscriber::factory()->create();
 
     postFromTwilio('webhooks.twilio.inbound', ['MessageSid' => 'SMreply1', 'From' => $subscriber->phone, 'To' => '+61400000000', 'Body' => 'What time Saturday?', 'NumSegments' => '1'])
@@ -93,7 +93,7 @@ it('stores a reply against the subscriber who sent it', function () {
         ->assertHeader('Content-Type', 'text/xml; charset=UTF-8')
         ->assertSee('<Response/>', escape: false);
 
-    $reply = SmsMessage::sole();
+    $reply = SmsMessage::query()->sole();
     expect($reply->direction)->toBe(SmsDirection::Inbound)
         ->and($reply->status)->toBe(SmsStatus::Received)
         ->and($reply->subscriber_id)->toBe($subscriber->id)
@@ -102,13 +102,13 @@ it('stores a reply against the subscriber who sent it', function () {
         ->and($subscriber->refresh()->isSubscribed())->toBeTrue();
 });
 
-it('files a reply under the number it came from, even when the sender isn’t a subscriber', function () {
+it('files a reply under the number it came from, even when the sender isn’t a subscriber', function (): void {
     postFromTwilio('webhooks.twilio.inbound', ['MessageSid' => 'SMreply1', 'From' => '+61412000111', 'To' => '+61400000000', 'Body' => 'Do you deliver to Creswick?'])->assertOk();
 
-    expect(SmsMessage::sole())->contact_phone->toBe('+61412000111')->subscriber_id->toBeNull();
+    expect(SmsMessage::query()->sole())->contact_phone->toBe('+61412000111')->subscriber_id->toBeNull();
 });
 
-it('opts someone out when they reply asking to stop', function () {
+it('opts someone out when they reply asking to stop', function (): void {
     $subscriber = Subscriber::factory()->create();
 
     postFromTwilio('webhooks.twilio.inbound', ['MessageSid' => 'SMreply1', 'From' => $subscriber->phone, 'To' => '+61400000000', 'Body' => 'Stop please']);
@@ -116,17 +116,17 @@ it('opts someone out when they reply asking to stop', function () {
     expect($subscriber->refresh()->isSubscribed())->toBeFalse();
 });
 
-it('accepts a signed reply with spaces at either end, as Twilio signs it', function () {
+it('accepts a signed reply with spaces at either end, as Twilio signs it', function (): void {
     $subscriber = Subscriber::factory()->create();
 
     postFromTwilio('webhooks.twilio.inbound', ['MessageSid' => 'SMreply1', 'From' => $subscriber->phone, 'To' => '+61400000000', 'Body' => "Stop please \n"])
         ->assertOk();
 
     expect($subscriber->refresh()->isSubscribed())->toBeFalse()
-        ->and(SmsMessage::sole()->body)->toBe("Stop please \n");
+        ->and(SmsMessage::query()->sole()->body)->toBe("Stop please \n");
 });
 
-it('starts texting someone again when they reply START from their phone', function (string $body) {
+it('starts texting someone again when they reply START from their phone', function (string $body): void {
     $subscriber = Subscriber::factory()->unsubscribed()->create(['consent_ip' => '198.51.100.1']);
 
     $this->freezeSecond();
@@ -140,7 +140,7 @@ it('starts texting someone again when they reply START from their phone', functi
         ->and($subscriber->consent_ip)->toBeNull();
 })->with(['START', 'start', 'Unstop!']);
 
-it('keeps someone opted out when a reply only mentions starting', function (string $body) {
+it('keeps someone opted out when a reply only mentions starting', function (string $body): void {
     $subscriber = Subscriber::factory()->unsubscribed()->create();
 
     postFromTwilio('webhooks.twilio.inbound', ['MessageSid' => 'SMreply1', 'From' => $subscriber->phone, 'To' => '+61400000000', 'Body' => $body])->assertOk();
@@ -148,17 +148,17 @@ it('keeps someone opted out when a reply only mentions starting', function (stri
     expect($subscriber->refresh()->isSubscribed())->toBeFalse();
 })->with(['Yes', 'When does the next drop start?']);
 
-it('keeps replies from numbers that aren’t subscribers', function () {
+it('keeps replies from numbers that aren’t subscribers', function (): void {
     postFromTwilio('webhooks.twilio.inbound', ['MessageSid' => 'SMreply1', 'From' => '+61499999999', 'To' => '+61400000000', 'Body' => 'Who is this?']);
 
-    expect(SmsMessage::sole()->subscriber_id)->toBeNull();
+    expect(SmsMessage::query()->sole()->subscriber_id)->toBeNull();
 });
 
-it('stores a reply once when Twilio sends it again', function () {
+it('stores a reply once when Twilio sends it again', function (): void {
     $data = ['MessageSid' => 'SMreply1', 'From' => '+61499999999', 'To' => '+61400000000', 'Body' => 'Hello'];
 
     postFromTwilio('webhooks.twilio.inbound', $data)->assertOk();
     postFromTwilio('webhooks.twilio.inbound', $data)->assertOk();
 
-    expect(SmsMessage::count())->toBe(1);
+    expect(SmsMessage::query()->count())->toBe(1);
 });

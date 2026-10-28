@@ -31,7 +31,7 @@ class CurrentDropStats extends TableWidget
         $drop = Drop::featured();
 
         $table
-            ->heading($drop === null ? 'No drop yet' : $drop->name)
+            ->heading($drop instanceof Drop ? $drop->name : 'No drop yet')
             ->query(DropItem::query()->where('drop_id', $drop->id ?? 0)->with(['product', 'orderItems.order'])->orderBy('id'))
             ->paginated(false)
             ->poll('5s')
@@ -45,7 +45,7 @@ class CurrentDropStats extends TableWidget
                 )),
             ]);
 
-        if ($drop === null) {
+        if (! $drop instanceof Drop) {
             $table
                 ->emptyStateIcon(Heroicon::OutlinedCalendarDays)
                 ->emptyStateHeading('Sales for the current drop show here')

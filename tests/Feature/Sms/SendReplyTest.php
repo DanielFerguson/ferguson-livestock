@@ -10,7 +10,7 @@ use App\Models\SmsMessage;
 use App\Models\Subscriber;
 use Tests\Fakes\FakeSmsGateway;
 
-it('answers a subscriber who texted in, as typed, from the shop’s number', function () {
+it('answers a subscriber who texted in, as typed, from the shop’s number', function (): void {
     $sms = FakeSmsGateway::swap();
     $subscriber = Subscriber::factory()->create();
     SmsMessage::factory()->reply('Is Saturday still on?')->for($subscriber)->create();
@@ -30,7 +30,7 @@ it('answers a subscriber who texted in, as typed, from the shop’s number', fun
         ->and($reply->sent_at)->not->toBeNull();
 });
 
-it('answers someone who texted in without being on the wait list', function () {
+it('answers someone who texted in without being on the wait list', function (): void {
     $sms = FakeSmsGateway::swap();
     SmsMessage::factory()->reply('Do you deliver to Creswick?')->state(['subscriber_id' => null, 'from' => '+61412000111'])->create();
 
@@ -41,7 +41,7 @@ it('answers someone who texted in without being on the wait list', function () {
         ->and($reply->contact_phone)->toBe('+61412000111');
 });
 
-it('won’t text someone who has opted out, even though they texted in', function () {
+it('won’t text someone who has opted out, even though they texted in', function (): void {
     $sms = FakeSmsGateway::swap();
     $subscriber = Subscriber::factory()->unsubscribed()->create();
     SmsMessage::factory()->reply('Stop')->for($subscriber)->create();
@@ -50,10 +50,10 @@ it('won’t text someone who has opted out, even though they texted in', functio
         ->toThrow(CannotReply::class, 'They’ve opted out of texts, so you can’t text them.');
 
     expect($sms->sent)->toBe([])
-        ->and(SmsMessage::where('direction', SmsDirection::Outbound)->count())->toBe(0);
+        ->and(SmsMessage::query()->where('direction', SmsDirection::Outbound)->count())->toBe(0);
 });
 
-it('only answers numbers that have texted in', function () {
+it('only answers numbers that have texted in', function (): void {
     $sms = FakeSmsGateway::swap();
     $subscriber = Subscriber::factory()->create();
 
@@ -63,7 +63,7 @@ it('only answers numbers that have texted in', function () {
     expect($sms->sent)->toBe([]);
 });
 
-it('refuses an empty answer and one too long to send', function (string $body, string $message) {
+it('refuses an empty answer and one too long to send', function (string $body, string $message): void {
     FakeSmsGateway::swap();
     $subscriber = Subscriber::factory()->create();
     SmsMessage::factory()->reply()->for($subscriber)->create();
@@ -74,7 +74,7 @@ it('refuses an empty answer and one too long to send', function (string $body, s
     'too long' => [str_repeat('a', 641), 'That’s too long: keep it to 640 characters.'],
 ]);
 
-it('records an answer Twilio turned down, and opts the person out if they had told Twilio to stop', function (int $code, bool $optedOut) {
+it('records an answer Twilio turned down, and opts the person out if they had told Twilio to stop', function (int $code, bool $optedOut): void {
     $sms = FakeSmsGateway::swap();
     $subscriber = Subscriber::factory()->create();
     SmsMessage::factory()->reply()->for($subscriber)->create();
@@ -91,7 +91,7 @@ it('records an answer Twilio turned down, and opts the person out if they had to
     'any other refusal' => [21211, false],
 ]);
 
-it('lets Twilio’s delivery report update an answer', function () {
+it('lets Twilio’s delivery report update an answer', function (): void {
     FakeSmsGateway::swap();
     $subscriber = Subscriber::factory()->create();
     SmsMessage::factory()->reply()->for($subscriber)->create();

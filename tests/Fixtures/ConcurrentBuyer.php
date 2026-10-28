@@ -27,7 +27,7 @@ final class ConcurrentBuyer
             time_sleep_until($startAt);
 
             try {
-                app(StockLedger::class)->reserve(Drop::findOrFail($dropId), [$dropItemId => 1], DeliveryMethod::Pickup, null, $buyer, now()->addMinutes(31));
+                app(StockLedger::class)->reserve(Drop::query()->findOrFail($dropId), [$dropItemId => 1], DeliveryMethod::Pickup, null, $buyer, now()->addMinutes(31));
 
                 return 'held';
             } catch (InsufficientStock) {

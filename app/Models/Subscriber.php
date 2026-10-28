@@ -57,13 +57,13 @@ class Subscriber extends Model
      */
     public static function recordSignUp(string $firstName, string $phone, string $postcode, ?string $ip): self
     {
-        $existing = self::firstWhere('phone', $phone);
+        $existing = self::query()->firstWhere('phone', $phone);
 
         if ($existing !== null && ! $existing->isSubscribed()) {
             return $existing;
         }
 
-        return self::updateOrCreate(['phone' => $phone], [
+        return self::query()->updateOrCreate(['phone' => $phone], [
             'first_name' => $firstName,
             'postcode' => $postcode,
             'consented_at' => now(),

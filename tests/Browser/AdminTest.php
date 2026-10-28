@@ -18,24 +18,24 @@ use App\Models\User;
 use Database\Seeders\DemoDropSeeder;
 use Database\Seeders\ProductSeeder;
 
-beforeEach(function () {
+beforeEach(function (): void {
     config(['shop.admin_email' => 'daniel@example.com']);
     $this->seed([ProductSeeder::class, DemoDropSeeder::class]);
     $this->actingAs(User::factory()->withAppAuthentication()->create(['email' => 'daniel@example.com']));
 });
 
-it('renders the admin pages in a real browser without errors', function () {
+it('renders the admin pages in a real browser without errors', function (): void {
     visit([
         '/admin',
         '/admin/drops',
         '/admin/drops/create',
-        '/admin/drops/'.Drop::sole()->id.'/edit',
+        '/admin/drops/'.Drop::query()->sole()->id.'/edit',
         '/admin/products',
-        '/admin/products/'.Product::where('slug', 'beef-box-10kg')->sole()->id.'/edit',
+        '/admin/products/'.Product::query()->where('slug', 'beef-box-10kg')->sole()->id.'/edit',
     ])->assertNoJavaScriptErrors();
 });
 
-it('renders the order pages in a real browser without errors', function () {
+it('renders the order pages in a real browser without errors', function (): void {
     $order = Order::factory()->create();
     OrderItem::factory()->for($order)->create();
 
@@ -47,7 +47,7 @@ it('renders the order pages in a real browser without errors', function () {
     ])->assertNoJavaScriptErrors();
 });
 
-it('renders the texting pages in a real browser without errors', function () {
+it('renders the texting pages in a real browser without errors', function (): void {
     $sent = SmsBroadcast::factory()->sent()->create();
     $subscriber = Subscriber::factory()->create();
     SmsMessage::factory()->for($sent, 'broadcast')->for($subscriber)->create();
@@ -67,7 +67,7 @@ it('renders the texting pages in a real browser without errors', function () {
     ])->assertNoJavaScriptErrors();
 });
 
-it('shows the logo, the site fonts and the admin theme on the dashboard', function () {
+it('shows the logo, the site fonts and the admin theme on the dashboard', function (): void {
     visit('/admin')
         ->assertScript("document.querySelector('.fl-brand-mark').naturalWidth > 0")
         ->assertScript("getComputedStyle(document.querySelector('.fl-brand-mark')).width", '40px')

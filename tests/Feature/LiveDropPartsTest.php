@@ -14,7 +14,7 @@ function messagesFor(string $page, string $state, bool $hidden = false): int
     return (int) preg_match_all('/<p data-drop-show="'.$state.'"'.($hidden ? '\s+hidden' : '').'\s*>/', $page);
 }
 
-it('announces an open drop on the homepage', function () {
+it('announces an open drop on the homepage', function (): void {
     StockedDrop::create();
 
     $this->get(route('home'))
@@ -22,17 +22,17 @@ it('announces an open drop on the homepage', function () {
         ->assertSee('data-drop-show="live"', escape: false);
 });
 
-it('announces when the next drop opens', function () {
+it('announces when the next drop opens', function (): void {
     Drop::factory()->create(['opens_at' => CarbonImmutable::parse('2026-10-10 09:00', 'Australia/Melbourne')->utc()]);
 
     $this->get(route('home'))->assertSee('Next drop opens Saturday 10 October at 9:00am');
 });
 
-it('points people to the wait list between drops', function () {
+it('points people to the wait list between drops', function (): void {
     $this->get(route('home'))->assertSee('Next drop coming soon');
 });
 
-it('announces the date of the next drop before its stock is known', function () {
+it('announces the date of the next drop before its stock is known', function (): void {
     $this->travelTo('2026-10-01 12:00');
     Drop::factory()->announced()->create(['opens_at' => '2026-11-13 22:00:00']);
 
@@ -46,7 +46,7 @@ it('announces the date of the next drop before its stock is known', function () 
         ->and(messagesFor($page, 'closed none', hidden: true))->toBe(2);
 });
 
-it('announces the next drop’s date after the last drop has closed', function () {
+it('announces the next drop’s date after the last drop has closed', function (): void {
     $this->travelTo('2026-10-01 12:00');
     Drop::factory()->closed()->create();
     Drop::factory()->announced()->create(['opens_at' => '2026-11-13 22:00:00']);
@@ -57,7 +57,7 @@ it('announces the next drop’s date after the last drop has closed', function (
         ->and(messagesFor($page, 'closed none', hidden: true))->toBe(2);
 });
 
-it('shows a published drop’s opening time instead of an announced date', function () {
+it('shows a published drop’s opening time instead of an announced date', function (): void {
     $this->travelTo('2026-10-01 12:00');
     Drop::factory()->create(['opens_at' => '2026-10-09 22:00:00']);
     Drop::factory()->announced()->create(['opens_at' => '2026-11-13 22:00:00']);
@@ -68,7 +68,7 @@ it('shows a published drop’s opening time instead of an announced date', funct
         ->and(messagesFor($page, 'announced', hidden: true))->toBe(2);
 });
 
-it('adds the announced date to the sold-out message', function () {
+it('adds the announced date to the sold-out message', function (): void {
     $this->travelTo('2026-10-01 12:00');
     StockedDrop::create(boxes: 0, mince: 0);
     Drop::factory()->announced()->create(['opens_at' => '2026-11-13 22:00:00']);
@@ -79,7 +79,7 @@ it('adds the announced date to the sold-out message', function () {
         ->assertSee('The next drop is Saturday 14 November.');
 });
 
-it('shows each box’s stock on the beef boxes page', function () {
+it('shows each box’s stock on the beef boxes page', function (): void {
     $shop = StockedDrop::create(boxes: 3);
 
     $this->get(route('beef-boxes'))

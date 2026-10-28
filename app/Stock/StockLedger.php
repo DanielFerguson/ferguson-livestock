@@ -45,7 +45,7 @@ final class StockLedger
             $lines = $this->lines($drop, $quantities);
             $this->takeStock($lines);
 
-            $order = Order::create([
+            $order = Order::query()->create([
                 'drop_id' => $drop->id,
                 'status' => OrderStatus::Pending,
                 'delivery_method' => $deliveryMethod,

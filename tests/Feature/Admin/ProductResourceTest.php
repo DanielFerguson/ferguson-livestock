@@ -13,7 +13,7 @@ use Filament\Forms\Components\Repeater;
 
 use function Pest\Livewire\livewire;
 
-beforeEach(function () {
+beforeEach(function (): void {
     config(['shop.admin_email' => 'daniel@example.com']);
     $this->actingAs(User::factory()->withAppAuthentication()->create(['email' => 'daniel@example.com']));
     $this->undoRepeaterFake = Repeater::fake();
@@ -21,7 +21,7 @@ beforeEach(function () {
 
 afterEach(fn () => ($this->undoRepeaterFake)());
 
-it('adds a box with its contents', function () {
+it('adds a box with its contents', function (): void {
     livewire(CreateProduct::class)
         ->fillForm([
             'name' => '8kg Beef Box',
@@ -38,13 +38,13 @@ it('adds a box with its contents', function () {
         ->call('create')
         ->assertHasNoFormErrors();
 
-    $box = Product::where('slug', 'beef-box-8kg')->sole();
+    $box = Product::query()->where('slug', 'beef-box-8kg')->sole();
 
     expect($box->type)->toBe(ProductType::Box)
         ->and($box->box_details['contents'] ?? null)->toBe(['Approximately 1.2kg primary cuts', 'Approximately 1.5kg mince']);
 });
 
-it('locks the slug and type once a product exists', function () {
+it('locks the slug and type once a product exists', function (): void {
     $product = Product::factory()->create();
 
     livewire(EditProduct::class, ['record' => $product->getRouteKey()])
@@ -52,7 +52,7 @@ it('locks the slug and type once a product exists', function () {
         ->assertFormFieldDisabled('type');
 });
 
-it('keeps products that have been sold in a drop', function () {
+it('keeps products that have been sold in a drop', function (): void {
     $sold = DropItem::factory()->create()->product;
     $unused = Product::factory()->create();
 

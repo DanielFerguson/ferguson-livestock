@@ -15,7 +15,7 @@ use Tests\Fixtures\StockedDrop;
 
 use function Pest\Livewire\livewire;
 
-it('shows the open drop’s boxes, extras and delivery days with what’s left', function () {
+it('shows the open drop’s boxes, extras and delivery days with what’s left', function (): void {
     $shop = StockedDrop::create(boxes: 3, mince: 20);
 
     livewire(OrderForm::class, ['drop' => $shop->drop])
@@ -23,7 +23,7 @@ it('shows the open drop’s boxes, extras and delivery days with what’s left',
         ->assertSee(now()->addDays(3)->format('l j F'));
 });
 
-it('sends the customer to Stripe with what they chose', function () {
+it('sends the customer to Stripe with what they chose', function (): void {
     FakePaymentGateway::swap();
     $shop = StockedDrop::create();
 
@@ -35,11 +35,11 @@ it('sends the customer to Stripe with what they chose', function () {
         ->call('checkout')
         ->assertRedirect('https://checkout.stripe.test/cs_test_1');
 
-    expect(Order::sole()->status)->toBe(OrderStatus::Pending)
-        ->and(Order::sole()->total)->toBe(16000 + 2 * 1200 + 1500);
+    expect(Order::query()->sole()->status)->toBe(OrderStatus::Pending)
+        ->and(Order::query()->sole()->total)->toBe(16000 + 2 * 1200 + 1500);
 });
 
-it('won’t start checkout when Cloudflare’s bot check fails', function () {
+it('won’t start checkout when Cloudflare’s bot check fails', function (): void {
     FakePaymentGateway::swap();
     fakeTurnstile(genuine: false);
     $shop = StockedDrop::create();
@@ -52,10 +52,10 @@ it('won’t start checkout when Cloudflare’s bot check fails', function () {
     $form->assertSet('problem', Turnstile::FAILED_MESSAGE)->assertNoRedirect();
     $form->assertDispatched('turnstile-reset');
 
-    expect(Order::count())->toBe(0);
+    expect(Order::query()->count())->toBe(0);
 });
 
-it('starts checkout when Cloudflare’s bot check passes', function () {
+it('starts checkout when Cloudflare’s bot check passes', function (): void {
     FakePaymentGateway::swap();
     fakeTurnstile(genuine: true);
     $shop = StockedDrop::create();
@@ -67,7 +67,7 @@ it('starts checkout when Cloudflare’s bot check passes', function () {
         ->assertRedirect('https://checkout.stripe.test/cs_test_1');
 });
 
-it('counts a failed bot check as a try, and stops asking Cloudflare once the tries run out', function () {
+it('counts a failed bot check as a try, and stops asking Cloudflare once the tries run out', function (): void {
     FakePaymentGateway::swap();
     fakeTurnstile(genuine: false);
     $shop = StockedDrop::create();
@@ -86,7 +86,7 @@ it('counts a failed bot check as a try, and stops asking Cloudflare once the tri
     Http::assertSentCount(5);
 });
 
-it('refuses an extra sent under another spelling of its ID', function () {
+it('refuses an extra sent under another spelling of its ID', function (): void {
     FakePaymentGateway::swap();
     $shop = StockedDrop::create(mince: 30);
 
@@ -98,16 +98,16 @@ it('refuses an extra sent under another spelling of its ID', function () {
         ->assertSet('problem', 'Something in your order isn’t part of this drop.')
         ->assertNoRedirect();
 
-    expect(Order::count())->toBe(0);
+    expect(Order::query()->count())->toBe(0);
 });
 
-it('only lets the browser call checkout', function () {
+it('only lets the browser call checkout', function (): void {
     $shop = StockedDrop::create();
 
     livewire(OrderForm::class, ['drop' => $shop->drop])->call('isTakingOrders');
 })->throws(MethodNotFoundException::class);
 
-it('says what to fix when the order can’t be taken', function () {
+it('says what to fix when the order can’t be taken', function (): void {
     FakePaymentGateway::swap();
     $shop = StockedDrop::create();
 
@@ -119,36 +119,36 @@ it('says what to fix when the order can’t be taken', function () {
         ->assertNoRedirect();
 });
 
-it('cuts an extra down to what’s left, and says so', function () {
+it('cuts an extra down to what’s left, and says so', function (): void {
     FakePaymentGateway::swap();
     $shop = StockedDrop::create(mince: 10);
     $form = livewire(OrderForm::class, ['drop' => $shop->drop])
         ->set("extras.{$shop->mince->id}", 3)
         ->set('deliveryMethod', 'pickup');
-    DropItem::whereKey($shop->mince->id)->update(['available' => 2]);
+    DropItem::query()->whereKey($shop->mince->id)->update(['available' => 2]);
 
     $form->call('checkout')
         ->assertSet("extras.{$shop->mince->id}", 2)
         ->assertSet('notices', ['There are only 2 of the 500g Beef Mince left, so we’ve changed your order to 2.'])
         ->assertNoRedirect();
 
-    expect(Order::count())->toBe(0);
+    expect(Order::query()->count())->toBe(0);
 });
 
-it('takes a box that just sold out off the order, and says so', function () {
+it('takes a box that just sold out off the order, and says so', function (): void {
     FakePaymentGateway::swap();
     $shop = StockedDrop::create(boxes: 1);
     $form = livewire(OrderForm::class, ['drop' => $shop->drop])
         ->set('box', (string) $shop->box->id)
         ->set('deliveryMethod', 'pickup');
-    DropItem::whereKey($shop->box->id)->update(['available' => 0]);
+    DropItem::query()->whereKey($shop->box->id)->update(['available' => 0]);
 
     $form->call('checkout')
         ->assertSet('box', '')
         ->assertSet('notices', ['The 5kg Beef Box just sold out, so we’ve taken it off your order.']);
 });
 
-it('shows when the next drop opens, and doesn’t take orders before then', function () {
+it('shows when the next drop opens, and doesn’t take orders before then', function (): void {
     FakePaymentGateway::swap();
     $shop = StockedDrop::create(drop: ['opens_at' => now()->addDay()->startOfHour()]);
 
@@ -160,7 +160,7 @@ it('shows when the next drop opens, and doesn’t take orders before then', func
         ->assertSet('problem', 'This drop isn’t taking orders right now.');
 });
 
-it('puts the order form on the order page while a drop is open or coming up', function () {
+it('puts the order form on the order page while a drop is open or coming up', function (): void {
     $shop = StockedDrop::create();
 
     $this->get(route('order'))
@@ -169,7 +169,7 @@ it('puts the order form on the order page while a drop is open or coming up', fu
         ->assertSee('<meta name="robots" content="noindex, follow">', escape: false);
 });
 
-it('shows the wait list on the order page between drops', function () {
+it('shows the wait list on the order page between drops', function (): void {
     Drop::factory()->closed()->create();
 
     $this->get(route('order'))
@@ -178,7 +178,7 @@ it('shows the wait list on the order page between drops', function () {
         ->assertSee('Join the wait list');
 });
 
-it('shows the announced date on the order page between drops', function () {
+it('shows the announced date on the order page between drops', function (): void {
     $this->travelTo('2026-10-01 12:00');
     Drop::factory()->announced()->create(['opens_at' => '2026-11-13 22:00:00']);
 
@@ -189,7 +189,7 @@ it('shows the announced date on the order page between drops', function () {
         ->assertSee('Join the wait list');
 });
 
-it('shows the announced date on the order page after the last drop has closed', function () {
+it('shows the announced date on the order page after the last drop has closed', function (): void {
     $this->travelTo('2026-10-01 12:00');
     Drop::factory()->closed()->create();
     Drop::factory()->announced()->create(['opens_at' => '2026-11-13 22:00:00']);
@@ -199,7 +199,7 @@ it('shows the announced date on the order page after the last drop has closed', 
         ->assertDontSee('1. Choose a box');
 });
 
-it('puts the order form ahead of an announced date while a drop is open', function () {
+it('puts the order form ahead of an announced date while a drop is open', function (): void {
     $this->travelTo('2026-10-01 12:00');
     StockedDrop::create();
     Drop::factory()->announced()->create(['opens_at' => '2026-11-13 22:00:00']);
@@ -209,7 +209,7 @@ it('puts the order form ahead of an announced date while a drop is open', functi
         ->assertDontSee('The next drop is Saturday 14 November.');
 });
 
-it('says the order was cancelled when the customer comes back from Stripe', function () {
+it('says the order was cancelled when the customer comes back from Stripe', function (): void {
     $shop = StockedDrop::create();
 
     $this->withSession(['checkout.notice' => 'Your order was cancelled and nothing was charged.'])

@@ -29,7 +29,7 @@ function stripeCheckout(string $status, string $paymentStatus = 'unpaid'): Check
     return new CheckoutSession('cs_test_1', $status, $paymentStatus, paymentIntentId: 'pi_1', customerName: 'Sam Buyer', email: 'buyer@example.test', phone: '+61400000002');
 }
 
-it('marks an order paid, keeps the buyer’s details and emails them and the farm once', function () {
+it('marks an order paid, keeps the buyer’s details and emails them and the farm once', function (): void {
     Mail::fake();
     $shop = StockedDrop::create();
     $order = pendingOrder($shop);
@@ -47,7 +47,7 @@ it('marks an order paid, keeps the buyer’s details and emails them and the far
     Mail::assertQueued(NewOrderNotification::class, fn (NewOrderNotification $mail) => $mail->hasTo(config()->string('shop.email')));
 });
 
-it('keeps holding the stock while a bank payment clears', function () {
+it('keeps holding the stock while a bank payment clears', function (): void {
     Mail::fake();
     $shop = StockedDrop::create(boxes: 5);
     $order = pendingOrder($shop);
@@ -59,7 +59,7 @@ it('keeps holding the stock while a bank payment clears', function () {
     Mail::assertNothingQueued();
 });
 
-it('marks a bank payment paid once it clears', function () {
+it('marks a bank payment paid once it clears', function (): void {
     Mail::fake();
     $order = pendingOrder(StockedDrop::create());
     app(OrderPayments::class)->apply($order, stripeCheckout('complete'));
@@ -70,7 +70,7 @@ it('marks a bank payment paid once it clears', function () {
     Mail::assertQueued(OrderConfirmation::class, 1);
 });
 
-it('puts the stock back on sale when a bank payment fails', function () {
+it('puts the stock back on sale when a bank payment fails', function (): void {
     $shop = StockedDrop::create(boxes: 5);
     $order = pendingOrder($shop);
     app(OrderPayments::class)->apply($order, stripeCheckout('complete'));
@@ -81,7 +81,7 @@ it('puts the stock back on sale when a bank payment fails', function () {
         ->and($shop->box->refresh()->available)->toBe(5);
 });
 
-it('puts the stock back on sale when the payment page expires', function () {
+it('puts the stock back on sale when the payment page expires', function (): void {
     $shop = StockedDrop::create(boxes: 5);
     $order = pendingOrder($shop);
 
@@ -91,7 +91,7 @@ it('puts the stock back on sale when the payment page expires', function () {
         ->and($shop->box->refresh()->available)->toBe(5);
 });
 
-it('records refunds without putting stock back', function () {
+it('records refunds without putting stock back', function (): void {
     $shop = StockedDrop::create(boxes: 5);
     $order = pendingOrder($shop);
     app(OrderPayments::class)->apply($order, stripeCheckout('complete', 'paid'));

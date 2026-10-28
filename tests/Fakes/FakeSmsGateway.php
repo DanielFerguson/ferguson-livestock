@@ -56,7 +56,7 @@ final class FakeSmsGateway implements SmsGateway
 
     public function send(string $to, string $body): SentSms
     {
-        if ($this->whileSending !== null) {
+        if ($this->whileSending instanceof Closure) {
             ($this->whileSending)();
         }
 

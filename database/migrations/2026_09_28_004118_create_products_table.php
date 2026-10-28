@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('products', function (Blueprint $table) {
+        Schema::create('products', function (Blueprint $table): void {
             $table->id();
             // Stable identifiers such as `beef-box-5kg`, kept from the Astro site.
             $table->string('slug')->unique();

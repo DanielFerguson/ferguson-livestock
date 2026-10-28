@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\SmsBroadcasts\Schemas;
 
+use App\Enums\BroadcastStatus;
 use App\Enums\SmsStatus;
 use App\Models\SmsBroadcast;
 use App\Sms\BroadcastPreview;
@@ -40,7 +41,7 @@ class SmsBroadcastInfolist
                     ->columns(3)
                     ->schema([
                         TextEntry::make('status')
-                            ->state(fn (SmsBroadcast $record) => $record->status())
+                            ->state(fn (SmsBroadcast $record): BroadcastStatus => $record->status())
                             ->badge(),
                         TextEntry::make('audience')
                             ->label('To')

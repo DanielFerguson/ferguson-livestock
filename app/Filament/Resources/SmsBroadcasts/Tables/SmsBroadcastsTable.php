@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\SmsBroadcasts\Tables;
 
+use App\Enums\BroadcastStatus;
 use App\Models\SmsBroadcast;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -19,7 +20,7 @@ class SmsBroadcastsTable
             ->columns([
                 TextColumn::make('body')->label('Message')->limit(70)->wrap()->searchable(),
                 TextColumn::make('status')
-                    ->state(fn (SmsBroadcast $record) => $record->status())
+                    ->state(fn (SmsBroadcast $record): BroadcastStatus => $record->status())
                     ->badge(),
                 TextColumn::make('audience')
                     ->label('To')

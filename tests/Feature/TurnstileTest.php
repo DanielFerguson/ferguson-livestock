@@ -7,7 +7,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 
-it('asks Cloudflare whether the token is genuine', function () {
+it('asks Cloudflare whether the token is genuine', function (): void {
     fakeTurnstile(genuine: true);
 
     expect(app(Turnstile::class)->passes('token-from-widget', '203.0.113.7'))->toBeTrue();
@@ -16,13 +16,13 @@ it('asks Cloudflare whether the token is genuine', function () {
         && $request->data() === ['secret' => 'test-secret-key', 'response' => 'token-from-widget', 'remoteip' => '203.0.113.7']);
 });
 
-it('fails a token Cloudflare rejects', function () {
+it('fails a token Cloudflare rejects', function (): void {
     fakeTurnstile(genuine: false);
 
     expect(app(Turnstile::class)->passes('used-token', '203.0.113.7'))->toBeFalse();
 });
 
-it('fails a missing token without asking Cloudflare', function (mixed $token) {
+it('fails a missing token without asking Cloudflare', function (mixed $token): void {
     fakeTurnstile(genuine: true);
 
     expect(app(Turnstile::class)->passes($token, '203.0.113.7'))->toBeFalse();
@@ -34,18 +34,18 @@ it('fails a missing token without asking Cloudflare', function (mixed $token) {
     'too long' => [str_repeat('a', 2049)],
 ]);
 
-it('lets people through when Cloudflare is down', function (Closure $answer) {
+it('lets people through when Cloudflare is down', function (Closure $answer): void {
     config(['services.turnstile.site_key' => 'test-site-key', 'services.turnstile.secret_key' => 'test-secret-key']);
     Http::preventStrayRequests();
     Http::fake([Turnstile::VERIFY_URL => $answer]);
 
     expect(app(Turnstile::class)->passes('token-from-widget', '203.0.113.7'))->toBeTrue();
 })->with([
-    'unreachable' => [fn () => fn () => throw new ConnectionException('Timed out')],
-    'server error' => [fn () => fn () => Http::response('', 503)],
+    'unreachable' => [fn (): Closure => fn () => throw new ConnectionException('Timed out')],
+    'server error' => [fn (): Closure => fn () => Http::response('', 503)],
 ]);
 
-it('passes everything without asking Cloudflare until both keys are set', function (?string $siteKey, ?string $secretKey) {
+it('passes everything without asking Cloudflare until both keys are set', function (?string $siteKey, ?string $secretKey): void {
     config(['services.turnstile.site_key' => $siteKey, 'services.turnstile.secret_key' => $secretKey]);
     Http::preventStrayRequests();
 

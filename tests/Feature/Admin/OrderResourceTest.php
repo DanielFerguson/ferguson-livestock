@@ -17,7 +17,7 @@ use Filament\Actions\Testing\TestAction;
 
 use function Pest\Livewire\livewire;
 
-beforeEach(function () {
+beforeEach(function (): void {
     config(['shop.admin_email' => 'daniel@example.com']);
     $this->actingAs(User::factory()->withAppAuthentication()->create(['email' => 'daniel@example.com']));
 });
@@ -38,7 +38,7 @@ function paidOrder(Drop $drop, string $suburb, string $postcode, array $attribut
     return $order;
 }
 
-it('lists paid orders, leaving out checkouts that were abandoned', function () {
+it('lists paid orders, leaving out checkouts that were abandoned', function (): void {
     $drop = Drop::factory()->open()->create();
     $paid = paidOrder($drop, 'Ballarat', '3350');
     $abandoned = Order::factory()->for($drop)->pending()->create(['status' => OrderStatus::Expired]);
@@ -49,7 +49,7 @@ it('lists paid orders, leaving out checkouts that were abandoned', function () {
         ->assertSee($paid->reference());
 });
 
-it('marks orders fulfilled, leaving any that aren’t paid', function () {
+it('marks orders fulfilled, leaving any that aren’t paid', function (): void {
     $drop = Drop::factory()->open()->create();
     $paid = paidOrder($drop, 'Ballarat', '3350');
     $clearing = paidOrder($drop, 'Creswick', '3363', ['status' => OrderStatus::Processing]);
@@ -64,7 +64,7 @@ it('marks orders fulfilled, leaving any that aren’t paid', function () {
         ->and($clearing->refresh()->status)->toBe(OrderStatus::Processing);
 });
 
-it('downloads a drop’s delivery run, sorted by suburb, with pickups last', function () {
+it('downloads a drop’s delivery run, sorted by suburb, with pickups last', function (): void {
     $drop = Drop::factory()->open()->create();
     $creswick = paidOrder($drop, 'Creswick', '3363', ['customer_name' => 'Cam']);
     $ballarat = paidOrder($drop, 'Ballarat', '3350', ['customer_name' => '=Ada']);
@@ -79,7 +79,7 @@ it('downloads a drop’s delivery run, sorted by suburb, with pickups last', fun
         ->and($csv)->toContain('2 × ');
 });
 
-it('quotes formula-like phone numbers and postcodes in the delivery run', function () {
+it('quotes formula-like phone numbers and postcodes in the delivery run', function (): void {
     $drop = Drop::factory()->open()->create();
     paidOrder($drop, 'Ballarat', '=HYPERLINK("https://x.test")', ['phone' => '+1=2+3']);
 
@@ -88,7 +88,7 @@ it('quotes formula-like phone numbers and postcodes in the delivery run', functi
     expect([$row[2], $row[8]])->toBe(["'+1=2+3", "'=HYPERLINK(\"https://x.test\")"]);
 });
 
-it('prints the delivery run by suburb, with pickups separate', function () {
+it('prints the delivery run by suburb, with pickups separate', function (): void {
     $drop = Drop::factory()->open()->create(['name' => 'October drop']);
     paidOrder($drop, 'Creswick', '3363', ['customer_name' => 'Cam']);
     paidOrder($drop, 'Ballarat', '3350', ['customer_name' => 'Ada']);
@@ -99,7 +99,7 @@ it('prints the delivery run by suburb, with pickups separate', function () {
         ->assertSeeInOrder(['October drop', 'Deliveries', 'Ada', 'Ballarat', 'Cam', 'Creswick', 'Farm pickups', 'Pat']);
 });
 
-it('shows everything about an order', function () {
+it('shows everything about an order', function (): void {
     $order = paidOrder(Drop::factory()->open()->create(), 'Ballarat', '3350', ['customer_name' => 'Sam Buyer', 'email' => 'buyer@example.test', 'delivery_method' => DeliveryMethod::Delivery]);
 
     OrderItem::factory()->for($order)->create(['quantity' => 1, 'unit_price' => 1500]);
@@ -108,7 +108,7 @@ it('shows everything about an order', function () {
         ->assertSee(['Sam Buyer', 'buyer@example.test', '1 Main St', 'Ballarat', $order->reference(), '$24', '$15']);
 });
 
-it('keeps the delivery run behind the admin sign-in', function () {
+it('keeps the delivery run behind the admin sign-in', function (): void {
     auth()->logout();
 
     $this->get(OrderResource::getUrl('delivery-run', ['drop' => Drop::factory()->create()]))->assertRedirect(route('filament.admin.auth.login'));

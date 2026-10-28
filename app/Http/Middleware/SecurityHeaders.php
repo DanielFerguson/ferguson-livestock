@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class SecurityHeaders
 {
-    private const HEADERS = [
+    private const array HEADERS = [
         'X-Content-Type-Options' => 'nosniff',
         'Referrer-Policy' => 'strict-origin-when-cross-origin',
         'Permissions-Policy' => 'camera=(), microphone=(), geolocation=()',

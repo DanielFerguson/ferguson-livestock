@@ -7,13 +7,13 @@ use App\Models\Drop;
 use App\Models\DropItem;
 use Carbon\CarbonImmutable;
 
-it('is a draft until it is published, whatever the time', function () {
+it('is a draft until it is published, whatever the time', function (): void {
     $drop = Drop::factory()->draft()->create(['opens_at' => now()->subDay()]);
 
     expect($drop->status())->toBe(DropStatus::Draft);
 });
 
-it('is scheduled until it opens, then live', function () {
+it('is scheduled until it opens, then live', function (): void {
     $drop = Drop::factory()->withStock()->create(['opens_at' => now()->addHour()]);
 
     expect($drop->status())->toBe(DropStatus::Scheduled);
@@ -23,7 +23,7 @@ it('is scheduled until it opens, then live', function () {
     expect($drop->status())->toBe(DropStatus::Live);
 });
 
-it('opens at the right moment when the clocks go forward in Melbourne', function () {
+it('opens at the right moment when the clocks go forward in Melbourne', function (): void {
     // 9am on Sunday 4 October 2026 is AEDT (UTC+11), the first morning of daylight saving.
     $opensAt = CarbonImmutable::parse('2026-10-04 09:00', 'Australia/Melbourne')->utc();
     $drop = Drop::factory()->withStock()->create(['opens_at' => $opensAt]);
@@ -37,7 +37,7 @@ it('opens at the right moment when the clocks go forward in Melbourne', function
     expect($drop->status())->toBe(DropStatus::Live);
 });
 
-it('is sold out when every item with its own stock has none left', function () {
+it('is sold out when every item with its own stock has none left', function (): void {
     $drop = Drop::factory()->open()->create();
     DropItem::factory()->for($drop)->create(['quantity' => 5, 'available' => 0]);
     DropItem::factory()->for($drop)->delivery()->create();
@@ -45,7 +45,7 @@ it('is sold out when every item with its own stock has none left', function () {
     expect($drop->status())->toBe(DropStatus::SoldOut);
 });
 
-it('stays live while any item with its own stock is left', function () {
+it('stays live while any item with its own stock is left', function (): void {
     $drop = Drop::factory()->open()->create();
     DropItem::factory()->for($drop)->create(['quantity' => 5, 'available' => 0]);
     DropItem::factory()->for($drop)->create(['quantity' => 10, 'available' => 1]);
@@ -53,13 +53,13 @@ it('stays live while any item with its own stock is left', function () {
     expect($drop->status())->toBe(DropStatus::Live);
 });
 
-it('closes when closed by hand', function () {
+it('closes when closed by hand', function (): void {
     $drop = Drop::factory()->open()->withStock()->create(['closed_at' => now()]);
 
     expect($drop->status())->toBe(DropStatus::Closed);
 });
 
-it('closes at its close time', function () {
+it('closes at its close time', function (): void {
     $drop = Drop::factory()->open()->withStock()->create(['closes_at' => now()->addHour()]);
 
     $this->travel(59)->minutes();
@@ -69,7 +69,7 @@ it('closes at its close time', function () {
     expect($drop->status())->toBe(DropStatus::Closed);
 });
 
-it('closes when the next published drop opens', function () {
+it('closes when the next published drop opens', function (): void {
     $current = Drop::factory()->open()->withStock()->create();
     Drop::factory()->withStock()->create(['opens_at' => now()->addDay()]);
 
@@ -79,20 +79,20 @@ it('closes when the next published drop opens', function () {
     expect($current->status())->toBe(DropStatus::Closed);
 });
 
-it('is not closed by a later draft', function () {
+it('is not closed by a later draft', function (): void {
     $current = Drop::factory()->open()->withStock()->create();
     Drop::factory()->draft()->create(['opens_at' => now()->subMinute()]);
 
     expect($current->status())->toBe(DropStatus::Live);
 });
 
-it('is announced while an unpublished drop has its date on the website', function () {
+it('is announced while an unpublished drop has its date on the website', function (): void {
     $drop = Drop::factory()->announced()->create(['opens_at' => now()->addWeek()]);
 
     expect($drop->status())->toBe(DropStatus::Announced);
 });
 
-it('goes back to a draft once its announced date has passed', function () {
+it('goes back to a draft once its announced date has passed', function (): void {
     $drop = Drop::factory()->announced()->create(['opens_at' => now()->addWeek()]);
 
     $this->travel(8)->days();
@@ -100,7 +100,7 @@ it('goes back to a draft once its announced date has passed', function () {
     expect($drop->status())->toBe(DropStatus::Draft);
 });
 
-it('is scheduled rather than announced once published', function () {
+it('is scheduled rather than announced once published', function (): void {
     $drop = Drop::factory()->announced()->create(['published_at' => now(), 'opens_at' => now()->addWeek()]);
 
     expect($drop->status())->toBe(DropStatus::Scheduled);
