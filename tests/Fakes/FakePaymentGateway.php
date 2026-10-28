@@ -33,6 +33,9 @@ final class FakePaymentGateway implements PaymentGateway
 
     private ?string $offline = null;
 
+    /** Where a real browser lands instead of Stripe's payment page: 'paid', 'cancelled', or null for Stripe's own address. */
+    private ?string $browserOutcome = null;
+
     public function addPrice(string $id, int $unitAmount, bool $active = true, string $type = 'one_time', string $currency = 'aud', ?string $productName = null): self
     {
         $this->prices[$id] = new Price($id, $active, $type, $currency, $unitAmount, $productName);
@@ -76,6 +79,27 @@ final class FakePaymentGateway implements PaymentGateway
     }
 
     /**
+     * For browser tests: the customer is sent straight back to the shop's success page, already paid, in place of
+     * Stripe's payment page (which a test browser can't reach).
+     */
+    public function paysOnReturn(): self
+    {
+        $this->browserOutcome = 'paid';
+
+        return $this;
+    }
+
+    /**
+     * For browser tests: the customer presses back on Stripe's payment page and lands on the shop's cancel page.
+     */
+    public function cancelsOnReturn(): self
+    {
+        $this->browserOutcome = 'cancelled';
+
+        return $this;
+    }
+
+    /**
      * Make every call fail, as if Stripe were down.
      */
     public function goOffline(string $reason = 'Stripe is unreachable.'): self
@@ -91,7 +115,15 @@ final class FakePaymentGateway implements PaymentGateway
         $this->createdSessions[] = $session;
         $id = 'cs_test_'.count($this->createdSessions);
 
-        return $this->sessions[$id] = new CheckoutSession($id, 'open', 'unpaid', "https://checkout.stripe.test/{$id}", $session->orderPublicId);
+        $returnUrl = match ($this->browserOutcome) {
+            'paid' => str_replace('{CHECKOUT_SESSION_ID}', $id, $session->successUrl),
+            'cancelled' => str_replace('{CHECKOUT_SESSION_ID}', $id, $session->cancelUrl),
+            default => "https://checkout.stripe.test/{$id}",
+        };
+
+        $this->sessions[$id] = new CheckoutSession($id, 'open', 'unpaid', $returnUrl, $session->orderPublicId);
+
+        return $this->browserOutcome === 'paid' ? $this->completeSession($id, url: $returnUrl) : $this->sessions[$id];
     }
 
     public function retrieveCheckoutSession(string $sessionId): CheckoutSession
@@ -115,7 +147,7 @@ final class FakePaymentGateway implements PaymentGateway
     /**
      * The customer finished paying. A bank debit finishes 'unpaid' and clears days later.
      */
-    public function completeSession(string $sessionId, string $paymentStatus = 'paid', string $name = 'Jane Citizen', string $email = 'jane@example.com'): CheckoutSession
+    public function completeSession(string $sessionId, string $paymentStatus = 'paid', string $name = 'Jane Citizen', string $email = 'jane@example.com', ?string $url = null): CheckoutSession
     {
         $session = $this->retrieveCheckoutSession($sessionId);
 
@@ -123,6 +155,7 @@ final class FakePaymentGateway implements PaymentGateway
             id: $sessionId,
             status: 'complete',
             paymentStatus: $paymentStatus,
+            url: $url,
             orderPublicId: $session->orderPublicId,
             paymentIntentId: 'pi_'.substr($sessionId, 8),
             customerName: $name,
