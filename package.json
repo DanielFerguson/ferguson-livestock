@@ -24,6 +24,6 @@
         "vite": "^8.3.1"
     },
     "optionalDependencies": {
-        "@laravel/multiplex": "^0.4.4"
+        "@laravel/multiplex": "^0.4.5"
     }
 }
