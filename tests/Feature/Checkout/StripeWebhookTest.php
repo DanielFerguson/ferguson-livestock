@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Checkout\OrderPayments;
 use App\Enums\DeliveryMethod;
 use App\Enums\OrderStatus;
+use App\Jobs\ProcessStripeEvent;
 use App\Mail\OrderConfirmation;
 use App\Models\Order;
 use App\Models\StripeEvent;
@@ -171,3 +172,7 @@ it('refuses events Stripe didn’t sign', function (?string $signature): void {
     'unsigned' => [null],
     'signed with another secret' => ['t=1,v1=0000000000000000000000000000000000000000000000000000000000000000'],
 ]);
+
+it('lets a lost event be queued again after ten minutes, instead of staying locked out forever', function (): void {
+    expect((new ProcessStripeEvent('evt_1'))->uniqueFor)->toBe(600);
+});

@@ -137,3 +137,9 @@ it('sweeps every hour, as a safety net for timed settles that went missing', fun
 
     expect($event?->expression)->toBe('0 * * * *');
 });
+
+it('clears failed jobs out after thirty days, so old order details don’t pile up', function (): void {
+    $event = collect(app(Schedule::class)->events())->first(fn ($event): bool => str_contains((string) $event->command, 'queue:prune-failed'));
+
+    expect($event?->command)->toContain('--hours=720');
+});

@@ -12,6 +12,9 @@ use App\Payments\PriceCheck;
 use App\Payments\StripeWebhookEvents;
 use App\Support\Turnstile;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Queue;
 use Throwable;
 
 /**
@@ -28,7 +31,7 @@ final readonly class RunDropPreflight
     {
         $drop->loadMissing('items.product');
 
-        $problems = [...$this->stockProblems($drop), ...$this->deliveryProblems($drop), ...$this->botCheckProblems()];
+        $problems = [...$this->stockProblems($drop), ...$this->deliveryProblems($drop), ...$this->botCheckProblems(), ...$this->infrastructureProblems()];
 
         try {
             $problems = [...$problems, ...$this->priceProblems($drop), ...$this->webhookProblems()];
@@ -120,6 +123,103 @@ final readonly class RunDropPreflight
         }
 
         return ['Cloudflare’s bot check is off, so the order and wait-list forms accept anything. Set TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY in this environment.'];
+    }
+
+    /**
+     * What a drop quietly depends on once it opens: email, texts, a queue worker, the live Stripe key and the cache.
+     * Each of these fails without anyone seeing an error, so they're checked here rather than discovered on the day.
+     *
+     * @return list<string>
+     */
+    private function infrastructureProblems(): array
+    {
+        if (app()->isLocal()) {
+            return [];
+        }
+
+        $problems = [];
+
+        if (in_array(config('mail.default'), ['log', 'array', 'null'], true) || (config('mail.default') === 'resend' && blank(config('services.resend.key')))) {
+            $problems[] = 'Order emails won’t reach customers: set MAIL_MAILER=resend and RESEND_API_KEY in this environment.';
+        }
+
+        if (blank(config('services.twilio.sid')) || blank(config('services.twilio.token')) || blank(config('services.twilio.from'))) {
+            $problems[] = 'Texts aren’t set up, so the wait list can’t be told the drop is open: set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN and TWILIO_FROM_NUMBER.';
+        }
+
+        $problems = [...$problems, ...$this->queueProblems(), ...$this->cacheProblems(), ...$this->settingsProblems()];
+
+        if (Turnstile::isEnabled() && Turnstile::secretIsRejected()) {
+            $problems[] = 'Cloudflare doesn’t accept the bot-check secret, so every customer would be turned away. Check TURNSTILE_SECRET_KEY.';
+        }
+
+        return $problems;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function queueProblems(): array
+    {
+        if (config('queue.default') === 'sync') {
+            return ['There’s no queue worker: jobs run inside the customer’s request, so a slow email slows their order. Use the managed queue.'];
+        }
+
+        $problems = [];
+
+        try {
+            Queue::size();
+        } catch (Throwable $exception) {
+            $problems[] = 'Can’t reach the queue ('.$exception->getMessage().'). Order emails and stock releases depend on it.';
+        }
+
+        $failed = DB::table('failed_jobs')->count();
+
+        if ($failed > 0) {
+            $problems[] = "{$failed} background ".($failed === 1 ? 'job has' : 'jobs have').' failed. Look at them before the drop: they may be order emails or payments.';
+        }
+
+        return $problems;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function cacheProblems(): array
+    {
+        try {
+            $key = 'preflight-probe-'.bin2hex(random_bytes(4));
+            Cache::put($key, 'ok', 10);
+            $works = Cache::pull($key) === 'ok';
+        } catch (Throwable $exception) {
+            return ['Can’t reach the cache ('.$exception->getMessage().'). Rate limits and the live stock feed depend on it.'];
+        }
+
+        return $works ? [] : ['The cache isn’t keeping values. Rate limits and the live stock feed depend on it.'];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function settingsProblems(): array
+    {
+        if (! app()->isProduction()) {
+            return [];
+        }
+
+        $problems = [];
+
+        if (config('app.debug') === true) {
+            $problems[] = 'Debug mode is on, which would show customers error details. Set APP_DEBUG=false.';
+        }
+
+        $stripeKey = config('services.stripe.secret');
+
+        if (is_string($stripeKey) && str_starts_with($stripeKey, 'sk_test_')) {
+            $problems[] = 'Stripe is in test mode: payments wouldn’t be real. Set STRIPE_SECRET to the live key.';
+        }
+
+        return $problems;
     }
 
     /**

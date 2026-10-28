@@ -9,3 +9,6 @@ use Illuminate\Support\Facades\Schedule;
 Schedule::command('drops:preflight')->hourly()->onOneServer()->withoutOverlapping();
 Schedule::command('sms:send-scheduled')->hourly()->onOneServer()->withoutOverlapping();
 Schedule::command('orders:sweep')->hourly()->onOneServer()->withoutOverlapping();
+
+// A failed job keeps the order or payment it was handling. Thirty days is long enough to look into it.
+Schedule::command('queue:prune-failed --hours=720')->daily()->onOneServer();

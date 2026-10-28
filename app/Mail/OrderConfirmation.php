@@ -19,6 +19,15 @@ use Illuminate\Queue\SerializesModels;
 class OrderConfirmation extends Mailable implements ShouldQueue
 {
     use Queueable;
+
+    /**
+     * A burst of paid orders can hit the email provider's rate limit, so a failed send is tried again a few times.
+     */
+    public int $tries = 5;
+
+    /** @var list<int> */
+    public array $backoff = [10, 30, 120, 600];
+
     use SerializesModels;
 
     public function __construct(public Order $order)

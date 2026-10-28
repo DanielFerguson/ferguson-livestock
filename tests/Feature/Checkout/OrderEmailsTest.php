@@ -66,3 +66,12 @@ it('escapes names in both emails', function (): void {
             ->not->toContain('Thanks, <b');
     }
 });
+
+it('retries a failed order email a few times before giving up', function (): void {
+    $order = Order::factory()->create();
+    $confirmation = new OrderConfirmation($order);
+    $notification = new NewOrderNotification($order);
+
+    expect([$confirmation->tries, $notification->tries])->toBe([5, 5])
+        ->and([$confirmation->backoff, $notification->backoff])->toBe([[10, 30, 120, 600], [10, 30, 120, 600]]);
+});

@@ -106,12 +106,44 @@ Outside production, every email goes to the farm's address (`email` in `config/s
 
 Every page polls `/api/drop` for live stock: every couple of seconds while a drop is live or about to open, every 30 seconds while one is scheduled, and not at all otherwise or in background tabs. The feed is built at most once a second and rebuilt straight after any stock change, and it may be cached by Cloudflare for a second too. `SHOP_DROP_POLL_MS` changes the polling interval (default 2000).
 
-Before each drop:
+### A week before
 
-1. Raise the minimum replicas (Growth plan autoscaling isn't scheduled). The pre-flight email reminds you.
-2. Watch the dashboard's current-drop table, which refreshes every five seconds.
+- **Run the checks:** `composer ci` passes on `main`, and `php artisan site:check https://fergusonlivestock.com.au` passes every check.
+- **Look at what's waiting:** Stripe Events in the admin shows nothing under "Not done", and Laravel Cloud's failed jobs are empty. The pre-flight check reports any failed jobs too.
+- **Resend:** the free plan sends 100 emails a day and each order sends two, so upgrade before a drop that could pass about 49 orders.
+- **Twilio:** the account is on a paid plan with credit, and **Send a test to me** on a draft broadcast reaches your phone.
+- **Backups:** the database keeps point-in-time history (see "Backups" below). Take a manual snapshot the day before.
+- **Spending alert:** set it above what a drop month costs, so the alert still means something.
 
-**Load test (staging):** `k6 run -e BASE_URL=https://<staging-host> scripts/load/drop-day.js` runs 500 visitors polling the feed for five minutes, with some loading the order page. It fails if more than 1% of requests fail or the feed's 95th percentile goes over 300 ms. It doesn't start checkouts (see the script's notes).
+### The day before
+
+1. Create the drop, add its Stripe prices, and publish it. Run **Run pre-flight check** from the drop's page. It checks stock, delivery, prices, the Stripe webhook, the bot check, email, texts, the queue, the cache, failed jobs, debug mode and the live Stripe key. Fix everything it lists. It also runs by itself ten minutes before the drop opens, and emails you the result.
+2. Announce the date by text with **Announce by text** on the drop, if you haven't.
+3. Raise the app's minimum replicas in Laravel Cloud (Growth plan autoscaling isn't scheduled), and stop the database sleeping while the drop is on: set its idle time (`suspend_seconds`) to 0, or raise its minimum compute above 0.25. A cold database adds seconds to the first orders.
+
+### While the drop is open
+
+- Watch the dashboard's current-drop table, which refreshes every five seconds.
+- Texts from customers arrive under Texts → Conversations. Answer them, flag the ones you need to come back to, and tick Done when you're finished.
+- An email titled "A background job failed" means an order email or a Stripe event didn't go through. It arrives at most once every 15 minutes. Check Stripe Events and the failed jobs.
+
+### To pause a drop
+
+Press **Close now** on the drop. The order page shows the closed message straight away and nobody can start a checkout. Orders already at Stripe's payment page can still finish, and anyone who leaves has their stock put back.
+
+### After the drop
+
+1. Put the minimum replicas, the database sleep setting and the monitoring back to normal to save money.
+2. Reconcile: the number of paid orders in the admin should match the successful payments in Stripe's dashboard for the drop. A difference means an unprocessed event, so open Stripe Events.
+3. Check Texts → Conversations has nothing unanswered.
+
+### Backups
+
+The production database keeps **7 days** of point-in-time history, so it can be restored to any moment in the last week. To restore, use Laravel Cloud's database settings to create a restore at the chosen time. It creates a new database, which you then attach to the environment. If the data is lost beyond that, orders can be rebuilt from Stripe's dashboard (each payment carries the order's reference). The subscribers' consent records exist only in this database, so take a manual snapshot before any risky change.
+
+### Load test
+
+`k6 run -e BASE_URL=https://fergusonlivestock.com.au scripts/load/drop-day.js` runs visitors polling the feed. There's no separate staging site, so this runs against the live one: lower the numbers first (edit the stages at the top of the script) and run it off-peak, never during a drop. It fails if more than 1% of requests fail or the feed's 95th percentile goes over 300 ms. It doesn't start checkouts (see the script's notes).
 
 **Cloudflare rate limit:** the `fergusonlivestock.com.au` zone in Cloudflare (Free plan) proxies the site, and has one rate limiting rule, "Wait-list and order form submissions per visitor". An IP address that sends more than 60 requests in 10 seconds to `/waitlist` or `/livewire-*/update` (the order form and the admin) is blocked from those paths for 10 seconds. Page loads, the stock feed and the Stripe and Twilio webhooks aren't counted. If customers say the order form stops responding during a drop, look for blocks under Security → Analytics in Cloudflare before raising the limit.
 

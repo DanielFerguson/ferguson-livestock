@@ -21,6 +21,12 @@ class ProcessStripeEvent implements ShouldBeUnique, ShouldQueue
 
     public int $tries = 10;
 
+    /**
+     * The lock that stops one event being queued twice clears after ten minutes, so an event whose job was lost,
+     * for example when the queue was flushed, can be queued again by Stripe's next retry.
+     */
+    public int $uniqueFor = 600;
+
     /** @var list<int> */
     public array $backoff = [10, 30, 60, 300];
 

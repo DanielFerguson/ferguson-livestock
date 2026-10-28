@@ -179,3 +179,11 @@ it('reports Stripe being unreachable', function (): void {
 
     StripePaymentGateway::fromConfig()->createCheckoutSession(new NewCheckoutSession('01J9ORDER', [['price' => 'price_box', 'quantity' => 1]], false, now()->addMinutes(31)->toImmutable(), 'https://example.test/s', 'https://example.test/c'));
 })->throws(PaymentProviderUnavailable::class);
+
+it('gives up on a slow Stripe quickly, instead of tying up the server for over a minute', function (): void {
+    StripePaymentGateway::fromConfig();
+
+    $http = CurlClient::instance();
+
+    expect($http instanceof CurlClient ? [$http->getTimeout(), $http->getConnectTimeout()] : null)->toBe([15, 5]);
+});

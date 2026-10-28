@@ -152,3 +152,22 @@ it('signs up visitors who pass Cloudflare’s bot check', function (): void {
 
     expect(Subscriber::query()->count())->toBe(1);
 });
+
+it('sends someone back to the form on this site, never to the page that linked them here', function (): void {
+    $this->post('/waitlist', ['first_name' => ''], ['Referer' => 'https://evil.example/phish'])
+        ->assertRedirect(url('/').'/#waitlist');
+});
+
+it('keeps people on this site when the wait-list limit is reached too', function (): void {
+    foreach (range(1, 5) as $ignored) {
+        $this->post('/waitlist', ['first_name' => ''], ['Referer' => 'https://evil.example/phish']);
+    }
+
+    $this->post('/waitlist', ['first_name' => ''], ['Referer' => 'https://evil.example/phish'])
+        ->assertRedirect(url('/').'/#waitlist');
+});
+
+it('still returns people to the page they were on, on this site', function (): void {
+    $this->post('/waitlist', ['first_name' => ''], ['Referer' => url('/order')])
+        ->assertRedirect(url('/order').'#waitlist');
+});
