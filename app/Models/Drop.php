@@ -46,6 +46,13 @@ class Drop extends Model
     use HasFactory;
 
     /**
+     * The same default as the column, so a drop that hasn't been saved yet starts with no delivery days, not null.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = ['delivery_days' => '[]'];
+
+    /**
      * Publishing a drop, or moving it, to open within the hour times its pre-flight check straight away; later
      * ones are timed by the hourly drops:preflight.
      */

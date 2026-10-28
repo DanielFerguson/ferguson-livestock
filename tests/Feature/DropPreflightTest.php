@@ -213,3 +213,10 @@ it('doesn’t blame the bot check when Cloudflare can’t be reached', function 
 
     expect(app(RunDropPreflight::class)($drop)['passed'])->toBeTrue();
 });
+
+it('asks for a delivery day on a drop that hasn’t been saved yet, instead of failing', function (): void {
+    $drop = new Drop(['name' => 'Probe', 'opens_at' => now()->addHour()]);
+
+    expect($drop->delivery_days)->toBe([])
+        ->and(app(RunDropPreflight::class)($drop)['problems'])->toContain('Add at least one delivery day.');
+});
