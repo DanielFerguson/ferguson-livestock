@@ -40,3 +40,22 @@ arch()->preset()->php();
 arch()->preset()->laravel()->ignoring(['App\Providers\Filament', ...appClassesFromVendor()]);
 
 arch()->preset()->security();
+
+// Every file declares strict types, so a wrong type is an error rather than a quiet conversion. Pint adds the line.
+arch('every application class declares strict types')
+    ->expect('App')
+    ->toUseStrictTypes()
+    ->ignoring(appClassesFromVendor());
+
+arch('the tests declare strict types')
+    ->expect('Tests')
+    ->toUseStrictTypes();
+
+// Configuration is read once, in config/. Everywhere else asks config(), so a cached config can't change behaviour.
+arch('env() is only called from config files')
+    ->expect('env')
+    ->not->toBeUsedIn('App');
+
+arch('nothing leaves debugging calls behind')
+    ->expect(['dd', 'ddd', 'dump', 'ray', 'var_dump', 'print_r', 'die', 'exit'])
+    ->not->toBeUsedIn('App');

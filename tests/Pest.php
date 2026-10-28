@@ -19,6 +19,20 @@ use Tests\TestCase;
 |
 */
 
+/*
+|--------------------------------------------------------------------------
+| Test Impact Analysis
+|--------------------------------------------------------------------------
+|
+| `composer test:fast` runs Pest with --tia: it records which source files each
+| test touches, then re-runs only the tests a change can affect and replays the
+| rest from cache. It's switched on for local runs only, so CI and `composer ci`
+| always run the whole suite. The recorded graph lives outside the repository.
+|
+*/
+
+pest()->tia()->locally();
+
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->beforeEach(fn () => $this->withoutVite())

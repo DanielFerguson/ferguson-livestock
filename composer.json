@@ -65,6 +65,29 @@
             "@php artisan config:clear --ansi @no_additional_args",
             "@php artisan test"
         ],
+        "test:fast": [
+            "@php artisan config:clear --ansi",
+            "@putenv XDEBUG_MODE=coverage",
+            "vendor/bin/pest --tia"
+        ],
+        "lint": [
+            "vendor/bin/pint --test",
+            "vendor/bin/rector process --dry-run --no-progress-bar"
+        ],
+        "lint:fix": [
+            "vendor/bin/pint",
+            "vendor/bin/rector process --no-progress-bar",
+            "vendor/bin/pint"
+        ],
+        "analyse": [
+            "vendor/bin/phpstan analyse --memory-limit=2G --no-progress"
+        ],
+        "ci": [
+            "@lint",
+            "@analyse",
+            "@test",
+            "@composer audit"
+        ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi",
@@ -97,8 +120,18 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "php-http/discovery": true
+        },
+        "audit": {
+            "abandoned": "report"
         }
     },
     "minimum-stability": "stable",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "scripts-descriptions": {
+        "test:fast": "Re-run only the tests a change can affect (Pest TIA), replaying the rest from cache",
+        "lint": "Check formatting (Pint) and Rector changes without applying them",
+        "lint:fix": "Apply Pint and Rector changes",
+        "analyse": "PHPStan at max level with strict rules",
+        "ci": "Everything CI runs: lint, analyse, the full test suite, and the dependency audit"
+    }
 }
