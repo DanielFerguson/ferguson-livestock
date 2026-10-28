@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Exceptions\PaymentProviderUnavailable;
 use App\Payments\NewCheckoutSession;
+use App\Payments\Price;
 use App\Payments\StripePaymentGateway;
 use Carbon\CarbonImmutable;
 use Stripe\ApiRequestor;
@@ -62,6 +63,37 @@ it('asks Stripe once, then answers from the cache', function (): void {
 
     $gateway->retrievePrice('price_missing');
     $gateway->retrievePrice('price_missing');
+
+    expect($http->requests)->toHaveCount(1);
+});
+
+it('lists the active one-time Australian-dollar prices, named by their product', function (): void {
+    $http = fakeStripeHttp([
+        'GET /v1/prices' => [200, [
+            'object' => 'list', 'has_more' => false, 'url' => '/v1/prices',
+            'data' => [
+                ['id' => 'price_10kg', 'object' => 'price', 'active' => true, 'type' => 'one_time', 'currency' => 'aud', 'unit_amount' => 30000,
+                    'product' => ['id' => 'prod_2', 'object' => 'product', 'name' => '10kg Beef Box']],
+                ['id' => 'price_5kg', 'object' => 'price', 'active' => true, 'type' => 'one_time', 'currency' => 'aud', 'unit_amount' => 16000,
+                    'product' => ['id' => 'prod_1', 'object' => 'product', 'name' => '5kg Beef Box']],
+            ],
+        ]],
+    ]);
+
+    $prices = StripePaymentGateway::fromConfig()->activePrices();
+
+    expect(array_map(fn (Price $price): array => [$price->id, $price->unitAmount, $price->productName], $prices))->toBe([
+        ['price_10kg', 30000, '10kg Beef Box'],
+        ['price_5kg', 16000, '5kg Beef Box'],
+    ])->and($http->requests[0]['params'])->toMatchArray(['active' => 'true', 'type' => 'one_time', 'currency' => 'aud', 'expand' => ['data.product']]);
+});
+
+it('lists prices once, then answers from the cache', function (): void {
+    $http = fakeStripeHttp(['GET /v1/prices' => [200, ['object' => 'list', 'has_more' => false, 'url' => '/v1/prices', 'data' => []]]]);
+    $gateway = StripePaymentGateway::fromConfig();
+
+    $gateway->activePrices();
+    $gateway->activePrices();
 
     expect($http->requests)->toHaveCount(1);
 });
