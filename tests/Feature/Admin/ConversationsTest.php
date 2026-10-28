@@ -3,6 +3,7 @@
 use App\Enums\SmsStatus;
 use App\Filament\Pages\Conversations;
 use App\Filament\Widgets\TextsOverview;
+use App\Models\ConversationState;
 use App\Models\SmsMessage;
 use App\Models\Subscriber;
 use App\Models\User;
@@ -140,5 +141,123 @@ it('counts the conversations with unread texts in the menu and on the dashboard'
 
     expect(Conversations::getNavigationBadge())->toBe('2');
 
-    livewire(TextsOverview::class)->assertSeeInOrder(['Unread conversations', '2']);
+    livewire(TextsOverview::class)->assertSeeInOrder(['Need attention', '2']);
+});
+
+/**
+ * A conversation whose last word is the person's (so it needs a reply), or yours.
+ *
+ * @param  array<string, mixed>  $theirText  attributes to set on their text
+ */
+function conversationWith(string $name, bool $theyHaveTheLastWord, array $theirText = []): Subscriber
+{
+    $subscriber = Subscriber::factory()->create(['first_name' => $name]);
+    SmsMessage::factory()->for($subscriber)->reply("{$name} asks")->create(array_merge(['created_at' => now()->subHours(3), 'read_at' => now()], $theirText));
+
+    if (! $theyHaveTheLastWord) {
+        SmsMessage::factory()->for($subscriber)->create(['sms_broadcast_id' => null, 'body' => "Answer to {$name}", 'created_at' => now()->subHours(2)]);
+    }
+
+    return $subscriber;
+}
+
+it('filters to the conversations that still need a reply', function () {
+    conversationWith('Waiting', theyHaveTheLastWord: true);
+    conversationWith('Answered', theyHaveTheLastWord: false);
+
+    livewire(Conversations::class)
+        ->assertSee('Waiting asks')->assertSee('Answer to Answered')
+        ->set('filter', 'needs_reply')
+        ->assertSee('Waiting asks')->assertDontSee('Answered');
+});
+
+it('filters to unread texts and the conversations flagged to come back to', function () {
+    conversationWith('Seen', theyHaveTheLastWord: true);
+    conversationWith('Fresh', theyHaveTheLastWord: true, theirText: ['read_at' => null]);
+    $later = conversationWith('Later', theyHaveTheLastWord: true);
+    ConversationState::create(['contact_phone' => $later->phone, 'follow_up_at' => now()]);
+
+    livewire(Conversations::class)
+        ->set('filter', 'unread')
+        ->assertSee('Fresh asks')->assertSee('Later asks')->assertDontSee('Seen asks');
+});
+
+it('flags a conversation to come back to, which keeps it unread after it has been opened', function () {
+    $person = conversationWith('Later', theyHaveTheLastWord: true);
+
+    livewire(Conversations::class)
+        ->call('open', $person->phone)
+        ->call('followUp')
+        ->set('phone', null)->set('filter', 'unread')
+        ->assertSee('Later asks')
+        ->call('open', $person->phone)->call('clearFollowUp')
+        ->set('phone', null)
+        ->assertDontSee('Later asks');
+});
+
+it('keeps a flag after you answer, until you tick it done', function () {
+    $sms = FakeSmsGateway::swap();
+    $person = conversationWith('Later', theyHaveTheLastWord: true);
+
+    livewire(Conversations::class)
+        ->call('open', $person->phone)
+        ->call('followUp')
+        ->set('draft', 'Found it: Saturday.')
+        ->call('send')
+        ->set('phone', null)
+        ->set('filter', 'needs_reply')->assertDontSee('Later asks')->assertDontSee('Found it')
+        ->set('filter', 'unread')->assertSee('Found it: Saturday.')
+        ->call('open', $person->phone)->call('done')
+        ->set('phone', null)
+        ->assertDontSee('Found it: Saturday.');
+
+    expect($sms->sent)->toHaveCount(1)
+        ->and(ConversationState::sole()->follow_up_at)->toBeNull()
+        ->and(ConversationState::sole()->done_at)->not->toBeNull();
+});
+
+it('takes a finished conversation out of the filters until they text again', function () {
+    $person = conversationWith('Done', theyHaveTheLastWord: true, theirText: ['read_at' => null]);
+
+    livewire(Conversations::class)->call('open', $person->phone)->call('done')
+        ->set('phone', null)
+        ->set('filter', 'needs_reply')->assertDontSee('Done asks')
+        ->set('filter', 'unread')->assertDontSee('Done asks');
+
+    $this->travel(1)->minute();
+    SmsMessage::factory()->for($person)->reply('One more thing')->create();
+
+    livewire(Conversations::class)->set('filter', 'needs_reply')->assertSee('One more thing');
+});
+
+it('opening a conversation doesn’t finish it', function () {
+    $person = conversationWith('Open', theyHaveTheLastWord: true, theirText: ['read_at' => null]);
+
+    livewire(Conversations::class)->call('open', $person->phone)->set('phone', null)->set('filter', 'needs_reply')->assertSee('Open asks');
+});
+
+it('puts conversations that need attention first, and a broadcast never moves or replaces anything', function () {
+    $quiet = conversationWith('Quiet', theyHaveTheLastWord: false);
+    $waiting = conversationWith('Waiting', theyHaveTheLastWord: true);
+    SmsMessage::factory()->for($quiet)->create(['body' => 'Ferguson Livestock: Beef boxes drop Saturday.', 'created_at' => now()]);
+
+    livewire(Conversations::class)
+        ->assertSeeInOrder(['Waiting', 'Waiting asks', 'Quiet', 'Answer to Quiet'])
+        ->assertDontSee('Beef boxes drop Saturday.');
+});
+
+it('counts flagged conversations as needing attention in the menu', function () {
+    $later = conversationWith('Later', theyHaveTheLastWord: true);
+    conversationWith('Fresh', theyHaveTheLastWord: true, theirText: ['read_at' => null]);
+    ConversationState::create(['contact_phone' => $later->phone, 'follow_up_at' => now()]);
+
+    expect(Conversations::getNavigationBadge())->toBe('2');
+});
+
+it('doesn’t say someone who opted out needs a reply', function () {
+    $sam = Subscriber::factory()->unsubscribed()->create(['first_name' => 'Sam']);
+    SmsMessage::factory()->for($sam)->reply('Stop please')->create(['read_at' => now()]);
+
+    livewire(Conversations::class)->set('filter', 'needs_reply')->assertDontSee('Stop please')
+        ->set('filter', 'all')->assertSee('Stop please');
 });

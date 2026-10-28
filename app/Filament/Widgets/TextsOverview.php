@@ -20,13 +20,14 @@ class TextsOverview extends StatsOverviewWidget
      */
     protected function getStats(): array
     {
-        $unread = ConversationList::unreadCount();
+        $unread = ConversationList::attentionCount();
 
         return [
             Stat::make('Subscribed', Number::format(Subscriber::query()->subscribed()->count()))
                 ->description('On the wait list for texts')
                 ->icon(Heroicon::OutlinedUsers),
-            Stat::make('Unread conversations', Number::format($unread))
+            Stat::make('Need attention', Number::format($unread))
+                ->description('Unread, or flagged to come back to')
                 ->icon(Heroicon::OutlinedInboxArrowDown)
                 ->url(Conversations::getUrl())
                 ->color($unread > 0 ? 'warning' : 'gray'),
