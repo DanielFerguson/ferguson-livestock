@@ -17,6 +17,15 @@ interface PaymentGateway
     public function retrievePrice(string $priceId): ?Price;
 
     /**
+     * The prices a drop can charge, which are the active, one-time ones in Australian dollars, for an admin to choose from.
+     *
+     * @return list<Price>
+     *
+     * @throws PaymentProviderUnavailable
+     */
+    public function activePrices(): array;
+
+    /**
      * The webhook endpoints registered with the provider.
      *
      * @return list<WebhookEndpoint>

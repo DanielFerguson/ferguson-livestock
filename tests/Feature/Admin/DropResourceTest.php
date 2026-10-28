@@ -18,6 +18,7 @@ use App\Payments\PaymentGateway;
 use Carbon\CarbonImmutable;
 use Filament\Actions\Testing\TestAction;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Select;
 use Illuminate\Support\MessageBag;
 use Livewire\Component;
 use Livewire\Features\SupportTesting\Testable;
@@ -212,7 +213,29 @@ it('checks each Stripe price before saving', function (Closure $stripe, string $
     'different amount' => [fn (FakePaymentGateway $stripe): FakePaymentGateway => $stripe->addPrice('price_box', 15000), 'Stripe charges $150 for this price, but the drop says $160.'],
 ]);
 
-it('fills in the price from Stripe when a price ID is pasted', function (): void {
+it('offers the active Stripe prices to pick from, by product and amount', function (): void {
+    $this->stripe->addPrice('price_box', 16000, productName: '5kg Beef Box')
+        ->addPrice('price_archived', 15000, active: false, productName: 'Old box')
+        ->addPrice('price_usd', 9000, currency: 'usd', productName: 'US box')
+        ->addPrice('price_subscription', 1000, type: 'recurring', productName: 'Subscription');
+
+    livewire(CreateDrop::class)
+        ->fillForm(dropForm())
+        ->assertFormFieldExists('items.0.stripe_price_id', fn (Select $field): bool => $field->getOptions() === [
+            'price_delivery' => '$15 · price_delivery',
+            'price_box' => '5kg Beef Box · $160 · price_box',
+        ]);
+});
+
+it('still shows the form when Stripe can’t be reached, with nothing to pick from', function (): void {
+    $this->stripe->goOffline();
+
+    livewire(CreateDrop::class)
+        ->fillForm(dropForm())
+        ->assertFormFieldExists('items.0.stripe_price_id', fn (Select $field): bool => $field->getOptions() === []);
+});
+
+it('fills in the price from Stripe when a price is chosen', function (): void {
     livewire(CreateDrop::class)
         ->fillForm(dropForm(['items' => [['product_id' => $this->box->id, 'price' => null, 'quantity' => 5]]]))
         ->set('data.items.0.stripe_price_id', 'price_box')

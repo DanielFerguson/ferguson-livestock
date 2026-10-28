@@ -72,6 +72,34 @@ final readonly class StripePaymentGateway implements PaymentGateway
         return $price === false ? null : new Price(...$price);
     }
 
+    /**
+     * Cached for five minutes like retrievePrice, so opening a drop's form doesn't call Stripe every time.
+     */
+    public function activePrices(): array
+    {
+        /** @var list<array{id: string, active: bool, type: string, currency: string, unitAmount: int|null, productName: string|null}> $prices */
+        $prices = Cache::remember('stripe:prices:active', now()->addMinutes(5), function (): array {
+            $prices = [];
+
+            $list = $this->stripe->prices->all(['active' => true, 'type' => 'one_time', 'currency' => 'aud', 'limit' => 100, 'expand' => ['data.product']]);
+
+            foreach ($list->autoPagingIterator() as $price) {
+                $prices[] = [
+                    'id' => $price->id,
+                    'active' => (bool) $price->active,
+                    'type' => (string) $price->type,
+                    'currency' => (string) $price->currency,
+                    'unitAmount' => $price->unit_amount,
+                    'productName' => $price->product instanceof StripeProduct ? $price->product->name : null,
+                ];
+            }
+
+            return $prices;
+        });
+
+        return array_map(fn (array $price): Price => new Price(...$price), $prices);
+    }
+
     public function webhookEndpoints(): array
     {
         $endpoints = [];

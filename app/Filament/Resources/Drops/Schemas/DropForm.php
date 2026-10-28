@@ -11,7 +11,9 @@ use App\Models\Drop;
 use App\Models\DropItem;
 use App\Models\Product;
 use App\Payments\PaymentGateway;
+use App\Payments\Price;
 use App\Payments\PriceCheck;
+use App\Support\Money;
 use Carbon\CarbonImmutable;
 use Closure;
 use Filament\Forms\Components\DatePicker;
@@ -74,7 +76,7 @@ class DropForm
                             ->columnSpanFull(),
                     ]),
                 Section::make('Products')
-                    ->description('Prices come from Stripe: paste each product’s price ID and the amount fills in.')
+                    ->description('Prices come from Stripe: choose each product’s price and the amount fills in.')
                     ->schema([self::items()]),
                 Section::make('Pre-flight check')
                     ->visibleOn('edit')
@@ -106,11 +108,17 @@ class DropForm
                     // Customers are holding or have bought this item, so it can't become a different product.
                     ->disabled(fn (?DropItem $record): bool => ($record?->committed() ?? 0) > 0)
                     ->columnSpan(2),
-                TextInput::make('stripe_price_id')
-                    ->label('Stripe price ID')
-                    ->placeholder('price_…')
+                Select::make('stripe_price_id')
+                    ->label('Stripe price')
+                    ->placeholder('Choose a price from Stripe')
+                    ->helperText('Active, one-time prices in AUD. Can’t see yours? Check it’s live and not archived.')
+                    ->options(fn (): array => self::stripePriceOptions())
+                    // A price that is saved but no longer in Stripe's list, say an archived one, still shows by its ID,
+                    // so the check below can explain what's wrong with it.
+                    ->getOptionLabelUsing(fn (mixed $value): ?string => is_string($value) ? (self::stripePriceOptions()[$value] ?? $value) : null)
+                    ->searchable()
                     ->required()
-                    ->live(onBlur: true)
+                    ->live()
                     ->afterStateUpdated(fn (?string $state, Set $set) => self::fillPriceFromStripe($state, $set))
                     ->rule(fn (Get $get): Closure => self::stripePriceMatches($get))
                     ->columnSpan(2),
@@ -183,6 +191,37 @@ class DropForm
         unset($data['quantity'], $data['available']);
 
         return $data;
+    }
+
+    /**
+     * The prices an admin can choose from, labelled by product and amount: "5kg Beef Box · $160 · price_1Abc…".
+     * Empty when Stripe can't be reached, since the form should still open.
+     *
+     * @return array<string, string>
+     */
+    private static function stripePriceOptions(): array
+    {
+        return once(function (): array {
+            try {
+                $prices = app(PaymentGateway::class)->activePrices();
+            } catch (Throwable) {
+                return [];
+            }
+
+            usort($prices, fn (Price $a, Price $b): int => [strtolower((string) $a->productName), $a->unitAmount] <=> [strtolower((string) $b->productName), $b->unitAmount]);
+
+            $options = [];
+
+            foreach ($prices as $price) {
+                $options[$price->id] = implode(' · ', array_filter([
+                    $price->productName,
+                    $price->unitAmount === null ? null : Money::format($price->unitAmount),
+                    $price->id,
+                ], filled(...)));
+            }
+
+            return $options;
+        });
     }
 
     private static function fillPriceFromStripe(?string $priceId, Set $set): void

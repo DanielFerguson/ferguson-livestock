@@ -61,6 +61,16 @@ final class FakePaymentGateway implements PaymentGateway
         return $this->prices[$priceId] ?? null;
     }
 
+    public function activePrices(): array
+    {
+        $this->failIfOffline();
+
+        return array_values(array_filter(
+            $this->prices,
+            fn (Price $price): bool => $price->active && $price->type === 'one_time' && $price->currency === 'aud',
+        ));
+    }
+
     public function webhookEndpoints(): array
     {
         $this->failIfOffline();
