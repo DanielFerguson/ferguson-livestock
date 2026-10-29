@@ -58,6 +58,8 @@ final readonly class RunDropPreflight
 
         $problems = [];
         $hasOpened = now()->gte($drop->opens_at);
+        // Units sold or held through the early-access link before opening are expected, not a leftover.
+        $hasEarlyOrders = $drop->orders()->where('via_early_access', true)->exists();
 
         foreach ($drop->items as $item) {
             $bundle = $item->product->bundle;
@@ -70,7 +72,7 @@ final readonly class RunDropPreflight
         foreach ($drop->items->filter(fn (DropItem $item): bool => $item->hasOwnStock()) as $item) {
             if ($item->quantity === 0) {
                 $problems[] = "{$item->product->name} has no stock. Set a quantity.";
-            } elseif (! $hasOpened && $item->committed() > 0) {
+            } elseif (! $hasOpened && ! $hasEarlyOrders && $item->committed() > 0) {
                 $problems[] = "{$item->product->name} has {$item->committed()} units held or sold before the drop has opened.";
             }
         }

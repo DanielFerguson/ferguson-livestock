@@ -42,19 +42,20 @@ final class StockLedger
 
     /**
      * @param  array<int, int>  $quantities  drop item ID => quantity, including the delivery fee for deliveries
+     * @param  bool  $earlyAccess  the caller has checked the early-access secret, so an unopened drop can still be ordered from
      *
      * @throws DropNotOpen
      * @throws InsufficientStock
      */
-    public function reserve(Drop $drop, array $quantities, DeliveryMethod $deliveryMethod, ?CarbonImmutable $deliveryDay, string $sessionFingerprint, CarbonImmutable $expiresAt): Order
+    public function reserve(Drop $drop, array $quantities, DeliveryMethod $deliveryMethod, ?CarbonImmutable $deliveryDay, string $sessionFingerprint, CarbonImmutable $expiresAt, bool $earlyAccess = false): Order
     {
-        $order = $this->waitingForLocks(fn (): Order => DB::transaction(function () use ($drop, $quantities, $deliveryMethod, $deliveryDay, $sessionFingerprint, $expiresAt): Order {
+        $order = $this->waitingForLocks(fn (): Order => DB::transaction(function () use ($drop, $quantities, $deliveryMethod, $deliveryDay, $sessionFingerprint, $expiresAt, $earlyAccess): Order {
             // Postgres only: give up on a stock row that stays locked, rather than queueing behind it indefinitely.
             DB::statement("SET LOCAL lock_timeout = '".self::LOCK_TIMEOUT."'");
 
             $drop = Drop::query()->with('items.product.bundle')->findOrFail($drop->id);
 
-            if (! $drop->status()->isOpen()) {
+            if (! $drop->status()->isOpen() && (! $earlyAccess || ! $drop->acceptsEarlyOrders())) {
                 throw new DropNotOpen;
             }
 
@@ -68,6 +69,7 @@ final class StockLedger
                 'delivery_day' => $deliveryDay,
                 'total' => array_sum(array_map(fn (StockLine $line): int => $line->item->price * $line->quantity, $lines)),
                 'session_fingerprint' => $sessionFingerprint,
+                'via_early_access' => $earlyAccess,
                 'expires_at' => $expiresAt,
             ]);
 

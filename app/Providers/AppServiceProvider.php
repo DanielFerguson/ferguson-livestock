@@ -92,6 +92,10 @@ class AppServiceProvider extends ServiceProvider
         // A customer lands on these once or twice; more than this is someone replaying a link.
         RateLimiter::for('checkout-return', fn (Request $request) => Limit::perMinute(20)->by((string) $request->ip()));
 
+        // Guessing a link is hopeless at 40 random characters, but nothing needs to try, and a family on one connection
+        // polling stock every 10 seconds stays well under this.
+        RateLimiter::for('early-access', fn (Request $request) => Limit::perMinute(60)->by((string) $request->ip()));
+
         // Keyed on the token so one client can't starve another, and on the address when there isn't one.
         RateLimiter::for('mcp', fn (Request $request) => Limit::perMinute(120)
             ->by($request->bearerToken() !== null ? hash('sha256', $request->bearerToken()) : (string) $request->ip()));

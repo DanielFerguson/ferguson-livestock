@@ -27,6 +27,7 @@ final class BusinessRulesResource extends Resource
         - A drop is a timed sale. It has an opening time, an optional closing time, and a list of items (a product with a price, a Stripe price id and a stock quantity).
         - Status is derived, never stored: **Draft** (not published) → **Announced** (draft whose date is on the website) → **Scheduled** (published, before it opens) → **Live** → **Sold out** (open, nothing left) → **Closed**.
         - "Going live" = publishing. The drop opens by itself at its opening time.
+        - **Early access**: a drop can have a secret link (enable-early-access-tool) so family and close friends can order before it is public. It works on a Draft, Announced or Scheduled drop and keeps working after it opens; orders use the same stock as everyone else's. A published drop is already visible on the order page before it opens, so keep it unpublished until the public should see it. Replacing or disabling the link stops the old one; orders already placed stand. The owner shares the link themselves; it is never texted by broadcast.
         - Two published drops can't overlap. A drop also ends when the next published drop opens.
         - A pre-flight check runs automatically 10 minutes before opening (and on demand). It checks stock, delivery days, Stripe prices and webhook, and the site's infrastructure.
 

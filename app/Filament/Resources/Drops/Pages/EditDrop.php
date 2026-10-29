@@ -24,6 +24,9 @@ class EditDrop extends EditRecord
         return [
             DropActions::runPreflight(),
             DropActions::announce(),
+            DropActions::startEarlyAccess(),
+            DropActions::replaceEarlyAccessLink(),
+            DropActions::stopEarlyAccess(),
             DropActions::duplicate(),
             DropActions::closeNow(),
             DeleteAction::make()

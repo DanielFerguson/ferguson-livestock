@@ -79,6 +79,15 @@ class DropForm
                 Section::make('Products')
                     ->description('Prices come from Stripe: choose each product’s price and the amount fills in.')
                     ->schema([self::items()]),
+                Section::make('Early access')
+                    ->description('A secret link for family and close friends to order before the drop is public. They use the same stock as everyone else. Keep the drop unpublished until you want everyone to see it.')
+                    ->visibleOn('edit')
+                    ->schema([
+                        TextEntry::make('early_access_url')
+                            ->label('Link')
+                            ->state(fn (?Drop $record): string => $record instanceof Drop && $record->acceptsEarlyOrders() ? (string) $record->earlyAccessUrl() : 'Off. Use “Turn on early access” above to get a link.')
+                            ->copyable(fn (?Drop $record): bool => $record instanceof Drop && $record->acceptsEarlyOrders()),
+                    ]),
                 Section::make('Pre-flight check')
                     ->visibleOn('edit')
                     ->schema([

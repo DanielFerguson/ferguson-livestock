@@ -35,6 +35,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $stripe_checkout_session_id
  * @property string|null $stripe_payment_intent_id
  * @property string $session_fingerprint
+ * @property bool $via_early_access
  * @property CarbonImmutable $expires_at
  * @property CarbonImmutable|null $paid_at
  * @property CarbonImmutable|null $released_at
@@ -45,7 +46,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read Drop $drop
  * @property-read Collection<int, OrderItem> $items
  */
-#[Fillable(['drop_id', 'status', 'delivery_method', 'delivery_day', 'customer_name', 'email', 'phone', 'shipping_address', 'total', 'amount_refunded', 'stripe_checkout_session_id', 'stripe_payment_intent_id', 'session_fingerprint', 'expires_at', 'paid_at', 'released_at', 'fulfilled_at', 'refunded_at'])]
+#[Fillable(['drop_id', 'status', 'delivery_method', 'delivery_day', 'customer_name', 'email', 'phone', 'shipping_address', 'total', 'amount_refunded', 'stripe_checkout_session_id', 'stripe_payment_intent_id', 'session_fingerprint', 'via_early_access', 'expires_at', 'paid_at', 'released_at', 'fulfilled_at', 'refunded_at'])]
 class Order extends Model
 {
     /** @use HasFactory<OrderFactory> */
@@ -104,6 +105,7 @@ class Order extends Model
             'shipping_address' => 'array',
             'total' => 'integer',
             'amount_refunded' => 'integer',
+            'via_early_access' => 'boolean',
             'expires_at' => 'immutable_datetime',
             'paid_at' => 'immutable_datetime',
             'released_at' => 'immutable_datetime',

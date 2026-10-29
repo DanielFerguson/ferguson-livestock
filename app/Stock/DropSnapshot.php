@@ -87,15 +87,7 @@ final class DropSnapshot
             return ['drop' => null, 'announced' => self::announced(), 'items' => [], 'held' => 0];
         }
 
-        $items = [];
-
-        foreach ($drop->items as $item) {
-            $available = self::available($drop, $item);
-
-            if ($available !== null) {
-                $items[$item->product->slug] = ['available' => $available, 'max' => $item->max_per_order, ...self::pool($drop, $item)];
-            }
-        }
+        $stock = self::stockOf($drop);
 
         return [
             'drop' => [
@@ -106,9 +98,30 @@ final class DropSnapshot
                 'closes_at' => $drop->effectiveClosesAt()?->toIso8601ZuluString(),
             ],
             'announced' => self::announced(),
-            'items' => $items,
-            'held' => $drop->orders()->where('status', OrderStatus::Pending)->count(),
+            ...$stock,
         ];
+    }
+
+    /**
+     * What's left of each item of one drop, not necessarily the featured one, and how many checkouts are open. The
+     * early-access page reads this for a drop the public can't see yet.
+     *
+     * @return array{items: array<string, array{available: int, max: int, pool: string, units: int}>, held: int}
+     */
+    public static function stockOf(Drop $drop): array
+    {
+        $drop->loadMissing('items.product.bundle');
+        $items = [];
+
+        foreach ($drop->items as $item) {
+            $available = self::available($drop, $item);
+
+            if ($available !== null) {
+                $items[$item->product->slug] = ['available' => $available, 'max' => $item->max_per_order, ...self::pool($drop, $item)];
+            }
+        }
+
+        return ['items' => $items, 'held' => $drop->orders()->where('status', OrderStatus::Pending)->count()];
     }
 
     /**

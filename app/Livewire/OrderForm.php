@@ -39,6 +39,13 @@ class OrderForm extends Component
     public int $dropId = 0;
 
     /**
+     * The secret from the early-access link this form was opened through, if any. Checkout checks it against the
+     * drop again; here it only decides what the page shows.
+     */
+    #[Locked]
+    public ?string $earlyAccessToken = null;
+
+    /**
      * The chosen box's drop item ID, 'none' for extras only, or '' before the customer has chosen.
      */
     public string $box = '';
@@ -63,9 +70,12 @@ class OrderForm extends Component
 
     public ?string $problem = null;
 
-    public function mount(Drop $drop): void
+    public function mount(Drop $drop, ?string $earlyAccessToken = null): void
     {
+        abort_if($earlyAccessToken !== null && ! $this->isEarlyAccessFor($drop, $earlyAccessToken), 404);
+
         $this->dropId = $drop->id;
+        $this->earlyAccessToken = $earlyAccessToken;
         $this->extras = $this->itemsOfType($this->drop(), ProductType::Extra)->mapWithKeys(fn (DropItem $item): array => [$item->id => 0])->all();
     }
 
@@ -92,7 +102,7 @@ class OrderForm extends Component
         }
 
         try {
-            $url = $start(new CheckoutRequest($this->dropId, $this->quantities(), $deliveryMethod, $this->chosenDay(), session()->getId(), (string) request()->ip(), $turnstileToken));
+            $url = $start(new CheckoutRequest($this->dropId, $this->quantities(), $deliveryMethod, $this->chosenDay(), session()->getId(), (string) request()->ip(), $turnstileToken, $this->earlyAccessToken));
         } catch (InsufficientStock) {
             $drop = $this->drop();
             $this->cutTo($drop, $stock->fit($drop, $this->quantities()));
@@ -114,13 +124,17 @@ class OrderForm extends Component
     public function render(): View
     {
         $drop = $this->drop();
-        $snapshot = DropSnapshot::current();
+        $earlyAccess = $this->earlyAccessToken !== null;
+        // The public feed only knows the featured drop, which an unpublished early-access drop isn't.
+        $snapshot = $earlyAccess ? DropSnapshot::stockOf($drop) : DropSnapshot::current();
         $stock = $snapshot['items'];
         $available = fn (DropItem $item): int => $stock[$item->product->slug]['available'] ?? 0;
 
         return view('livewire.order-form', [
             'drop' => $drop,
             'status' => $drop->status(),
+            'earlyAccess' => $earlyAccess,
+            'open' => $drop->status()->isOpen() || ($earlyAccess && $drop->acceptsEarlyOrders()),
             'boxes' => $this->itemsOfType($drop, ProductType::Box),
             'extraItems' => $this->itemsOfType($drop, ProductType::Extra),
             'deliveryFee' => $this->itemsOfType($drop, ProductType::Delivery)->first(),
@@ -146,7 +160,12 @@ class OrderForm extends Component
 
     private function drop(): Drop
     {
-        return Drop::query()->with('items.product')->findOrFail($this->dropId);
+        return Drop::query()->with('items.product.bundle')->findOrFail($this->dropId);
+    }
+
+    private function isEarlyAccessFor(Drop $drop, string $token): bool
+    {
+        return $drop->early_access_token !== null && hash_equals($drop->early_access_token, $token);
     }
 
     /**

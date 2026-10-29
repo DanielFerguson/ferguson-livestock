@@ -99,3 +99,24 @@ it('sends someone who has nothing to confirm back to the order page', function (
     visit('/order-confirmed')->assertPathIs('/order')->assertNoJavaScriptErrors();
     visit('/checkout/cancel')->assertPathIs('/order')->assertNoJavaScriptErrors();
 });
+
+it('takes an early-access order on a drop the public can’t see yet', function (): void {
+    FakePaymentGateway::swap()->paysOnReturn();
+    $shop = StockedDrop::create(boxes: 5, drop: ['published_at' => null, 'opens_at' => now()->addWeek()]);
+    $token = $shop->drop->startEarlyAccess();
+
+    visit(route('order'))->assertDontSee('5kg Beef Box');
+
+    visit(route('early-access', ['token' => $token]))
+        ->assertSee('Early access')
+        ->assertSee('5 left')
+        ->radio('box', (string) $shop->box->id)
+        ->radio('deliveryMethod', 'pickup')
+        ->press('Continue to payment')
+        ->assertPathIs('/order-confirmed')
+        ->assertSee('Order confirmed, Jane!')
+        ->assertNoJavaScriptErrors();
+
+    expect(Order::query()->sole()->via_early_access)->toBeTrue()
+        ->and($shop->box->refresh()->available)->toBe(4);
+});

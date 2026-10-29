@@ -31,7 +31,9 @@ use App\Mcp\Tools\Drops\CloseDropNowTool;
 use App\Mcp\Tools\Drops\CreateDropTool;
 use App\Mcp\Tools\Drops\CreateProductTool;
 use App\Mcp\Tools\Drops\DeleteDropTool;
+use App\Mcp\Tools\Drops\DisableEarlyAccessTool;
 use App\Mcp\Tools\Drops\DuplicateDropTool;
+use App\Mcp\Tools\Drops\EnableEarlyAccessTool;
 use App\Mcp\Tools\Drops\GetDropTool;
 use App\Mcp\Tools\Drops\ListDropsTool;
 use App\Mcp\Tools\Drops\ListProductsTool;
@@ -70,6 +72,7 @@ Runs Ferguson Livestock: a small beef business that sells boxes in timed "drops"
 Conventions
 - Money is integer cents (AUD). Times are in Australia/Melbourne; send ISO-8601 and leave off the offset to mean Melbourne wall-clock time.
 - A drop's status is derived: Draft (not published), Announced, Scheduled (published, before it opens), Live, SoldOut, Closed. "Going live" means publishing; the drop opens at its opens_at.
+- Early access: a drop can have a secret link that lets family and close friends order before it is public (enable-early-access-tool). It works on an unpublished drop, uses the same stock, and keeps working once the drop opens. Keep the drop unpublished until the public should see it. The owner shares the link themselves; never text it to the wait list.
 - Stock lives on a drop's items. Raising or lowering an item's quantity never takes it below what customers have already bought or are checking out.
 - A bundle is a product sold as N units of another product (10kg box = 2 × 5kg box). It has no stock of its own: put its component on the drop with a quantity, then add the bundle with its own Stripe price.
 
@@ -121,7 +124,9 @@ class FergusonLivestockServer extends Server
         CloseDropNowTool::class,
         CreateDropTool::class,
         DeleteDropTool::class,
+        DisableEarlyAccessTool::class,
         DuplicateDropTool::class,
+        EnableEarlyAccessTool::class,
         PrepareDeleteDropTool::class,
         PreparePublishDropTool::class,
         PublishDropTool::class,

@@ -93,13 +93,14 @@ final readonly class StartCheckout
         }
 
         $drop = Drop::query()->with('items.product')->findOrFail($request->dropId);
+        $earlyAccess = $this->hasEarlyAccess($drop, $request);
         $quantities = $this->validated($drop, $request);
 
         $this->letGoOfEarlierCheckouts($fingerprint);
 
         $deliveryDay = $request->deliveryMethod === DeliveryMethod::Delivery ? $request->deliveryDay : null;
         try {
-            $order = $this->stock->reserve($drop, $quantities, $request->deliveryMethod, $deliveryDay, $fingerprint, now()->addMinutes(config()->integer('shop.hold_minutes'))->toImmutable());
+            $order = $this->stock->reserve($drop, $quantities, $request->deliveryMethod, $deliveryDay, $fingerprint, now()->addMinutes(config()->integer('shop.hold_minutes'))->toImmutable(), $earlyAccess);
         } catch (InsufficientStock|CheckoutBusy $exception) {
             // Being beaten to the last one isn't a mistake, so it doesn't count against the visitor's tries.
             $this->giveBackTry($fingerprint, $request->ip);
@@ -121,6 +122,17 @@ final readonly class StartCheckout
         $order->update(['stripe_checkout_session_id' => $session->id]);
 
         return (string) $session->url;
+    }
+
+    /**
+     * Whether the request carries the drop's current early-access secret. A wrong or old one is no better than none:
+     * the drop is then only orderable when it's open.
+     */
+    private function hasEarlyAccess(Drop $drop, CheckoutRequest $request): bool
+    {
+        return $request->earlyAccessToken !== null
+            && $drop->early_access_token !== null
+            && hash_equals($drop->early_access_token, $request->earlyAccessToken);
     }
 
     /**

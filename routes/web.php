@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Checkout\CancelCheckoutController;
 use App\Http\Controllers\Checkout\OrderConfirmedController;
+use App\Http\Controllers\EarlyAccessController;
+use App\Http\Controllers\EarlyAccessStockController;
 use App\Http\Controllers\JoinWaitlistController;
 use App\Http\Controllers\OrderPageController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Middleware\PreventIndexing;
 use Illuminate\Support\Facades\Route;
 use Spatie\ResponseCache\Middlewares\CacheResponse;
 
@@ -33,6 +36,12 @@ Route::view('/thank-you', 'pages.thank-you')->name('thank-you');
 
 // Not cached: the form holds each visitor's choices.
 Route::get('/order', OrderPageController::class)->name('order');
+
+// A drop's secret early-access link. Not cached: the form holds each visitor's choices, and the link is private.
+Route::middleware(['throttle:early-access', PreventIndexing::class])->group(function (): void {
+    Route::get('/early/{token}', EarlyAccessController::class)->name('early-access');
+    Route::get('/early/{token}/stock', EarlyAccessStockController::class)->name('early-access.stock');
+});
 
 // Stripe sends customers back here. Neither page is cached: both depend on the order. Both can ask Stripe
 // about the order, so they're throttled to keep the shop's Stripe rate limit for checkouts.

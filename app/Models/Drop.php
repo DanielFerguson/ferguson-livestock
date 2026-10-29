@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * A timed release of stock. Only one drop is open at a time: a drop closes at `closed_at`, `closes_at`
@@ -30,6 +31,7 @@ use Illuminate\Support\Facades\DB;
  * @property CarbonImmutable|null $closed_at
  * @property CarbonImmutable|null $published_at
  * @property CarbonImmutable|null $announced_at
+ * @property string|null $early_access_token
  * @property list<string> $delivery_days
  * @property CarbonImmutable|null $preflight_ran_at
  * @property array{passed: bool, problems: list<string>, checked_at: string}|null $preflight_report
@@ -37,7 +39,7 @@ use Illuminate\Support\Facades\DB;
  * @property CarbonImmutable $updated_at
  * @property-read Collection<int, DropItem> $items
  */
-#[Fillable(['name', 'opens_at', 'closes_at', 'closed_at', 'published_at', 'announced_at', 'delivery_days', 'preflight_ran_at', 'preflight_report'])]
+#[Fillable(['name', 'opens_at', 'closes_at', 'closed_at', 'published_at', 'announced_at', 'early_access_token', 'delivery_days', 'preflight_ran_at', 'preflight_report'])]
 class Drop extends Model
 {
     use ClearsResponseCache;
@@ -170,6 +172,53 @@ class Drop extends Model
     }
 
     /**
+     * Whether the early-access link can still be used to order: it's switched on and the drop hasn't ended. The
+     * drop needn't be published or open, which is the point.
+     */
+    public function acceptsEarlyOrders(): bool
+    {
+        return $this->early_access_token !== null && ! $this->hasEnded();
+    }
+
+    /**
+     * Whether ordering is over for good: closed by hand, past its close time, or replaced by the next drop.
+     */
+    public function hasEnded(): bool
+    {
+        foreach ([$this->closed_at, $this->closes_at] as $endsAt) {
+            if ($endsAt instanceof CarbonImmutable && now()->gte($endsAt)) {
+                return true;
+            }
+        }
+
+        return $this->status() === DropStatus::Closed;
+    }
+
+    /**
+     * Switch early access on, or replace the link so the old one stops working. Returns the new secret.
+     */
+    public function startEarlyAccess(): string
+    {
+        $token = Str::random(40);
+        $this->update(['early_access_token' => $token]);
+
+        return $token;
+    }
+
+    public function stopEarlyAccess(): void
+    {
+        $this->update(['early_access_token' => null]);
+    }
+
+    /**
+     * The secret link to order from before the drop is public, or null while early access is off.
+     */
+    public function earlyAccessUrl(): ?string
+    {
+        return $this->early_access_token === null ? null : route('early-access', ['token' => $this->early_access_token]);
+    }
+
+    /**
      * Why this drop can't be deleted, or null when it can: only a drop that hasn't opened, with nothing held or sold.
      */
     public function whyItCantBeDeleted(): ?string
@@ -199,7 +248,7 @@ class Drop extends Model
     public function duplicateAsDraft(): self
     {
         return DB::transaction(function (): self {
-            $copy = $this->replicate(['closed_at', 'published_at', 'announced_at', 'preflight_ran_at', 'preflight_report']);
+            $copy = $this->replicate(['closed_at', 'published_at', 'announced_at', 'early_access_token', 'preflight_ran_at', 'preflight_report']);
             $copy->name = "{$this->name} (copy)";
             $copy->opens_at = $this->opens_at->addWeek();
             $copy->closes_at = $this->closes_at?->addWeek();

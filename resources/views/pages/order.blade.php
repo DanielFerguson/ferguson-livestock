@@ -4,15 +4,17 @@
     description="Order Ferguson Livestock Murray Grey beef boxes and individual cuts when a drop is open."
     robots="noindex, follow"
     :scripts="$drop !== null ? ['resources/js/order-form.js'] : []"
+    :drop-status-url="isset($earlyAccessToken) ? route('early-access.stock', ['token' => $earlyAccessToken]) : null"
+    :drop-poll-ms="isset($earlyAccessToken) ? 10000 : null"
 >
     @if ($drop !== null)
         <section class="bg-cream-dark py-12 lg:py-16">
             <div class="mx-auto max-w-4xl px-6">
-                <x-section-heading eyebrow="Ordering" :level="1" size="page" class="mb-8">
+                <x-section-heading :eyebrow="isset($earlyAccessToken) ? 'Early access' : 'Ordering'" :level="1" size="page" class="mb-8">
                     {{ $drop->name }}
                 </x-section-heading>
 
-                <livewire:order-form :drop="$drop" />
+                <livewire:order-form :drop="$drop" :early-access-token="$earlyAccessToken ?? null" />
             </div>
         </section>
     @else

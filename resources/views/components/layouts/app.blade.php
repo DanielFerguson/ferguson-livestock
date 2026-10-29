@@ -11,6 +11,9 @@
     'fonts' => ['source-sans', 'cormorant'],
     // Extra Vite entries for this page, e.g. the order form's script.
     'scripts' => [],
+    // Where the live stock script polls, and how often. An early-access page points it at its own link's feed.
+    'dropStatusUrl' => null,
+    'dropPollMs' => null,
 ])
 
 @php
@@ -84,7 +87,7 @@
         {"prefetch": [{"where": {"and": [{"href_matches": "/*"}, {"not": {"href_matches": ["/order", "/order-confirmed", "/thank-you", "/waitlist", "/checkout/*", "/api/*", "/admin", "/admin/*"]}}]}, "eagerness": "moderate"}]}
     </script>
 </head>
-<body class="overflow-x-hidden bg-cream font-sans leading-relaxed text-gray-800" data-drop-status="{{ route('drop-status') }}" data-drop-poll="{{ config('shop.drop_poll_ms') }}">
+<body class="overflow-x-hidden bg-cream font-sans leading-relaxed text-gray-800" data-drop-status="{{ $dropStatusUrl ?? route('drop-status') }}" data-drop-poll="{{ $dropPollMs ?? config('shop.drop_poll_ms') }}">
     <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-100 focus:rounded-lg focus:bg-forest focus:px-4 focus:py-2 focus:text-cream">
         Skip to main content
     </a>

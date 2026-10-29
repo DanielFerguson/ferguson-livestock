@@ -60,6 +60,7 @@ final class Presenter
             'closed_by_hand_at' => self::time($drop->closed_at),
             'effective_closes_at' => self::time($drop->effectiveClosesAt()),
             'announced_at' => self::time($drop->announced_at),
+            'early_access' => ['enabled' => $drop->acceptsEarlyOrders(), 'url' => $drop->acceptsEarlyOrders() ? $drop->earlyAccessUrl() : null],
             'delivery_days' => $drop->delivery_days,
             'preflight' => $report === null ? null : [
                 'ran_at' => self::time($drop->preflight_ran_at),

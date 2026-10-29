@@ -17,6 +17,7 @@ final readonly class CheckoutRequest
      * @param  array<int, int>  $quantities  drop item ID => quantity
      * @param  string  $sessionId  the visitor's session, to find and let go of their earlier unpaid checkout
      * @param  string  $botCheckToken  the Turnstile widget's token, from the form in the browser
+     * @param  string|null  $earlyAccessToken  the secret from an early-access link; checkout checks it against the drop's own
      */
     public function __construct(
         public int $dropId,
@@ -26,5 +27,6 @@ final readonly class CheckoutRequest
         public string $sessionId,
         public string $ip,
         public string $botCheckToken = '',
+        public ?string $earlyAccessToken = null,
     ) {}
 }

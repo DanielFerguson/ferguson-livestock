@@ -36,7 +36,7 @@ class CancelCheckoutController extends Controller
         // already knows, so replaying an old link can't spend the shop's Stripe rate limit.
         if ($order->status !== OrderStatus::Pending) {
             return in_array($order->status, [OrderStatus::Expired, OrderStatus::Failed], true)
-                ? to_route('order')->with('checkout.notice', self::CANCELLED)
+                ? $this->backToOrderPage($order)->with('checkout.notice', self::CANCELLED)
                 : to_route('order-confirmed', ['session_id' => $sessionId]);
         }
 
@@ -44,7 +44,7 @@ class CancelCheckoutController extends Controller
             $session = app(PaymentGateway::class)->expireCheckoutSession($sessionId);
         } catch (PaymentProviderUnavailable) {
             // The sweep closes the payment page and puts the stock back once Stripe answers again.
-            return to_route('order');
+            return $this->backToOrderPage($order);
         }
 
         $orders->apply($order, $session);
@@ -53,6 +53,19 @@ class CancelCheckoutController extends Controller
             return to_route('order-confirmed', ['session_id' => $sessionId]);
         }
 
-        return to_route('order')->with('checkout.notice', self::CANCELLED);
+        return $this->backToOrderPage($order)->with('checkout.notice', self::CANCELLED);
+    }
+
+    /**
+     * Someone who came in through a drop's early-access link goes back to it, since the public order page may
+     * not show their drop yet.
+     */
+    private function backToOrderPage(Order $order): RedirectResponse
+    {
+        $drop = $order->drop;
+
+        return $order->via_early_access && $drop->acceptsEarlyOrders()
+            ? to_route('early-access', ['token' => $drop->early_access_token])
+            : to_route('order');
     }
 }
