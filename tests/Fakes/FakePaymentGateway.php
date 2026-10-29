@@ -34,6 +34,8 @@ final class FakePaymentGateway implements PaymentGateway
     /** @var array<string, string> payment intent ID by the refund's idempotency key */
     public array $refunds = [];
 
+    private string $sessionIdPrefix = 'cs_test_';
+
     private ?string $offline = null;
 
     /** Where a real browser lands instead of Stripe's payment page: 'paid', 'cancelled', or null for Stripe's own address. */
@@ -92,6 +94,16 @@ final class FakePaymentGateway implements PaymentGateway
     }
 
     /**
+     * For tests that run several fakes at once, one per process: a session ID is unique to the order it is for.
+     */
+    public function withSessionIdPrefix(string $prefix): self
+    {
+        $this->sessionIdPrefix = $prefix;
+
+        return $this;
+    }
+
+    /**
      * For browser tests: the customer is sent straight back to the shop's success page, already paid, in place of
      * Stripe's payment page (which a test browser can't reach).
      */
@@ -126,7 +138,7 @@ final class FakePaymentGateway implements PaymentGateway
     {
         $this->failIfOffline();
         $this->createdSessions[] = $session;
-        $id = 'cs_test_'.count($this->createdSessions);
+        $id = $this->sessionIdPrefix.count($this->createdSessions);
 
         $returnUrl = match ($this->browserOutcome) {
             'paid' => str_replace('{CHECKOUT_SESSION_ID}', $id, $session->successUrl),

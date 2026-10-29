@@ -4,8 +4,8 @@
  *
  *   k6 run -e BASE_URL=https://<staging-host> scripts/load/drop-day.js
  *
- * It doesn't start checkouts: those would create Stripe test sessions, and checkout allows 30 tries per IP
- * address every 10 minutes, so a single load generator can't stand in for many customers there.
+ * It doesn't start checkouts: those would create Stripe test sessions, and checkout allows 60 tries per IP
+ * address every 35 minutes, so a single load generator can't stand in for many customers there.
  */
 import http from 'k6/http';
 import { check, sleep } from 'k6';
