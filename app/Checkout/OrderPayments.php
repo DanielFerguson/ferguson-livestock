@@ -5,11 +5,16 @@ declare(strict_types=1);
 namespace App\Checkout;
 
 use App\Enums\OrderStatus;
+use App\Exceptions\InsufficientStock;
+use App\Exceptions\PaymentProviderUnavailable;
+use App\Mail\LatePaymentNotification;
 use App\Mail\NewOrderNotification;
 use App\Mail\OrderConfirmation;
 use App\Models\Order;
 use App\Payments\CheckoutSession;
+use App\Payments\PaymentGateway;
 use App\Stock\StockLedger;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
 /**
@@ -35,12 +40,25 @@ final readonly class OrderPayments
         };
     }
 
+    /**
+     * A payment that arrives after the order was given up on (its checkout timed out and the stock went back on
+     * sale) is not dropped: the order takes its stock back if there's enough, and is refunded if there isn't.
+     *
+     * @throws PaymentProviderUnavailable
+     */
     public function markPaid(Order $order, CheckoutSession $session): bool
     {
         if (! $this->transition($order, [OrderStatus::Pending, OrderStatus::Processing], OrderStatus::Paid)) {
-            return false;
+            return $this->recoverLatePayment($order, $session);
         }
 
+        $this->confirmPaid($order, $session);
+
+        return true;
+    }
+
+    private function confirmPaid(Order $order, CheckoutSession $session): void
+    {
         $order->fill([...$this->buyerDetails($session), 'paid_at' => now()])->save();
 
         if ($order->email !== null) {
@@ -48,8 +66,63 @@ final readonly class OrderPayments
         }
 
         Mail::to(config()->string('shop.email'))->queue(new NewOrderNotification($order));
+    }
 
-        return true;
+    /**
+     * @throws PaymentProviderUnavailable
+     */
+    private function recoverLatePayment(Order $order, CheckoutSession $session): bool
+    {
+        if (! $session->isPaid() || ! in_array($order->status, [OrderStatus::Expired, OrderStatus::Failed], true)) {
+            return false;
+        }
+
+        try {
+            $recovered = DB::transaction(function () use ($order): bool {
+                if (! $this->transition($order, [OrderStatus::Expired, OrderStatus::Failed], OrderStatus::Paid)) {
+                    return false;
+                }
+
+                if (! $this->stock->reclaim($order)) {
+                    throw new InsufficientStock([]);
+                }
+
+                return true;
+            });
+        } catch (InsufficientStock) {
+            $order->refresh();
+            $this->refundLatePayment($order, $session);
+
+            return false;
+        }
+
+        if ($recovered) {
+            $this->confirmPaid($order, $session);
+        }
+
+        return $recovered;
+    }
+
+    /**
+     * @throws PaymentProviderUnavailable
+     */
+    private function refundLatePayment(Order $order, CheckoutSession $session): void
+    {
+        $order->fill($this->buyerDetails($session))->save();
+
+        if ($order->refunded_at !== null) {
+            return;
+        }
+
+        $refunded = $order->stripe_payment_intent_id !== null;
+
+        if ($order->stripe_payment_intent_id !== null) {
+            // Resolved here, not injected: nearly every payment change never talks to Stripe.
+            app(PaymentGateway::class)->refund($order->stripe_payment_intent_id, "late-payment-{$order->public_id}");
+            $this->recordRefund($order, $order->total);
+        }
+
+        Mail::to(config()->string('shop.email'))->queue(new LatePaymentNotification($order, $refunded));
     }
 
     /**
@@ -68,24 +141,28 @@ final readonly class OrderPayments
 
     public function markExpired(Order $order): bool
     {
-        if (! $this->transition($order, [OrderStatus::Pending], OrderStatus::Expired)) {
-            return false;
-        }
+        return DB::transaction(function () use ($order): bool {
+            if (! $this->transition($order, [OrderStatus::Pending], OrderStatus::Expired)) {
+                return false;
+            }
 
-        $this->stock->release($order);
+            $this->stock->release($order);
 
-        return true;
+            return true;
+        });
     }
 
     public function markFailed(Order $order): bool
     {
-        if (! $this->transition($order, [OrderStatus::Pending, OrderStatus::Processing], OrderStatus::Failed)) {
-            return false;
-        }
+        return DB::transaction(function () use ($order): bool {
+            if (! $this->transition($order, [OrderStatus::Pending, OrderStatus::Processing], OrderStatus::Failed)) {
+                return false;
+            }
 
-        $this->stock->release($order);
+            $this->stock->release($order);
 
-        return true;
+            return true;
+        });
     }
 
     public function markFulfilled(Order $order): bool

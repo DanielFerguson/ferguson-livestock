@@ -34,6 +34,10 @@ return [
     // Password for the account AdminUserSeeder creates. Locally it falls back to "password".
     'admin_password' => env('SHOP_ADMIN_PASSWORD'),
 
+    // How long an unpaid checkout holds its items before they go back on sale. Stripe's own payment page lasts
+    // longer (it can't be shorter than 30 minutes), so the shop closes it when this runs out.
+    'hold_minutes' => (int) env('SHOP_HOLD_MINUTES', 15),
+
     // How often pages check live stock while a drop is open, in milliseconds. Tests poll faster.
     'drop_poll_ms' => (int) env('SHOP_DROP_POLL_MS', 2000),
 

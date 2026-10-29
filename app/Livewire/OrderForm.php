@@ -8,6 +8,7 @@ use App\Checkout\CheckoutRequest;
 use App\Checkout\StartCheckout;
 use App\Enums\DeliveryMethod;
 use App\Enums\ProductType;
+use App\Exceptions\CheckoutBusy;
 use App\Exceptions\DropNotOpen;
 use App\Exceptions\FailedBotCheck;
 use App\Exceptions\InsufficientStock;
@@ -95,7 +96,7 @@ class OrderForm extends Component
             $this->cutTo($this->drop(), $exception->available);
 
             return;
-        } catch (FailedBotCheck|InvalidCheckout|DropNotOpen|TooManyCheckoutAttempts $exception) {
+        } catch (FailedBotCheck|InvalidCheckout|DropNotOpen|TooManyCheckoutAttempts|CheckoutBusy $exception) {
             $this->problem = $exception->getMessage();
 
             return;
