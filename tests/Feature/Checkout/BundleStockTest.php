@@ -75,3 +75,36 @@ it('keeps releasing at the units the order was taken at, even if the bundle chan
 
     expect($shop->mince->refresh()->available)->toBe(25);
 });
+
+it('trims a mixed order of a pack and 500g packs together, keeping the pack', function (): void {
+    $shop = StockedDrop::create(mince: 12);
+    $pack = bulkMincePack($shop);
+
+    $cut = app(StockLedger::class)->fit($shop->drop, [$pack->id => 1, $shop->mince->id => 3]);
+
+    expect($cut)->toBe([$shop->mince->id => 2]);
+});
+
+it('cuts nothing when the whole order is still in stock', function (): void {
+    $shop = StockedDrop::create(mince: 13);
+    $pack = bulkMincePack($shop);
+
+    expect(app(StockLedger::class)->fit($shop->drop, [$pack->id => 1, $shop->mince->id => 3]))->toBe([]);
+});
+
+it('takes a pack off the order when there is not a pack’s worth left, and keeps the singles', function (): void {
+    $shop = StockedDrop::create(mince: 9);
+    $pack = bulkMincePack($shop);
+
+    expect(app(StockLedger::class)->fit($shop->drop, [$pack->id => 1, $shop->mince->id => 4]))->toBe([$pack->id => 0]);
+});
+
+it('tells the order form which stock each item sells from', function (): void {
+    $shop = StockedDrop::create(mince: 25);
+    $pack = bulkMincePack($shop);
+    $items = DropSnapshot::current()['items'];
+
+    expect($items[$pack->product->slug])->toMatchArray(['available' => 2, 'pool' => $shop->mince->product->slug, 'units' => 10])
+        ->and($items[$shop->mince->product->slug])->toMatchArray(['available' => 25, 'pool' => $shop->mince->product->slug, 'units' => 1])
+        ->and($items[$shop->largeBox->product->slug])->toMatchArray(['pool' => $shop->box->product->slug, 'units' => 2]);
+});

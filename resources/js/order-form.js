@@ -23,8 +23,29 @@ document.addEventListener('alpine:init', () => {
             return Number(this.$wire.extras[id] ?? 0);
         },
 
+        /** How many of an item are chosen: a box is one or none. */
+        chosen(id) {
+            return this.items[id].box ? Number(this.$wire.box === String(id)) : this.quantity(id);
+        },
+
+        /** What's left of the stock an item sells from: its own, or the product it is a bundle of. */
+        poolLeft(item) {
+            return Object.values(this.items).find((other) => other.slug === item.pool)?.available ?? 0;
+        },
+
+        /** How much of that stock the rest of the order already uses. */
+        usedByOthers(id) {
+            const pool = this.items[id].pool;
+            return Object.entries(this.items)
+                .filter(([otherId, other]) => String(otherId) !== String(id) && other.pool === pool)
+                .reduce((sum, [otherId, other]) => sum + this.chosen(otherId) * other.units, 0);
+        },
+
+        /** The most of an item that can still be added: limited by the order, and by stock the order shares with it. */
         limit(id) {
-            return Math.min(this.items[id].max, this.items[id].available);
+            const item = this.items[id];
+            const room = Math.floor((this.poolLeft(item) - this.usedByOthers(id)) / item.units);
+            return Math.max(0, Math.min(item.max, room));
         },
 
         add(id) {
@@ -70,20 +91,37 @@ document.addEventListener('alpine:init', () => {
         apply(status) {
             this.open = status.state === 'live' || status.state === 'sold_out';
 
-            for (const [id, item] of Object.entries(this.items)) {
+            for (const item of Object.values(this.items)) {
                 const live = status.items?.[item.slug];
                 if (!live) continue;
                 item.available = live.available;
+                item.pool = live.pool ?? item.pool;
+                item.units = live.units ?? item.units;
+            }
 
-                if (item.box && this.$wire.box === id && live.available < 1) {
+            // Items that share stock (a mince pack and 500g mince) are trimmed together, not one at a time: the biggest
+            // bundles first, so a pack is kept and the singles beside it are cut. The server does the same (StockLedger::fit).
+            const left = {};
+            const byBundleSize = Object.entries(this.items).sort(([idA, a], [idB, b]) => b.units - a.units || Number(idA) - Number(idB));
+
+            for (const [id, item] of byBundleSize) {
+                const wanted = this.chosen(id);
+                if (wanted < 1) continue;
+
+                const have = (left[item.pool] ??= this.poolLeft(item));
+                const fits = Math.min(wanted, Math.floor(have / item.units));
+                left[item.pool] = have - fits * item.units;
+                if (fits >= wanted) continue;
+
+                if (item.box) {
                     this.$wire.box = '';
-                    this.notices.push(`The ${item.name} just sold out, so we’ve taken it off your order.`);
-                } else if (!item.box && this.quantity(id) > live.available) {
-                    this.$wire.extras[id] = live.available;
-                    this.notices.push(live.available > 0
-                        ? `There are only ${live.available} of the ${item.name} left, so we’ve changed your order to ${live.available}.`
-                        : `The ${item.name} just sold out, so we’ve taken it off your order.`);
+                } else {
+                    this.$wire.extras[id] = fits;
                 }
+
+                this.notices.push(fits > 0
+                    ? `There are only ${fits} of the ${item.name} left, so we’ve changed your order to ${fits}.`
+                    : `The ${item.name} just sold out, so we’ve taken it off your order.`);
             }
         },
     }));

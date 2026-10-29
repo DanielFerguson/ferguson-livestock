@@ -18,6 +18,7 @@ use App\Exceptions\TooManyCheckoutAttempts;
 use App\Models\Drop;
 use App\Models\DropItem;
 use App\Stock\DropSnapshot;
+use App\Stock\StockLedger;
 use Carbon\CarbonImmutable;
 use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Contracts\View\View;
@@ -74,7 +75,7 @@ class OrderForm extends Component
      *
      * @param  string  $turnstileToken  The bot check's token, read from the form in the browser.
      */
-    public function checkout(StartCheckout $start, string $turnstileToken = ''): void
+    public function checkout(StartCheckout $start, StockLedger $stock, string $turnstileToken = ''): void
     {
         $this->notices = [];
         $this->problem = null;
@@ -92,8 +93,9 @@ class OrderForm extends Component
 
         try {
             $url = $start(new CheckoutRequest($this->dropId, $this->quantities(), $deliveryMethod, $this->chosenDay(), session()->getId(), (string) request()->ip(), $turnstileToken));
-        } catch (InsufficientStock $exception) {
-            $this->cutTo($this->drop(), $exception->available);
+        } catch (InsufficientStock) {
+            $drop = $this->drop();
+            $this->cutTo($drop, $stock->fit($drop, $this->quantities()));
 
             return;
         } catch (FailedBotCheck|InvalidCheckout|DropNotOpen|TooManyCheckoutAttempts|CheckoutBusy $exception) {
@@ -132,6 +134,8 @@ class OrderForm extends Component
                     'price' => $item->price,
                     'max' => $item->max_per_order,
                     'available' => $available($item),
+                    'pool' => $stock[$item->product->slug]['pool'] ?? $item->product->slug,
+                    'units' => $stock[$item->product->slug]['units'] ?? 1,
                     'box' => $item->product->type === ProductType::Box,
                 ]])
                 ->all(),
@@ -184,7 +188,7 @@ class OrderForm extends Component
      * Someone else got there first. Trim the order to what's left and say what changed, in the same words the
      * browser uses when it trims the order itself.
      *
-     * @param  array<int, int>  $available
+     * @param  array<int, int>  $available  for each item that has to be cut, how many can still be had
      */
     private function cutTo(Drop $drop, array $available): void
     {
@@ -208,5 +212,8 @@ class OrderForm extends Component
         if ($available === []) {
             $this->problem = 'Something in your order just sold out. Please check it and try again.';
         }
+
+        // The page's own numbers are out of date, so don't wait for the next poll to show the real ones.
+        $this->dispatch('drop-status-refresh');
     }
 }

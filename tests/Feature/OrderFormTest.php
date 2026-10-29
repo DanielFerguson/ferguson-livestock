@@ -7,6 +7,7 @@ use App\Livewire\OrderForm;
 use App\Models\Drop;
 use App\Models\DropItem;
 use App\Models\Order;
+use App\Models\Product;
 use App\Support\Turnstile;
 use Illuminate\Support\Facades\Http;
 use Livewire\Exceptions\MethodNotFoundException;
@@ -215,4 +216,27 @@ it('says the order was cancelled when the customer comes back from Stripe', func
     $this->withSession(['checkout.notice' => 'Your order was cancelled and nothing was charged.'])
         ->get(route('order'))
         ->assertSee('Your order was cancelled and nothing was charged.');
+});
+
+it('trims a mixed order of a mince pack and 500g mince to what is left in one go, so trying again works', function (): void {
+    FakePaymentGateway::swap();
+    $shop = StockedDrop::create(mince: 12);
+    $pack = DropItem::factory()->for($shop->drop)->for(Product::factory()->bundleOf($shop->mince->product, 10)->create(['name' => '5kg Mince Pack']))
+        ->withoutStock()->create(['price' => 11000, 'stripe_price_id' => 'price_mince_5kg']);
+    $form = livewire(OrderForm::class, ['drop' => $shop->drop])
+        ->set("extras.{$pack->id}", 1)
+        ->set("extras.{$shop->mince->id}", 3)
+        ->set('deliveryMethod', 'pickup');
+    DropItem::query()->whereKey($shop->mince->id)->update(['available' => 11]);
+
+    $trimmed = $form->call('checkout');
+    $trimmed->assertSet("extras.{$pack->id}", 1)
+        ->assertSet("extras.{$shop->mince->id}", 1)
+        ->assertSet('notices', ['There are only 1 of the 500g Beef Mince left, so we’ve changed your order to 1.'])
+        ->assertNoRedirect();
+    $trimmed->assertDispatched('drop-status-refresh');
+
+    $form->call('checkout')->assertRedirect('https://checkout.stripe.test/cs_test_1');
+
+    expect($shop->mince->refresh()->available)->toBe(0);
 });

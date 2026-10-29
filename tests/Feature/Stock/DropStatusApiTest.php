@@ -24,9 +24,9 @@ it('describes the open drop and what’s left of each item', function (): void {
             'announced' => null,
             'server_time' => now()->toIso8601ZuluString('millisecond'),
             'items' => [
-                $shop->box->product->slug => ['available' => 5, 'max' => 1],
-                $shop->largeBox->product->slug => ['available' => 2, 'max' => 1],
-                $shop->mince->product->slug => ['available' => 10, 'max' => 10],
+                $shop->box->product->slug => ['available' => 5, 'max' => 1, 'pool' => $shop->box->product->slug, 'units' => 1],
+                $shop->largeBox->product->slug => ['available' => 2, 'max' => 1, 'pool' => $shop->box->product->slug, 'units' => 2],
+                $shop->mince->product->slug => ['available' => 10, 'max' => 10, 'pool' => $shop->mince->product->slug, 'units' => 1],
             ],
             'held' => 0,
         ]);

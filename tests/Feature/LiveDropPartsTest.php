@@ -79,10 +79,10 @@ it('adds the announced date to the sold-out message', function (): void {
         ->assertSee('The next drop is Saturday 14 November.');
 });
 
-it('shows each box’s stock on the beef boxes page', function (): void {
+it('leaves each box’s stock to the live script on the beef boxes page, which is cached', function (): void {
     $shop = StockedDrop::create(boxes: 3);
 
     $this->get(route('beef-boxes'))
         ->assertSee('data-drop-stock="'.$shop->box->product->slug.'"', escape: false)
-        ->assertSee('3 left');
+        ->assertDontSee('3 left');
 });

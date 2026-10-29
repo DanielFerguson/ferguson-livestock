@@ -189,6 +189,72 @@ final class StockLedger
     }
 
     /**
+     * What of an order someone wants is still in stock, worked out as checkout does: items that share stock (a mince
+     * pack and 500g mince, which both come from the same mince) draw on it together, largest bundles first. Used to
+     * trim an order after someone else got there first, so that trying again can work.
+     *
+     * @param  array<int, int>  $quantities  drop item ID => quantity wanted
+     * @return array<int, int> for each item that has to be cut, how many can still be had (0 when none)
+     */
+    public function fit(Drop $drop, array $quantities): array
+    {
+        $drop = Drop::query()->with('items.product.bundle')->findOrFail($drop->id);
+
+        $wanted = [];
+
+        foreach ($quantities as $dropItemId => $quantity) {
+            $item = $drop->items->firstWhere('id', $dropItemId);
+
+            if ($item instanceof DropItem && $item->product->type !== ProductType::Delivery) {
+                $wanted[] = [$item, $quantity, max(1, $item->product->bundle->units ?? 1)];
+            }
+        }
+
+        // The biggest bundles first, so a pack is kept and the singles beside it are trimmed, not the other way
+        // round, which would leave the pack's worth of stock unsold. Keep in step with apply() in order-form.js.
+        usort($wanted, fn (array $a, array $b): int => [$b[2], $a[0]->id] <=> [$a[2], $b[0]->id]);
+
+        $left = [];
+        $cut = [];
+
+        foreach ($wanted as [$item, $quantity, $units]) {
+            $stock = $this->stockOf($drop, $item);
+
+            if (! $stock instanceof DropItem) {
+                $cut[$item->id] = 0;
+
+                continue;
+            }
+
+            $left[$stock->id] ??= (int) $stock->available;
+            $fits = min($quantity, intdiv($left[$stock->id], $units));
+            $left[$stock->id] -= $fits * $units;
+
+            if ($fits < $quantity) {
+                $cut[$item->id] = $fits;
+            }
+        }
+
+        return $cut;
+    }
+
+    /**
+     * The drop item whose stock an item sells from: its own, its bundle's component, or none for the delivery fee.
+     */
+    private function stockOf(Drop $drop, DropItem $item): ?DropItem
+    {
+        $bundle = $item->product->bundle;
+
+        $stock = match (true) {
+            $item->hasOwnStock() => $item,
+            $bundle instanceof Bundle => $drop->items->firstWhere('product_id', $bundle->component_product_id),
+            default => null,
+        };
+
+        return $stock instanceof DropItem ? $stock : null;
+    }
+
+    /**
      * @param  array<int, int>  $quantities
      * @return list<StockLine>
      */
@@ -204,12 +270,7 @@ final class StockLedger
             }
 
             $bundle = $item->product->bundle;
-
-            $stock = match (true) {
-                $item->hasOwnStock() => $item,
-                $bundle instanceof Bundle => $drop->items->firstWhere('product_id', $bundle->component_product_id),
-                default => null,
-            };
+            $stock = $this->stockOf($drop, $item);
 
             // Only the delivery fee goes without stock. Anything else whose stock is missing from the drop, like a
             // 10kg box whose 5kg boxes aren't in it, is sold out, as the order page already shows it.
@@ -217,7 +278,7 @@ final class StockLedger
                 throw new InsufficientStock([$item->id => 0]);
             }
 
-            $lines[] = new StockLine($item, $quantity, $stock instanceof DropItem ? $stock : null, $stock === null ? 0 : ($bundle->units ?? 1));
+            $lines[] = new StockLine($item, $quantity, $stock instanceof DropItem ? $stock : null, $stock instanceof DropItem ? $bundle->units ?? 1 : (0));
         }
 
         return $lines;
