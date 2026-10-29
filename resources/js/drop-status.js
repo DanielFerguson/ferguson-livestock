@@ -12,6 +12,8 @@
  *   data-drop-countdown              time until the drop opens, by the server's clock
  *   data-drop-held                   how many checkouts could still free stock up
  *   data-drop-paused                 shown while updates can't get through
+ *
+ * Dispatch `drop-status-refresh` on window to poll straight away.
  */
 const root = document.body;
 const url = root.dataset.dropStatus;
@@ -20,6 +22,7 @@ const every = Number(root.dataset.dropPoll) || 2000;
 let snapshot = null;
 let offset = 0; // the server's clock minus this device's, in milliseconds
 let failures = 0;
+let retryAfter = 0; // milliseconds the server asked us to wait, from its Retry-After
 let timer;
 let lastState;
 let lastView;
@@ -62,7 +65,8 @@ function countdown(ms) {
 
 function nextPollIn() {
     if (document.hidden) return null;
-    if (failures) return 15000;
+    // Back off from a struggling server, a little longer each time and never all together.
+    if (failures) return Math.max(retryAfter, Math.min(30000, 2000 * 2 ** (failures - 1))) * (0.75 + Math.random() * 0.5);
     const now = state();
     if (now === 'live' || now === 'sold_out' || (now === 'scheduled' && opensIn() < 120000)) {
         return every * (0.85 + Math.random() * 0.3);
@@ -82,13 +86,17 @@ async function poll() {
 
     try {
         const response = await fetch(url, { headers: { Accept: 'application/json' } });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        if (!response.ok) {
+            retryAfter = (Number(response.headers.get('Retry-After')) || 0) * 1000;
+            throw new Error(`HTTP ${response.status}`);
+        }
         const data = await response.json();
         const received = Date.now();
         // Half the round trip, plus however long an edge cache held the response.
         const age = (Number(response.headers.get('Age')) || 0) * 1000;
         offset = Date.parse(data.server_time) + age + (received - sent) / 2 - received;
         failures = 0;
+        retryAfter = 0;
         snapshot = data;
         publish();
     } catch {
@@ -137,5 +145,7 @@ setInterval(() => {
 
 document.addEventListener('visibilitychange', () => (document.hidden ? clearTimeout(timer) : poll()));
 window.addEventListener('online', poll);
+// The order form asks for fresh numbers right after checkout turns someone away.
+window.addEventListener('drop-status-refresh', poll);
 
 if (url) poll();

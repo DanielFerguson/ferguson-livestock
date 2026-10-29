@@ -9,6 +9,7 @@ use App\Enums\ProductType;
 use App\Models\Bundle;
 use App\Models\Drop;
 use App\Models\DropItem;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -22,14 +23,52 @@ final class DropSnapshot
     private const string CACHE_KEY = 'drop-snapshot';
 
     /**
-     * @return array{drop: array{id: int, name: string, state: string, opens_at: string, closes_at: string|null}|null, announced: array{opens_at: string, label: string}|null, server_time: string, items: array<string, array{available: int, max: int}>, held: int}
+     * @return array{drop: array{id: int, name: string, state: string, opens_at: string, closes_at: string|null}|null, announced: array{opens_at: string, label: string}|null, server_time: string, items: array<string, array{available: int, max: int, pool: string, units: int}>, held: int}
      */
     public static function current(): array
     {
-        /** @var array{drop: array{id: int, name: string, state: string, opens_at: string, closes_at: string|null}|null, announced: array{opens_at: string, label: string}|null, items: array<string, array{available: int, max: int}>, held: int} $snapshot */
-        $snapshot = Cache::remember(self::CACHE_KEY, 1, fn (): array => self::build());
+        $snapshot = self::cached();
 
         return [...$snapshot, 'server_time' => now()->toIso8601ZuluString('millisecond')];
+    }
+
+    /**
+     * Rebuilt by one request at a time. When a stock change clears the snapshot, every viewer's next poll arrives
+     * together; the first rebuilds it and the rest wait a moment for the result instead of all querying the database.
+     *
+     * @return array{drop: array{id: int, name: string, state: string, opens_at: string, closes_at: string|null}|null, announced: array{opens_at: string, label: string}|null, items: array<string, array{available: int, max: int, pool: string, units: int}>, held: int}
+     */
+    private static function cached(): array
+    {
+        $snapshot = self::stored();
+
+        if ($snapshot !== null) {
+            return $snapshot;
+        }
+
+        try {
+            Cache::lock(self::CACHE_KEY.':building', 5)->block(2, function (): void {
+                if (self::stored() === null) {
+                    Cache::put(self::CACHE_KEY, self::build(), 1);
+                }
+            });
+        } catch (LockTimeoutException) {
+            // Whoever holds the lock is taking too long; answering from the database beats not answering.
+            return self::build();
+        }
+
+        return self::stored() ?? self::build();
+    }
+
+    /**
+     * @return array{drop: array{id: int, name: string, state: string, opens_at: string, closes_at: string|null}|null, announced: array{opens_at: string, label: string}|null, items: array<string, array{available: int, max: int, pool: string, units: int}>, held: int}|null
+     */
+    private static function stored(): ?array
+    {
+        /** @var array{drop: array{id: int, name: string, state: string, opens_at: string, closes_at: string|null}|null, announced: array{opens_at: string, label: string}|null, items: array<string, array{available: int, max: int, pool: string, units: int}>, held: int}|null $snapshot */
+        $snapshot = Cache::get(self::CACHE_KEY);
+
+        return $snapshot;
     }
 
     public static function forget(): void
@@ -38,7 +77,7 @@ final class DropSnapshot
     }
 
     /**
-     * @return array{drop: array{id: int, name: string, state: string, opens_at: string, closes_at: string|null}|null, announced: array{opens_at: string, label: string}|null, items: array<string, array{available: int, max: int}>, held: int}
+     * @return array{drop: array{id: int, name: string, state: string, opens_at: string, closes_at: string|null}|null, announced: array{opens_at: string, label: string}|null, items: array<string, array{available: int, max: int, pool: string, units: int}>, held: int}
      */
     private static function build(): array
     {
@@ -54,7 +93,7 @@ final class DropSnapshot
             $available = self::available($drop, $item);
 
             if ($available !== null) {
-                $items[$item->product->slug] = ['available' => $available, 'max' => $item->max_per_order];
+                $items[$item->product->slug] = ['available' => $available, 'max' => $item->max_per_order, ...self::pool($drop, $item)];
             }
         }
 
@@ -82,6 +121,27 @@ final class DropSnapshot
         $drop = Drop::announced();
 
         return $drop instanceof Drop ? ['opens_at' => $drop->opens_at->toIso8601ZuluString(), 'label' => $drop->announcedLabel()] : null;
+    }
+
+    /**
+     * Which stock an item sells from: the slug of the product whose `available` it draws on, and how many of that
+     * it uses each. An item with stock of its own is its own pool, one at a time; a bundle uses its component's.
+     * The order form adds up everything chosen from one pool, so a mince pack and 500g mince can't both be had
+     * from the same last few.
+     *
+     * @return array{pool: string, units: int}
+     */
+    private static function pool(Drop $drop, DropItem $item): array
+    {
+        $bundle = $item->product->bundle;
+
+        if ($item->hasOwnStock() || ! $bundle instanceof Bundle) {
+            return ['pool' => $item->product->slug, 'units' => 1];
+        }
+
+        $component = $drop->items->firstWhere('product_id', $bundle->component_product_id);
+
+        return ['pool' => $component instanceof DropItem ? $component->product->slug : $item->product->slug, 'units' => max(1, $bundle->units)];
     }
 
     /**

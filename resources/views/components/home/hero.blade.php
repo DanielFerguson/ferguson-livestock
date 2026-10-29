@@ -73,9 +73,8 @@
                                 <div class="text-right">
                                     <p class="font-bold text-forest">{{ Money::format($box->price) }}</p>
                                     <p class="text-xs text-sage">{{ Money::perKg((int) $box->box?->perKgPrice) }}</p>
-                                    @isset($liveDrop['items'][$box->slug])
-                                        <p class="text-xs font-semibold text-forest" data-drop-stock="{{ $box->slug }}">{{ \App\Stock\StockLabel::text($liveDrop['items'][$box->slug]['available']) }}</p>
-                                    @endisset
+                                    {{-- Filled in by the live stock script. This page is cached, so a count printed here could be minutes old. --}}
+                                    <p class="text-xs font-semibold text-forest" data-drop-stock="{{ $box->slug }}"></p>
                                 </div>
                             @endif
                         </div>
