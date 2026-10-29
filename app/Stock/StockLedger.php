@@ -7,6 +7,7 @@ namespace App\Stock;
 use App\Enums\DeliveryMethod;
 use App\Enums\OrderStatus;
 use App\Enums\ProductType;
+use App\Exceptions\CheckoutBusy;
 use App\Exceptions\DropNotOpen;
 use App\Exceptions\InsufficientStock;
 use App\Models\Bundle;
@@ -15,6 +16,7 @@ use App\Models\DropItem;
 use App\Models\Order;
 use App\Models\OrderItem;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -29,6 +31,16 @@ use InvalidArgumentException;
 final class StockLedger
 {
     /**
+     * Long enough for a rush to queue up behind one stock row, short enough to answer "busy" before the customer gives up.
+     */
+    private const string LOCK_TIMEOUT = '5s';
+
+    /**
+     * Postgres's SQLSTATE for a lock that wasn't granted in time.
+     */
+    private const string LOCK_NOT_AVAILABLE = '55P03';
+
+    /**
      * @param  array<int, int>  $quantities  drop item ID => quantity, including the delivery fee for deliveries
      *
      * @throws DropNotOpen
@@ -36,7 +48,10 @@ final class StockLedger
      */
     public function reserve(Drop $drop, array $quantities, DeliveryMethod $deliveryMethod, ?CarbonImmutable $deliveryDay, string $sessionFingerprint, CarbonImmutable $expiresAt): Order
     {
-        $order = DB::transaction(function () use ($drop, $quantities, $deliveryMethod, $deliveryDay, $sessionFingerprint, $expiresAt): Order {
+        $order = $this->waitingForLocks(fn (): Order => DB::transaction(function () use ($drop, $quantities, $deliveryMethod, $deliveryDay, $sessionFingerprint, $expiresAt): Order {
+            // Postgres only: give up on a stock row that stays locked, rather than queueing behind it indefinitely.
+            DB::statement("SET LOCAL lock_timeout = '".self::LOCK_TIMEOUT."'");
+
             $drop = Drop::query()->with('items.product.bundle')->findOrFail($drop->id);
 
             if (! $drop->status()->isOpen()) {
@@ -68,11 +83,51 @@ final class StockLedger
             }
 
             return $order->load('items');
-        });
+        }, attempts: 3));
 
         DropSnapshot::forget();
 
         return $order;
+    }
+
+    /**
+     * Take back the stock of an order that was released but then paid for after all. Returns false, taking nothing,
+     * when there isn't enough left. Call it inside the transaction that marks the order paid, so a refusal can undo it.
+     */
+    public function reclaim(Order $order): bool
+    {
+        $claimed = Order::query()->whereKey($order->id)->whereNotNull('released_at')->update(['released_at' => null, 'updated_at' => now()]);
+
+        // Never released, so the stock is still held for it.
+        if ($claimed === 0) {
+            return true;
+        }
+
+        $needed = OrderItem::query()
+            ->where('order_id', $order->id)
+            ->whereNotNull('stock_drop_item_id')
+            ->get()
+            ->groupBy('stock_drop_item_id')
+            ->map(fn ($items): int => $items->sum(fn (OrderItem $item): int => $item->quantity * $item->stock_units))
+            ->sortKeys()
+            ->all();
+
+        /** @var array<int, int> $available */
+        $available = DropItem::query()->whereKey(array_keys($needed))->orderBy('id')->lockForUpdate()->pluck('available', 'id')->all();
+
+        foreach ($needed as $dropItemId => $units) {
+            if ($units > ($available[$dropItemId] ?? 0)) {
+                return false;
+            }
+        }
+
+        foreach ($needed as $dropItemId => $units) {
+            DropItem::query()->whereKey($dropItemId)->decrement('available', $units);
+        }
+
+        DB::afterCommit(DropSnapshot::forget(...));
+
+        return true;
     }
 
     /**
@@ -105,10 +160,32 @@ final class StockLedger
         });
 
         if ($released) {
-            DropSnapshot::forget();
+            // After the outer transaction too, when an order is expired and released together.
+            DB::afterCommit(DropSnapshot::forget(...));
         }
 
         return $released;
+    }
+
+    /**
+     * @template T
+     *
+     * @param  callable(): T  $hold
+     * @return T
+     *
+     * @throws CheckoutBusy
+     */
+    private function waitingForLocks(callable $hold): mixed
+    {
+        try {
+            return $hold();
+        } catch (QueryException $exception) {
+            if ($exception->getCode() === self::LOCK_NOT_AVAILABLE) {
+                throw new CheckoutBusy;
+            }
+
+            throw $exception;
+        }
     }
 
     /**

@@ -158,6 +158,15 @@ final readonly class StripePaymentGateway implements PaymentGateway
         }
     }
 
+    public function refund(string $paymentIntentId, string $idempotencyKey): void
+    {
+        try {
+            $this->stripe->refunds->create(['payment_intent' => $paymentIntentId], ['idempotency_key' => $idempotencyKey]);
+        } catch (ApiErrorException $exception) {
+            throw new PaymentProviderUnavailable($exception->getMessage(), $exception->getCode(), previous: $exception);
+        }
+    }
+
     /**
      * @param  Closure(): StripeSession  $request
      *

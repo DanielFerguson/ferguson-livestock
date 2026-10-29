@@ -31,6 +31,9 @@ final class FakePaymentGateway implements PaymentGateway
     /** @var list<NewCheckoutSession> */
     public array $createdSessions = [];
 
+    /** @var array<string, string> payment intent ID by the refund's idempotency key */
+    public array $refunds = [];
+
     private ?string $offline = null;
 
     /** Where a real browser lands instead of Stripe's payment page: 'paid', 'cancelled', or null for Stripe's own address. */
@@ -152,6 +155,15 @@ final class FakePaymentGateway implements PaymentGateway
         }
 
         return $this->sessions[$sessionId] = new CheckoutSession($sessionId, 'expired', 'unpaid', null, $session->orderPublicId);
+    }
+
+    /**
+     * Refunds are recorded by their key, so asking twice shows up as one.
+     */
+    public function refund(string $paymentIntentId, string $idempotencyKey): void
+    {
+        $this->failIfOffline();
+        $this->refunds[$idempotencyKey] = $paymentIntentId;
     }
 
     /**

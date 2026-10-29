@@ -107,6 +107,7 @@ it('settles a payment page once Stripe has closed it, without waiting for the ho
 });
 
 it('waits for the payment page to close a quarter of an hour at a time, the longest delay the queue allows', function (): void {
+    config(['shop.hold_minutes' => 40]);
     FakePaymentGateway::swap();
     $order = leftAtPaymentPage(StockedDrop::create(), minutesAgo: 1);
     Queue::fake();

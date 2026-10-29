@@ -49,4 +49,11 @@ interface PaymentGateway
      * @throws PaymentProviderUnavailable
      */
     public function expireCheckoutSession(string $sessionId): CheckoutSession;
+
+    /**
+     * Give a payment back in full. The key makes asking twice refund once.
+     *
+     * @throws PaymentProviderUnavailable
+     */
+    public function refund(string $paymentIntentId, string $idempotencyKey): void;
 }

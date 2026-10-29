@@ -32,6 +32,6 @@
             <span x-show="! open" @if ($status->isOpen()) hidden @endif>Orders open in <span data-drop-countdown></span></span>
         </x-button>
         <p wire:loading wire:target="checkout" role="status" class="mt-3 text-sm text-gray-600">Holding your order and opening secure payment…</p>
-        <p class="mt-3 text-sm text-gray-600">You’ll pay on Stripe’s secure page. We hold your items for 30 minutes while you do.</p>
+        <p class="mt-3 text-sm text-gray-600">You’ll pay on Stripe’s secure page. We hold your items for {{ config('shop.hold_minutes') }} minutes while you do.</p>
     </div>
 </section>

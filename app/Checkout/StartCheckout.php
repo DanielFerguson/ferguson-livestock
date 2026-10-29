@@ -7,6 +7,7 @@ namespace App\Checkout;
 use App\Enums\DeliveryMethod;
 use App\Enums\OrderStatus;
 use App\Enums\ProductType;
+use App\Exceptions\CheckoutBusy;
 use App\Exceptions\DropNotOpen;
 use App\Exceptions\FailedBotCheck;
 use App\Exceptions\InsufficientStock;
@@ -34,9 +35,16 @@ use Illuminate\Support\Facades\RateLimiter;
 final readonly class StartCheckout
 {
     /**
-     * Stripe's shortest allowed time on the payment page is 30 minutes.
+     * Stripe's shortest allowed time on the payment page is 30 minutes. The shop holds the items for less than
+     * that (shop.hold_minutes) and closes the page itself when the hold runs out.
      */
     private const int PAYMENT_PAGE_MINUTES = 31;
+
+    /**
+     * An order that has stock but no payment page yet is still being set up by the request that made it, not
+     * abandoned. A second try from the same visitor within this time leaves it alone.
+     */
+    private const int SETTING_UP_SECONDS = 120;
 
     private const int TRIES_PER_VISITOR = 5;
 
@@ -45,7 +53,7 @@ final readonly class StartCheckout
     /**
      * A looser ceiling for scripts that throw their cookies away between tries.
      */
-    private const int TRIES_PER_IP_ADDRESS = 30;
+    private const int TRIES_PER_IP_ADDRESS = 60;
 
     /**
      * Longer than a hold lasts (the payment page's 31 minutes plus the sweep's grace period), so one address can't
@@ -71,6 +79,7 @@ final readonly class StartCheckout
      * @throws InvalidCheckout
      * @throws DropNotOpen
      * @throws InsufficientStock
+     * @throws CheckoutBusy
      * @throws PaymentProviderUnavailable
      */
     public function __invoke(CheckoutRequest $request): string
@@ -89,7 +98,14 @@ final readonly class StartCheckout
         $this->letGoOfEarlierCheckouts($fingerprint);
 
         $deliveryDay = $request->deliveryMethod === DeliveryMethod::Delivery ? $request->deliveryDay : null;
-        $order = $this->stock->reserve($drop, $quantities, $request->deliveryMethod, $deliveryDay, $fingerprint, now()->addMinutes(self::PAYMENT_PAGE_MINUTES)->toImmutable());
+        try {
+            $order = $this->stock->reserve($drop, $quantities, $request->deliveryMethod, $deliveryDay, $fingerprint, now()->addMinutes(config()->integer('shop.hold_minutes'))->toImmutable());
+        } catch (InsufficientStock|CheckoutBusy $exception) {
+            // Being beaten to the last one isn't a mistake, so it doesn't count against the visitor's tries.
+            $this->giveBackTry($fingerprint, $request->ip);
+
+            throw $exception;
+        }
 
         // Queued before Stripe is called, so the stock comes back even if this request stops part-way.
         SettleOrderWhenPaymentPageCloses::dispatch($order->id)->delay(SettleClosedCheckout::dueAt($order));
@@ -107,12 +123,27 @@ final readonly class StartCheckout
         return (string) $session->url;
     }
 
-    private function limitTries(string $fingerprint, string $ip): void
+    /**
+     * @return array<string, array{int, int}> the tries allowed and the seconds they last, by cache key
+     */
+    private function limits(string $fingerprint, string $ip): array
     {
-        $limits = [
+        return [
             "checkout:visitor:{$fingerprint}:{$ip}" => [self::TRIES_PER_VISITOR, self::VISITOR_WINDOW_SECONDS],
             "checkout:ip:{$ip}" => [self::TRIES_PER_IP_ADDRESS, self::IP_ADDRESS_WINDOW_SECONDS],
         ];
+    }
+
+    private function giveBackTry(string $fingerprint, string $ip): void
+    {
+        foreach ($this->limits($fingerprint, $ip) as $key => [, $window]) {
+            RateLimiter::decrement($key, $window);
+        }
+    }
+
+    private function limitTries(string $fingerprint, string $ip): void
+    {
+        $limits = $this->limits($fingerprint, $ip);
 
         foreach ($limits as $key => [$tries]) {
             if (RateLimiter::tooManyAttempts($key, $tries)) {
@@ -198,6 +229,10 @@ final readonly class StartCheckout
 
         foreach ($earlier as $order) {
             if ($order->stripe_checkout_session_id === null) {
+                if ($order->created_at->gt(now()->subSeconds(self::SETTING_UP_SECONDS))) {
+                    continue;
+                }
+
                 $this->orders->markExpired($order);
 
                 continue;
@@ -217,7 +252,7 @@ final readonly class StartCheckout
                 ->map(fn (OrderItem $item): array => ['price' => $item->dropItem->stripe_price_id, 'quantity' => $item->quantity])
                 ->all()),
             collectShippingAddress: $order->delivery_method === DeliveryMethod::Delivery,
-            expiresAt: $order->expires_at,
+            expiresAt: now()->addMinutes(self::PAYMENT_PAGE_MINUTES)->toImmutable(),
             successUrl: $returnTo('order-confirmed'),
             cancelUrl: $returnTo('checkout.cancel'),
         );

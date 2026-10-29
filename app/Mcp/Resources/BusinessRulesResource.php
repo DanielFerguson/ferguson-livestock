@@ -31,7 +31,7 @@ final class BusinessRulesResource extends Resource
         - A pre-flight check runs automatically 10 minutes before opening (and on demand). It checks stock, delivery days, Stripe prices and webhook, and the site's infrastructure.
 
         ## Stock
-        - `quantity` is the total for sale; `available` is what's left after sales and checkout holds. Units are held while a customer is at Stripe's payment page (about 30 minutes).
+        - `quantity` is the total for sale; `available` is what's left after sales and checkout holds. Units are held while a customer is at Stripe's payment page (15 minutes by default; the shop closes the page itself when that runs out).
         - You can raise or lower `quantity`, but never below the units already held or sold.
         - A **bundle** is a product sold as several units of another product: the 10kg beef box is 2 × the 5kg box, a 5kg mince pack is 10 × the 500g mince. Selling one uses up that many of the component's stock, so they can never be oversold together. A bundle has no quantity of its own: set the component's quantity, and the component must be on the same drop. A bundle keeps the rules of its type (a bundled box is still a box; a mince pack is an extra).
         - Delivery is a product with no stock.

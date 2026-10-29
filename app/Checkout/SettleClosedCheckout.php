@@ -12,27 +12,26 @@ use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * Settles an order whose payment page has closed, so a lost webhook never leaves its stock held. Stripe is asked
- * to close the page, in case it's still open, and its answer applied: paid, or expired with the stock back.
+ * Settles an order whose hold has run out, so abandoned checkouts and lost webhooks never leave stock held. Stripe is
+ * asked to close the payment page, in case it's still open, and its answer applied: paid, or expired with the stock back.
  */
 final readonly class SettleClosedCheckout
 {
     /**
-     * Stripe closes a payment page at its expiry time; this leaves a little longer for its webhook to arrive.
+     * How much longer than its hold the hourly sweep waits before it settles an order itself, in case the queued job
+     * is still on its way.
      */
     private const int GRACE_MINUTES = 2;
 
     public function __construct(private PaymentGateway $payments, private OrderPayments $orders) {}
 
     /**
-     * When an order can be settled: a little after its payment page closes, or after it was made if the request
-     * stopped before reaching Stripe.
+     * When an order can be settled: the moment its hold runs out (settling closes the payment page, so there's no
+     * webhook to wait for), or a little after it was made if the request stopped before reaching Stripe.
      */
     public static function dueAt(Order $order): CarbonImmutable
     {
-        $closedAt = $order->stripe_checkout_session_id === null ? $order->created_at : $order->expires_at;
-
-        return $closedAt->addMinutes(self::GRACE_MINUTES);
+        return $order->stripe_checkout_session_id === null ? $order->created_at->addMinutes(self::GRACE_MINUTES) : $order->expires_at;
     }
 
     /**

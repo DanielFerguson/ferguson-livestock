@@ -62,20 +62,20 @@ it('limits each visitor to five tries every ten minutes', function (): void {
     expect(fn (): string => attempt($shop, $empty))->toThrow(InvalidCheckout::class);
 });
 
-it('limits one address to thirty tries for as long as a hold lasts, however many visitors it has', function (): void {
+it('limits one address to sixty tries for as long as a hold lasts, however many visitors it has', function (): void {
     $shop = StockedDrop::create(mince: 100);
     $oneMince = fn (StockedDrop $shop): array => [$shop->mince->id => 1];
 
-    foreach (range(1, 30) as $try) {
+    foreach (range(1, 60) as $try) {
         attempt($shop, $oneMince, visitor: "visitor-{$try}");
     }
 
     $this->travel(11)->minutes();
-    expect(fn (): string => attempt($shop, $oneMince, visitor: 'visitor-31'))->toThrow(TooManyCheckoutAttempts::class)
-        ->and(Order::query()->where('status', OrderStatus::Pending)->count())->toBe(30);
+    expect(fn (): string => attempt($shop, $oneMince, visitor: 'visitor-61'))->toThrow(TooManyCheckoutAttempts::class)
+        ->and(Order::query()->where('status', OrderStatus::Pending)->count())->toBe(60);
 
     $this->travel(25)->minutes();
-    attempt($shop, $oneMince, visitor: 'visitor-32');
+    attempt($shop, $oneMince, visitor: 'visitor-62');
 
-    expect(Order::query()->where('status', OrderStatus::Pending)->count())->toBe(31);
+    expect(Order::query()->where('status', OrderStatus::Pending)->count())->toBe(61);
 });
