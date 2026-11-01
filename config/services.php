@@ -28,6 +28,8 @@ return [
         'from' => env('TWILIO_FROM_NUMBER'),
         // What Twilio charges per text (segment) to Australian mobiles, in AUD cents. Only used for cost estimates.
         'segment_cost' => (int) env('TWILIO_SEGMENT_COST', 8),
+        // The most wait-list confirmation texts sent in 24 hours, so fake sign-ups can't run up a bill.
+        'confirmations_per_day' => (int) env('TWILIO_CONFIRMATIONS_PER_DAY', 100),
     ],
 
     // Cloudflare's bot check on the public forms. Both keys must be set for the check to run.

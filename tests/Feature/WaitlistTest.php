@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Jobs\SendMetaEvent;
+use App\Jobs\SendSignUpConfirmation;
 use App\Models\Subscriber;
 use App\Support\Turnstile;
 use Illuminate\Support\Facades\Queue;
@@ -233,6 +234,39 @@ it('reports nothing from the server without a Conversions API token', function (
     $this->post('/waitlist', waitlistForm())->assertRedirect('/thank-you');
 
     Queue::assertNotPushed(SendMetaEvent::class);
+});
+
+it('queues a confirmation text for someone new and tells them to expect it', function (): void {
+    config(['services.twilio.sid' => 'test-account']);
+    Queue::fake([SendSignUpConfirmation::class]);
+
+    $this->followingRedirects()->post('/waitlist', waitlistForm())->assertSee('quick text to confirm');
+
+    Queue::assertPushed(SendSignUpConfirmation::class, fn (SendSignUpConfirmation $job): bool => $job->subscriberId === Subscriber::query()->sole()->id);
+});
+
+it('promises no confirmation text to bots or to numbers already on the list', function (array $form): void {
+    config(['services.twilio.sid' => 'test-account']);
+    Queue::fake([SendSignUpConfirmation::class]);
+    Subscriber::factory()->create(['phone' => '+61488888888']);
+    Subscriber::factory()->unsubscribed()->create(['phone' => '+61499999999']);
+
+    $this->followingRedirects()->post('/waitlist', waitlistForm($form))->assertDontSee('quick text to confirm');
+
+    Queue::assertNotPushed(SendSignUpConfirmation::class);
+})->with([
+    'bot' => [['website' => 'https://spam.example']],
+    'signing up again' => [['phone' => '0488 888 888']],
+    'opted out' => [['phone' => '0499 999 999']],
+]);
+
+it('promises no confirmation text where Twilio isn’t set up', function (): void {
+    config(['services.twilio.sid' => null]);
+    Queue::fake([SendSignUpConfirmation::class]);
+
+    $this->followingRedirects()->post('/waitlist', waitlistForm())->assertDontSee('quick text to confirm');
+
+    Queue::assertNotPushed(SendSignUpConfirmation::class);
 });
 
 it('keeps the ad campaign that brought a new subscriber to the site', function (): void {

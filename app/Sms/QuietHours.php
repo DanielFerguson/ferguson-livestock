@@ -23,4 +23,19 @@ final class QuietHours
 
         return $hour >= self::STARTS_AT_HOUR || $hour < self::ENDS_AT_HOUR;
     }
+
+    /**
+     * The moment itself if it's outside quiet hours, otherwise the 8am that ends them.
+     */
+    public static function nextSendingTime(CarbonInterface $moment): CarbonInterface
+    {
+        if (! self::contains($moment)) {
+            return $moment;
+        }
+
+        $melbourne = $moment->copy()->setTimezone(self::TIMEZONE);
+        $morning = $melbourne->copy()->setTime(self::ENDS_AT_HOUR, 0);
+
+        return $morning->isBefore($melbourne) ? $morning->addDay() : $morning;
+    }
 }

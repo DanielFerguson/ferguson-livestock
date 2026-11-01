@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\JoinWaitlistRequest;
 use App\Jobs\SendMetaEvent;
+use App\Jobs\SendSignUpConfirmation;
 use App\Models\Subscriber;
 use App\Support\AdCampaign;
 use App\Support\MetaConversions;
@@ -35,6 +36,7 @@ class JoinWaitlistController extends Controller
         return to_route('thank-you')->with([
             'waitlist.first_name' => $request->firstName(),
             'waitlist.lead_event_id' => $subscriber->isSubscribed() ? $leadEventId : null,
+            'waitlist.confirmation_coming' => SendSignUpConfirmation::queueFor($subscriber),
         ]);
     }
 

@@ -17,6 +17,9 @@
         <x-confirmation-letter :heading="'Thanks for joining, '.($firstName ?? 'friend').'!'" subheading="You’re now on our wait list.">
             <p>We’re thrilled to have you join the Ferguson Livestock family. It means the world to us that you’re interested in supporting our small family farm.</p>
             <p>Here’s what happens next: when our next beef drop is ready, we’ll send you a text message with all the details and a link to order.</p>
+            @if (session('waitlist.confirmation_coming'))
+                <p>We’ll also send you a quick text to confirm you’re on the list. If you joined after 8pm, it’ll come just after 8am. If it never turns up, call us on <a class="underline" href="tel:{{ config('shop.phone.international') }}">{{ config('shop.phone.display') }}</a> and we’ll check your number.</p>
+            @endif
             <p>No spam and no weekly newsletters—just a friendly heads-up when it’s time to stock your freezer.</p>
             <p>In the meantime, feel free to share this with friends and family who might be interested. The more, the merrier!</p>
 
