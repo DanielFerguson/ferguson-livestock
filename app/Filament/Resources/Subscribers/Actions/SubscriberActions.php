@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Subscribers\Actions;
 
+use App\Jobs\SendSignUpConfirmation;
 use App\Models\Subscriber;
+use App\Sms\QuietHours;
+use App\Sms\SmsText;
 use App\Support\SpreadsheetCell;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
@@ -33,6 +36,32 @@ final class SubscriberActions
                 $record->optOut();
 
                 Notification::make()->title('Opted out')->success()->send();
+            });
+    }
+
+    /**
+     * Send the wait-list confirmation to someone who hasn't had one, like people who joined before these were sent.
+     * Each person gets one at most, so it's not offered again after a text that failed.
+     */
+    public static function sendConfirmation(): Action
+    {
+        return Action::make('sendConfirmation')
+            ->label('Send text')
+            ->icon(Heroicon::OutlinedPaperAirplane)
+            ->color('gray')
+            ->visible(fn (Subscriber $record): bool => $record->isSubscribed() && $record->signUpConfirmation === null)
+            ->requiresConfirmation()
+            ->modalIcon(Heroicon::OutlinedPaperAirplane)
+            ->modalHeading('Send the confirmation text?')
+            ->modalDescription(fn (): string => 'They’ll get this text'.(QuietHours::contains(now()) ? ' after 8am' : '').': '.SmsText::forBroadcast(SendSignUpConfirmation::BODY)->text)
+            ->modalSubmitActionLabel('Send text')
+            ->action(function (Subscriber $record): void {
+                dispatch(SendSignUpConfirmation::requestedByAdmin($record));
+
+                Notification::make()
+                    ->title(QuietHours::contains(now()) ? 'Confirmation text queued for 8am' : 'Confirmation text on its way')
+                    ->success()
+                    ->send();
             });
     }
 

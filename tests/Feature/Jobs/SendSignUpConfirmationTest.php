@@ -5,9 +5,12 @@ declare(strict_types=1);
 use App\Enums\SmsDirection;
 use App\Enums\SmsStatus;
 use App\Jobs\SendSignUpConfirmation;
+use App\Models\SmsMessage;
 use App\Models\Subscriber;
+use App\Sms\SmsText;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Queue;
 use Tests\Fakes\FakeSmsGateway;
 
@@ -102,6 +105,38 @@ it('never texts a number twice when the job runs again', function (): void {
     expect($sms->sent)->toHaveCount(1);
 });
 
+it('still sends the confirmation to someone who has had a different text', function (): void {
+    $sms = FakeSmsGateway::swap();
+    $subscriber = Subscriber::factory()->create();
+    SmsMessage::factory()->create(['subscriber_id' => $subscriber->id, 'to' => $subscriber->phone]);
+
+    runSignUpConfirmation($subscriber->id);
+
+    expect($sms->sent)->toHaveCount(1);
+});
+
+it('marks the text as the subscriber’s confirmation', function (): void {
+    FakeSmsGateway::swap();
+    $subscriber = Subscriber::factory()->create();
+
+    runSignUpConfirmation($subscriber->id);
+
+    expect($subscriber->signUpConfirmation)->toBeInstanceOf(SmsMessage::class);
+});
+
+it('recognises confirmations sent before they were marked as such', function (): void {
+    $migration = ['--path' => 'database/migrations/2026_11_01_201811_add_sign_up_confirmation_to_sms_messages.php'];
+    expect(Artisan::call('migrate:rollback', $migration))->toBe(0);
+    $subscriber = Subscriber::factory()->create();
+    $confirmation = SmsMessage::factory()->create(['subscriber_id' => $subscriber->id, 'sms_broadcast_id' => null, 'body' => SmsText::forBroadcast(SendSignUpConfirmation::BODY)->text]);
+    $reply = SmsMessage::factory()->create(['subscriber_id' => $subscriber->id, 'sms_broadcast_id' => null, 'body' => 'Thanks for that']);
+
+    expect(Artisan::call('migrate', $migration))->toBe(0);
+
+    expect($subscriber->signUpConfirmation?->is($confirmation))->toBeTrue();
+    expect($reply->refresh()->is_sign_up_confirmation)->toBeFalse();
+});
+
 it('records a text Twilio refuses and doesn’t try again', function (): void {
     $sms = FakeSmsGateway::swap()->refuse('+61412345678', 30005);
     $subscriber = Subscriber::factory()->create(['phone' => '+61412345678']);
@@ -144,6 +179,29 @@ it('stops sending at the daily limit, without touching the sign-ups', function (
 
     expect($sms->sent)->toHaveCount(2);
     expect(Subscriber::query()->subscribed()->count())->toBe(3);
+});
+
+it('sends a text the admin asked for, whatever the daily limit', function (): void {
+    config(['services.twilio.confirmations_per_day' => 1]);
+    $sms = FakeSmsGateway::swap();
+    [$first, $second] = Subscriber::factory()->count(2)->create()->all();
+    runSignUpConfirmation($first->id);
+
+    app()->call([SendSignUpConfirmation::requestedByAdmin($second), 'handle']);
+
+    expect($sms->recipients())->toBe([$first->phone, $second->phone]);
+});
+
+it('holds a text the admin asked for until quiet hours end, still ignoring the limit', function (): void {
+    $sms = FakeSmsGateway::swap();
+    Queue::fake([SendSignUpConfirmation::class]);
+    $subscriber = Subscriber::factory()->create();
+    $this->travelTo(CarbonImmutable::parse('2026-11-02 22:00', 'Australia/Melbourne'));
+
+    app()->call([SendSignUpConfirmation::requestedByAdmin($subscriber), 'handle']);
+
+    expect($sms->sent)->toBeEmpty();
+    Queue::assertPushed(SendSignUpConfirmation::class, fn (SendSignUpConfirmation $job): bool => $job->ignoresDailyLimit);
 });
 
 it('starts sending again the day after reaching the limit', function (): void {

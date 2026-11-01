@@ -44,7 +44,23 @@ class SendSignUpConfirmation implements ShouldQueue
     /** @var list<int> */
     public array $backoff = [10, 30, 60, 120];
 
+    /**
+     * The daily limit is there for the public form, not for a text the admin chose to send.
+     */
+    public bool $ignoresDailyLimit = false;
+
     public function __construct(public int $subscriberId) {}
+
+    /**
+     * The text for someone who joined before these were sent, asked for from the subscribers page.
+     */
+    public static function requestedByAdmin(Subscriber $subscriber): self
+    {
+        $job = new self($subscriber->id);
+        $job->ignoresDailyLimit = true;
+
+        return $job;
+    }
 
     /**
      * Queue the text for someone new to the list. Someone already on it has no need of one, and a number that opted
@@ -81,17 +97,15 @@ class SendSignUpConfirmation implements ShouldQueue
         return DB::transaction(function (): ?SmsMessage {
             $subscriber = Subscriber::query()->lockForUpdate()->find($this->subscriberId);
 
-            if ($subscriber?->isSubscribed() !== true || $subscriber->messages()->where('direction', SmsDirection::Outbound)->exists()) {
+            if ($subscriber?->isSubscribed() !== true || $subscriber->signUpConfirmation()->exists()) {
                 return null;
             }
 
-            if (RateLimiter::tooManyAttempts(self::DAILY_LIMIT_KEY, config()->integer('services.twilio.confirmations_per_day'))) {
+            if (! $this->ignoresDailyLimit && RateLimiter::attempt(self::DAILY_LIMIT_KEY, config()->integer('services.twilio.confirmations_per_day'), fn (): bool => true, self::SECONDS_PER_DAY) === false) {
                 Log::warning('The daily limit on sign-up confirmation texts was reached, so one was skipped.', ['subscriber_id' => $subscriber->id]);
 
                 return null;
             }
-
-            RateLimiter::hit(self::DAILY_LIMIT_KEY, self::SECONDS_PER_DAY);
 
             return $subscriber->messages()->create([
                 'direction' => SmsDirection::Outbound,
@@ -99,6 +113,7 @@ class SendSignUpConfirmation implements ShouldQueue
                 'from' => config()->string('services.twilio.from'),
                 'body' => SmsText::forBroadcast(self::BODY)->text,
                 'status' => SmsStatus::Sending,
+                'is_sign_up_confirmation' => true,
             ]);
         });
     }

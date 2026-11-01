@@ -31,6 +31,7 @@ use Illuminate\Support\Facades\DB;
  * @property string|null $twilio_sid
  * @property int|null $segments
  * @property int|null $error_code
+ * @property bool $is_sign_up_confirmation
  * @property CarbonImmutable|null $sent_at
  * @property CarbonImmutable|null $delivered_at
  * @property CarbonImmutable|null $read_at
@@ -39,7 +40,7 @@ use Illuminate\Support\Facades\DB;
  * @property-read Subscriber|null $subscriber
  * @property-read SmsBroadcast|null $broadcast
  */
-#[Fillable(['subscriber_id', 'contact_phone', 'sms_broadcast_id', 'direction', 'to', 'from', 'body', 'status', 'twilio_sid', 'segments', 'error_code', 'sent_at', 'delivered_at', 'read_at'])]
+#[Fillable(['subscriber_id', 'contact_phone', 'sms_broadcast_id', 'direction', 'to', 'from', 'body', 'status', 'twilio_sid', 'segments', 'error_code', 'is_sign_up_confirmation', 'sent_at', 'delivered_at', 'read_at'])]
 class SmsMessage extends Model
 {
     /** @use HasFactory<SmsMessageFactory> */
@@ -145,6 +146,7 @@ class SmsMessage extends Model
             'status' => SmsStatus::class,
             'segments' => 'integer',
             'error_code' => 'integer',
+            'is_sign_up_confirmation' => 'boolean',
             'sent_at' => 'immutable_datetime',
             'delivered_at' => 'immutable_datetime',
             'read_at' => 'immutable_datetime',

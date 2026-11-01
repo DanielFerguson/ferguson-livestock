@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * Someone on the wait list who has agreed to receive drop announcements by text.
@@ -31,6 +32,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $utm_campaign
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
+ * @property-read SmsMessage|null $signUpConfirmation
  */
 #[Fillable(['first_name', 'phone', 'postcode', 'consented_at', 'consent_source', 'consent_wording', 'consent_ip', 'unsubscribed_at', 'utm_source', 'utm_medium', 'utm_campaign'])]
 class Subscriber extends Model
@@ -86,6 +88,16 @@ class Subscriber extends Model
     public function messages(): HasMany
     {
         return $this->hasMany(SmsMessage::class);
+    }
+
+    /**
+     * The one text they get on joining the wait list, once it's been sent.
+     *
+     * @return HasOne<SmsMessage, $this>
+     */
+    public function signUpConfirmation(): HasOne
+    {
+        return $this->hasOne(SmsMessage::class)->where('is_sign_up_confirmation', true);
     }
 
     public function isSubscribed(): bool

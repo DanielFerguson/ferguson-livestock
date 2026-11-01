@@ -39,6 +39,10 @@ class SubscribersTable
                     ->state(fn (Subscriber $record): string => $record->isSubscribed() ? 'Subscribed' : 'Opted out')
                     ->badge()
                     ->color(fn (string $state): string => $state === 'Subscribed' ? 'success' : 'gray'),
+                TextColumn::make('signUpConfirmation.status')
+                    ->label('Confirmation text')
+                    ->badge()
+                    ->placeholder('Not sent'),
             ])
             ->filters([
                 TernaryFilter::make('from_meta_ads')
@@ -55,6 +59,7 @@ class SubscribersTable
                     ),
             ])
             ->recordActions([
+                SubscriberActions::sendConfirmation(),
                 EditAction::make(),
                 SubscriberActions::optOut(),
             ]);

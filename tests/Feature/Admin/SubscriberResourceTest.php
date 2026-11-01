@@ -2,14 +2,17 @@
 
 declare(strict_types=1);
 
+use App\Enums\SmsStatus;
 use App\Filament\Resources\Subscribers\Pages\EditSubscriber;
 use App\Filament\Resources\Subscribers\Pages\ListSubscribers;
 use App\Filament\Resources\Subscribers\RelationManagers\MessagesRelationManager;
+use App\Jobs\SendSignUpConfirmation;
 use App\Models\SmsMessage;
 use App\Models\Subscriber;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Filament\Actions\Testing\TestAction;
+use Illuminate\Support\Facades\Queue;
 
 use function Pest\Livewire\livewire;
 
@@ -46,6 +49,68 @@ it('opts someone out by hand', function (): void {
         ->callAction(TestAction::make('optOut')->table($subscriber));
 
     expect($subscriber->refresh()->isSubscribed())->toBeFalse();
+});
+
+it('shows where each person’s confirmation text is up to', function (): void {
+    $delivered = Subscriber::factory()->create();
+    SmsMessage::factory()->signUpConfirmation()->create(['subscriber_id' => $delivered->id, 'status' => SmsStatus::Delivered]);
+    $failed = Subscriber::factory()->create();
+    SmsMessage::factory()->signUpConfirmation()->create(['subscriber_id' => $failed->id, 'status' => SmsStatus::Failed]);
+    Subscriber::factory()->create();
+
+    livewire(ListSubscribers::class)
+        ->assertTableColumnStateSet('signUpConfirmation.status', SmsStatus::Delivered, $delivered)
+        ->assertTableColumnStateSet('signUpConfirmation.status', SmsStatus::Failed, $failed)
+        ->assertSeeText('Delivered')
+        ->assertSeeText('Failed')
+        ->assertSeeText('Not sent');
+});
+
+it('sends a confirmation text by hand, past the daily limit', function (): void {
+    Queue::fake([SendSignUpConfirmation::class]);
+    $subscriber = Subscriber::factory()->create();
+
+    livewire(ListSubscribers::class)
+        ->callAction(TestAction::make('sendConfirmation')->table($subscriber))
+        ->assertNotified('Confirmation text on its way');
+
+    Queue::assertPushed(SendSignUpConfirmation::class, fn (SendSignUpConfirmation $job): bool => $job->subscriberId === $subscriber->id && $job->ignoresDailyLimit);
+});
+
+it('shows exactly what will be sent before sending it', function (): void {
+    $subscriber = Subscriber::factory()->create();
+
+    $page = livewire(ListSubscribers::class)->mountAction(TestAction::make('sendConfirmation')->table($subscriber));
+
+    $page->assertMountedActionModalSee(['on the wait list', 'Reply STOP to opt out']);
+    $page->assertMountedActionModalDontSee('after 8am');
+});
+
+it('says a confirmation text will wait until morning during quiet hours', function (): void {
+    Queue::fake([SendSignUpConfirmation::class]);
+    $subscriber = Subscriber::factory()->create();
+    $this->travelTo(CarbonImmutable::parse('2026-10-01 22:00', 'Australia/Melbourne'));
+
+    $page = livewire(ListSubscribers::class)->mountAction(TestAction::make('sendConfirmation')->table($subscriber));
+
+    $page->assertMountedActionModalSee('after 8am');
+    $page->callMountedAction();
+    $page->assertNotified('Confirmation text queued for 8am');
+});
+
+it('offers the confirmation text only to people who can have one', function (): void {
+    $waiting = Subscriber::factory()->create();
+    $optedOut = Subscriber::factory()->unsubscribed()->create();
+    $alreadySent = Subscriber::factory()->create();
+    SmsMessage::factory()->signUpConfirmation()->create(['subscriber_id' => $alreadySent->id]);
+    $failed = Subscriber::factory()->create();
+    SmsMessage::factory()->signUpConfirmation()->create(['subscriber_id' => $failed->id, 'status' => SmsStatus::Failed]);
+
+    livewire(ListSubscribers::class)
+        ->assertActionVisible(TestAction::make('sendConfirmation')->table($waiting))
+        ->assertActionHidden(TestAction::make('sendConfirmation')->table($optedOut))
+        ->assertActionHidden(TestAction::make('sendConfirmation')->table($alreadySent))
+        ->assertActionHidden(TestAction::make('sendConfirmation')->table($failed));
 });
 
 it('saves a corrected mobile number in the international format', function (): void {

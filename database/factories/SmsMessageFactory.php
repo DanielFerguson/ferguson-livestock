@@ -38,6 +38,17 @@ class SmsMessageFactory extends Factory
     }
 
     /**
+     * The one text someone gets on joining the wait list.
+     */
+    public function signUpConfirmation(): static
+    {
+        return $this->state(fn (): array => [
+            'sms_broadcast_id' => null,
+            'is_sign_up_confirmation' => true,
+        ]);
+    }
+
+    /**
      * A reply from a subscriber's phone.
      */
     public function reply(string $body = 'Thanks!'): static
