@@ -6,7 +6,7 @@
     $description = 'Compare Ferguson Livestock’s 5kg and 10kg Murray Grey beef boxes, current prices, typical contents, freezer guidance, delivery and pickup options.';
 @endphp
 
-<x-layouts.app :title="$title" :description="$description" :structured-data="StructuredData::beefBoxes($title, $description, $catalogue)">
+<x-layouts.app :title="$title" :description="$description" :structured-data="StructuredData::beefBoxes($title, $description, $catalogue)" :meta-events="[['ViewContent', ['content_name' => 'Beef boxes'], null]]">
     <section class="bg-forest py-16 text-cream lg:py-24">
         <div class="mx-auto grid max-w-6xl items-center gap-12 px-6 lg:grid-cols-2">
             <div>

@@ -14,6 +14,10 @@
     // Where the live stock script polls, and how often. An early-access page points it at its own link's feed.
     'dropStatusUrl' => null,
     'dropPollMs' => null,
+    // Meta's ad pixel. Off on pages whose address is private, since the pixel reports it to Meta.
+    'adTracking' => true,
+    // Events this page reports to Meta after the PageView: see the meta-pixel component.
+    'metaEvents' => [],
 ])
 
 @php
@@ -74,6 +78,13 @@
 
     <meta name="geo.region" content="AU-VIC">
     <meta name="geo.placename" content="{{ config('shop.location.locality') }}">
+
+    @if ($adTracking && filled(config('services.meta.pixel_id')))
+        <x-meta-pixel :events="$metaEvents" />
+    @elseif (! $adTracking)
+        {{-- The next page's pixel reports where the visitor came from, so a private address only passes on the site's name. --}}
+        <meta name="referrer" content="strict-origin">
+    @endif
 
     @fonts($fonts)
     @vite(['resources/css/app.css', 'resources/js/drop-status.js', ...$scripts])

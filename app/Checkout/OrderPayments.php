@@ -7,6 +7,7 @@ namespace App\Checkout;
 use App\Enums\OrderStatus;
 use App\Exceptions\InsufficientStock;
 use App\Exceptions\PaymentProviderUnavailable;
+use App\Jobs\SendMetaEvent;
 use App\Mail\LatePaymentNotification;
 use App\Mail\NewOrderNotification;
 use App\Mail\OrderConfirmation;
@@ -14,6 +15,8 @@ use App\Models\Order;
 use App\Payments\CheckoutSession;
 use App\Payments\PaymentGateway;
 use App\Stock\StockLedger;
+use App\Support\MetaConversions;
+use App\Support\MetaEvents;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
@@ -66,6 +69,10 @@ final readonly class OrderPayments
         }
 
         Mail::to(config()->string('shop.email'))->queue(new NewOrderNotification($order));
+
+        if (MetaConversions::isEnabled()) {
+            SendMetaEvent::dispatch(MetaEvents::purchase($order));
+        }
     }
 
     /**

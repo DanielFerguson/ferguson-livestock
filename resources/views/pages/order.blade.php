@@ -6,6 +6,8 @@
     :scripts="$drop !== null ? ['resources/js/order-form.js'] : []"
     :drop-status-url="isset($earlyAccessToken) ? route('early-access.stock', ['token' => $earlyAccessToken]) : null"
     :drop-poll-ms="isset($earlyAccessToken) ? 10000 : null"
+    :ad-tracking="! isset($earlyAccessToken)"
+    :meta-events="$drop !== null ? [['ViewContent', ['content_name' => $drop->name], null]] : []"
 >
     @if ($drop !== null)
         <section class="bg-cream-dark py-12 lg:py-16">

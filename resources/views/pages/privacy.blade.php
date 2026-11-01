@@ -2,13 +2,13 @@
 
 @php
     $title = 'Privacy | Ferguson Livestock';
-    $description = 'How Ferguson Livestock collects, uses and protects information provided through the wait list and ordering.';
+    $description = 'How Ferguson Livestock collects, uses and protects information provided through the wait list and ordering, and how we use Meta for advertising.';
 @endphp
 
 <x-layouts.app :title="$title" :description="$description" :structured-data="StructuredData::webPage('/privacy', $title, $description)">
     <div class="bg-cream py-16 lg:py-24">
         <article class="legal-content mx-auto max-w-3xl px-6 text-gray-700">
-            <p class="eyebrow text-sage">Last updated 28 September 2026</p>
+            <p class="eyebrow text-sage">Last updated 1 November 2026</p>
             <h1>Privacy</h1>
             <p>Ferguson Livestock is a family-run business in Snake Valley, Victoria. This page explains in plain language what information we collect through this website and how we use it.</p>
 
@@ -19,7 +19,12 @@
             <p>We use wait-list details to plan deliveries around our area and to send messages about Ferguson Livestock beef drops. We use order information to fulfil purchases, arrange delivery or pickup, send order confirmations, respond to questions and keep required business records.</p>
 
             <h2>Service providers</h2>
-            <p>We keep wait-list and order details in our own system. We use service providers including Twilio to send wait-list text messages and receive your replies, Stripe for checkout, Resend for order emails, and Laravel Cloud (which runs on Amazon Web Services and Cloudflare) to host this website and store that information. These providers handle information under their own privacy and security terms and may process data outside Australia.</p>
+            <p>We keep wait-list and order details in our own system. We use service providers including Twilio to send wait-list text messages and receive your replies, Stripe for checkout, Resend for order emails, Meta for advertising, and Laravel Cloud (which runs on Amazon Web Services and Cloudflare) to host this website and store that information. These providers handle information under their own privacy and security terms and may process data outside Australia.</p>
+
+            <h2>Advertising with Meta</h2>
+            <p>We advertise on Facebook and Instagram, which are run by Meta. Our website uses Meta’s pixel, which sets cookies in your browser and tells Meta about your visit, such as the pages you view. When you join the wait list or place an order, we also tell Meta. With that we send your IP address and browser details, any order’s total and contents, and a hashed (scrambled) copy of your mobile number, name, postcode and, for orders, your email and delivery address. Meta uses this to work out whether our ads led to sign-ups and orders, and to help show our ads to people likely to be interested. Meta handles this information under its own privacy policy and may process it outside Australia.</p>
+            <p>If you reach our website through one of our ads, we also note which ad it was, using the tags in the ad’s link, and keep that with your wait-list or order details. This lets us see which ads find people who go on to buy from us.</p>
+            <p>You can choose how Meta uses information from other websites in your Facebook or Instagram ad settings, or block cookies in your browser.</p>
 
             <h2>Marketing consent and opting out</h2>
             <p>Joining the wait list means you consent to receive Ferguson Livestock messages about beef drops. Messages will identify Ferguson Livestock and include a way to opt out. Reply STOP to any of our texts and we stop straight away, or contact us and we will action your request promptly. To start getting our texts again after opting out, reply START from the same phone.</p>

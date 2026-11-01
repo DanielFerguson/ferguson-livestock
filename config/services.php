@@ -36,6 +36,15 @@ return [
         'secret_key' => env('TURNSTILE_SECRET_KEY'),
     ],
 
+    // Meta (Facebook and Instagram) ads. Without a pixel ID nothing is tracked; without a token, only the browser
+    // pixel runs. Set a test event code to see server events in Events Manager's Test Events tab instead of live.
+    'meta' => [
+        'pixel_id' => env('META_PIXEL_ID'),
+        'conversions_api_token' => env('META_CONVERSIONS_API_TOKEN'),
+        'test_event_code' => env('META_TEST_EVENT_CODE'),
+        'graph_api_version' => env('META_GRAPH_API_VERSION', 'v26.0'),
+    ],
+
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],

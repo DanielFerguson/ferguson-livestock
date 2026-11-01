@@ -14,6 +14,7 @@ use App\Exceptions\InsufficientStock;
 use App\Exceptions\InvalidCheckout;
 use App\Exceptions\PaymentProviderUnavailable;
 use App\Exceptions\TooManyCheckoutAttempts;
+use App\Jobs\SendMetaEvent;
 use App\Jobs\SettleOrderWhenPaymentPageCloses;
 use App\Models\Drop;
 use App\Models\DropItem;
@@ -22,6 +23,9 @@ use App\Models\OrderItem;
 use App\Payments\NewCheckoutSession;
 use App\Payments\PaymentGateway;
 use App\Stock\StockLedger;
+use App\Support\MetaConversions;
+use App\Support\MetaEvents;
+use App\Support\MetaVisitor;
 use App\Support\Turnstile;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\RateLimiter;
@@ -119,7 +123,11 @@ final readonly class StartCheckout
             throw $exception;
         }
 
-        $order->update(['stripe_checkout_session_id' => $session->id]);
+        $order->update(['stripe_checkout_session_id' => $session->id, 'meta_visitor' => $request->visitor?->toArray(), ...($request->campaign?->attributes() ?? [])]);
+
+        if (MetaConversions::isEnabled()) {
+            SendMetaEvent::dispatch(MetaEvents::initiateCheckout($order, $request->visitor ?? new MetaVisitor(ip: $request->ip)));
+        }
 
         return (string) $session->url;
     }

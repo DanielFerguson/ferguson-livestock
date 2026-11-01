@@ -157,6 +157,11 @@ final class Presenter
             'consented_at' => self::time($subscriber->consented_at),
             'consent_source' => $subscriber->consent_source,
             'unsubscribed_at' => self::time($subscriber->unsubscribed_at),
+            'joined_from_ad' => $subscriber->utm_source === null ? null : [
+                'source' => $subscriber->utm_source,
+                'medium' => $subscriber->utm_medium,
+                'campaign' => $subscriber->utm_campaign,
+            ],
         ];
     }
 

@@ -1,5 +1,7 @@
 @php
     $firstName = session('waitlist.first_name');
+    // Only straight after a sign-up, so reloading the page doesn't report it again.
+    $leadEventId = session('waitlist.lead_event_id');
     $siteUrl = config()->string('shop.url');
     $shareText = 'I just joined the wait list for farm-fresh Murray Grey beef from Ferguson Livestock. Have a look: '.$siteUrl;
 @endphp
@@ -9,6 +11,7 @@
     description="Thanks for joining our wait list! We'll be in touch when the next beef drop is ready."
     robots="noindex, follow"
     :fonts="['source-sans', 'cormorant', 'caveat']"
+    :meta-events="is_string($leadEventId) ? [['Lead', [], $leadEventId]] : []"
 >
     <div class="flex min-h-[80vh] items-center justify-center bg-cream-dark px-6 py-16">
         <x-confirmation-letter :heading="'Thanks for joining, '.($firstName ?? 'friend').'!'" subheading="You’re now on our wait list.">

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Support\AdCampaign;
 use Carbon\CarbonImmutable;
 use Database\Factories\SubscriberFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -25,10 +26,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $consent_wording
  * @property string|null $consent_ip
  * @property CarbonImmutable|null $unsubscribed_at
+ * @property string|null $utm_source
+ * @property string|null $utm_medium
+ * @property string|null $utm_campaign
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
-#[Fillable(['first_name', 'phone', 'postcode', 'consented_at', 'consent_source', 'consent_wording', 'consent_ip', 'unsubscribed_at'])]
+#[Fillable(['first_name', 'phone', 'postcode', 'consented_at', 'consent_source', 'consent_wording', 'consent_ip', 'unsubscribed_at', 'utm_source', 'utm_medium', 'utm_campaign'])]
 class Subscriber extends Model
 {
     /** @use HasFactory<SubscriberFactory> */
@@ -54,8 +58,10 @@ class Subscriber extends Model
      *
      * It never undoes an opt-out, because the form can't prove who owns the number: anyone could type in someone
      * else's. People who opted out start again by texting START from their own phone (see optBackIn()).
+     *
+     * The ad campaign that brought them is kept only for someone new: an ad didn't find someone already on the list.
      */
-    public static function recordSignUp(string $firstName, string $phone, string $postcode, ?string $ip): self
+    public static function recordSignUp(string $firstName, string $phone, string $postcode, ?string $ip, ?AdCampaign $campaign = null): self
     {
         $existing = self::query()->firstWhere('phone', $phone);
 
@@ -70,6 +76,7 @@ class Subscriber extends Model
             'consent_source' => 'website wait list',
             'consent_wording' => self::CONSENT_WORDING,
             'consent_ip' => $ip,
+            ...($existing === null && $campaign instanceof AdCampaign ? $campaign->attributes() : []),
         ]);
     }
 

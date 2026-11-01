@@ -19,6 +19,8 @@ use App\Models\Drop;
 use App\Models\DropItem;
 use App\Stock\DropSnapshot;
 use App\Stock\StockLedger;
+use App\Support\AdCampaign;
+use App\Support\MetaVisitor;
 use Carbon\CarbonImmutable;
 use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Contracts\View\View;
@@ -102,7 +104,7 @@ class OrderForm extends Component
         }
 
         try {
-            $url = $start(new CheckoutRequest($this->dropId, $this->quantities(), $deliveryMethod, $this->chosenDay(), session()->getId(), (string) request()->ip(), $turnstileToken, $this->earlyAccessToken));
+            $url = $start(new CheckoutRequest($this->dropId, $this->quantities(), $deliveryMethod, $this->chosenDay(), session()->getId(), (string) request()->ip(), $turnstileToken, $this->earlyAccessToken, MetaVisitor::fromRequest(request()), AdCampaign::fromCookie(request())));
         } catch (InsufficientStock) {
             $drop = $this->drop();
             $this->cutTo($drop, $stock->fit($drop, $this->quantities()));

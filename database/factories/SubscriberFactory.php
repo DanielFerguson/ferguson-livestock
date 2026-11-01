@@ -38,4 +38,12 @@ class SubscriberFactory extends Factory
     {
         return $this->state(fn (): array => ['unsubscribed_at' => now()]);
     }
+
+    /**
+     * Someone who joined the wait list after arriving through a Meta ad's tagged link.
+     */
+    public function fromMetaAd(string $campaign = 'Spring wait list'): static
+    {
+        return $this->state(fn (): array => ['utm_source' => 'meta', 'utm_medium' => 'paid', 'utm_campaign' => $campaign]);
+    }
 }

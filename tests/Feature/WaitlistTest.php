@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Jobs\SendMetaEvent;
 use App\Models\Subscriber;
 use App\Support\Turnstile;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Js;
 
 /**
  * @param  array<mixed>  $overrides
@@ -170,4 +173,82 @@ it('keeps people on this site when the wait-list limit is reached too', function
 it('still returns people to the page they were on, on this site', function (): void {
     $this->post('/waitlist', ['first_name' => ''], ['Referer' => url('/order')])
         ->assertRedirect(url('/order').'#waitlist');
+});
+
+it('reports a sign-up to Meta from the server and the thank-you page, under one event ID', function (): void {
+    $this->freezeSecond();
+    enableMetaAds();
+    Queue::fake([SendMetaEvent::class]);
+
+    $thanks = $this->withUnencryptedCookies(['_fbp' => 'fb.1.1700000000000.111', '_fbc' => 'fb.1.1700000000000.click-abc'])
+        ->withHeaders(['User-Agent' => 'Test Browser', 'Referer' => 'https://fergusonlivestock.com.au/beef-boxes?utm_source=meta'])
+        ->followingRedirects()
+        ->post('https://fergusonlivestock.com.au/waitlist', waitlistForm(), ['REMOTE_ADDR' => '203.0.113.7']);
+
+    $event = queuedMetaEvent();
+    expect($event)->toMatchArray([
+        'event_name' => 'Lead',
+        'event_time' => now()->getTimestamp(),
+        'action_source' => 'website',
+        'event_source_url' => 'https://fergusonlivestock.com.au/beef-boxes',
+        'user_data' => [
+            'ph' => hash('sha256', '61412345678'),
+            'fn' => hash('sha256', 'sam'),
+            'zp' => hash('sha256', '3350'),
+            'country' => hash('sha256', 'au'),
+            'client_ip_address' => '203.0.113.7',
+            'client_user_agent' => 'Test Browser',
+            'fbp' => 'fb.1.1700000000000.111',
+            'fbc' => 'fb.1.1700000000000.click-abc',
+        ],
+    ]);
+    $thanks->assertSee("fbq('track', 'Lead', ".Js::from((object) []).', '.Js::from(['eventID' => $event['event_id']]).');', false);
+});
+
+it('reports a sign-up to Meta only once, however often the thank-you page is reloaded', function (): void {
+    enableMetaAds(conversionsApi: false);
+
+    $this->followingRedirects()->post('/waitlist', waitlistForm())->assertSee("'Lead'", false);
+
+    $this->get('/thank-you')->assertOk()->assertDontSee("'Lead'", false);
+});
+
+it('reports nothing to Meta for bots or for numbers that opted out', function (array $form): void {
+    enableMetaAds();
+    Queue::fake([SendMetaEvent::class]);
+    Subscriber::factory()->unsubscribed()->create(['phone' => '+61499999999']);
+
+    $this->followingRedirects()->post('/waitlist', waitlistForm($form))->assertDontSee("'Lead'", false);
+
+    Queue::assertNotPushed(SendMetaEvent::class);
+})->with([
+    'bot' => [['website' => 'https://spam.example']],
+    'opted out' => [['phone' => '0499 999 999']],
+]);
+
+it('reports nothing from the server without a Conversions API token', function (): void {
+    enableMetaAds(conversionsApi: false);
+    Queue::fake([SendMetaEvent::class]);
+
+    $this->post('/waitlist', waitlistForm())->assertRedirect('/thank-you');
+
+    Queue::assertNotPushed(SendMetaEvent::class);
+});
+
+it('keeps the ad campaign that brought a new subscriber to the site', function (): void {
+    $this->withUnencryptedCookies(['fl_campaign' => 'source=meta&medium=paid&campaign=Spring+wait+list'])
+        ->post('/waitlist', waitlistForm())
+        ->assertRedirect('/thank-you');
+
+    expect(Subscriber::query()->sole()->only('utm_source', 'utm_medium', 'utm_campaign'))
+        ->toBe(['utm_source' => 'meta', 'utm_medium' => 'paid', 'utm_campaign' => 'Spring wait list']);
+});
+
+it('doesn’t credit an ad for someone already on the wait list', function (): void {
+    $existing = Subscriber::factory()->create(['phone' => '+61412345678']);
+
+    $this->withUnencryptedCookies(['fl_campaign' => 'source=meta&medium=paid&campaign=Spring+wait+list'])
+        ->post('/waitlist', waitlistForm());
+
+    expect($existing->refresh()->utm_source)->toBeNull();
 });

@@ -39,6 +39,7 @@ Confirm each setting by eye in the environment's settings (the values are secret
 | `TWILIO_FROM_NUMBER` | the 04xx number, written `+614…` |
 | `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | both present, from the Turnstile widget that lists the www and apex hostnames |
 | `SHOP_ADMIN_EMAIL`, `SHOP_ADMIN_PHONE` | your email and mobile |
+| `META_PIXEL_ID`, `META_CONVERSIONS_API_TOKEN` | the Meta dataset's ID and a Conversions API token from its settings |
 
 Deploy, then run once from the environment's Commands tab:
 

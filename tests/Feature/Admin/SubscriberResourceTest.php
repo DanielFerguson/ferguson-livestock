@@ -116,3 +116,15 @@ it('stops spreadsheet formulas in names from running when the list is opened', f
             '',
         ]));
 });
+
+it('shows only the people Meta ads brought in, and which ad', function (): void {
+    $fromAd = Subscriber::factory()->fromMetaAd('Spring wait list')->create();
+    $other = Subscriber::factory()->create(['utm_source' => 'google']);
+    $untagged = Subscriber::factory()->create();
+
+    livewire(ListSubscribers::class)
+        ->filterTable('from_meta_ads', true)
+        ->assertCanSeeTableRecords([$fromAd])
+        ->assertCanNotSeeTableRecords([$other, $untagged])
+        ->assertTableColumnStateSet('utm_campaign', 'Spring wait list', $fromAd);
+});

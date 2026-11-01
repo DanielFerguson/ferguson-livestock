@@ -7,9 +7,12 @@ use App\Checkout\StartCheckout;
 use App\Enums\DeliveryMethod;
 use App\Enums\OrderStatus;
 use App\Exceptions\PaymentProviderUnavailable;
+use App\Jobs\SendMetaEvent;
 use App\Models\Order;
+use App\Support\MetaVisitor;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Queue;
 use Tests\Fakes\FakePaymentGateway;
 use Tests\Fixtures\StockedDrop;
 
@@ -99,4 +102,33 @@ it('puts the stock back when Stripe can’t be reached', function (): void {
 
     expect(Order::query()->sole()->status)->toBe(OrderStatus::Expired)
         ->and($shop->box->refresh()->available)->toBe(5);
+});
+
+it('keeps the customer’s browser on the order and reports the checkout to Meta', function (): void {
+    enableMetaAds();
+    Queue::fake([SendMetaEvent::class]);
+    FakePaymentGateway::swap();
+    $shop = StockedDrop::create();
+    $visitor = new MetaVisitor('192.0.2.1', 'Test Browser', 'fb.1.1700000000000.111', 'fb.1.1700000000000.click-abc');
+
+    app(StartCheckout::class)(new CheckoutRequest(
+        $shop->drop->id, [$shop->box->id => 1, $shop->mince->id => 2], DeliveryMethod::Delivery,
+        CarbonImmutable::parse($shop->drop->delivery_days[0]), 'visitor-a', '192.0.2.1', visitor: $visitor,
+    ));
+
+    $order = Order::query()->sole();
+    expect($order->meta_visitor)->toBe($visitor->toArray());
+    expect(queuedMetaEvent())->toMatchArray([
+        'event_name' => 'InitiateCheckout',
+        'event_id' => "checkout-{$order->public_id}",
+        'event_source_url' => route('order'),
+        'user_data' => ['client_ip_address' => '192.0.2.1', 'client_user_agent' => 'Test Browser', 'fbp' => 'fb.1.1700000000000.111', 'fbc' => 'fb.1.1700000000000.click-abc'],
+        'custom_data' => [
+            'value' => 199.0, // a box, two mince and the delivery fee
+            'currency' => 'AUD',
+            'content_type' => 'product',
+            'contents' => [['id' => (string) $shop->box->product_id, 'quantity' => 1], ['id' => (string) $shop->mince->product_id, 'quantity' => 2]],
+            'num_items' => 3,
+        ],
+    ]);
 });

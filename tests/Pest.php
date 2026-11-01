@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Jobs\SendMetaEvent;
 use App\Support\Turnstile;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 /*
@@ -56,4 +58,35 @@ function fakeTurnstile(bool $genuine): void
 
     Http::preventStrayRequests();
     Http::fake([Turnstile::VERIFY_URL => Http::response(['success' => $genuine, 'error-codes' => $genuine ? [] : ['invalid-input-response']])]);
+}
+
+/**
+ * Switch on Meta ads tracking: the pixel and, unless told otherwise, the Conversions API.
+ */
+function enableMetaAds(bool $conversionsApi = true): void
+{
+    config([
+        'services.meta.pixel_id' => '1234567890',
+        'services.meta.conversions_api_token' => $conversionsApi ? 'test-meta-token' : null,
+    ]);
+}
+
+/**
+ * The one event queued for Meta. Fails the test unless exactly one was queued; call Queue::fake() first.
+ *
+ * @return array<string, mixed>
+ */
+function queuedMetaEvent(): array
+{
+    $events = [];
+
+    Queue::assertPushed(SendMetaEvent::class, function (SendMetaEvent $job) use (&$events): bool {
+        $events[] = $job->event;
+
+        return true;
+    });
+
+    expect($events)->toHaveCount(1);
+
+    return $events[0];
 }

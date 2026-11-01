@@ -11,6 +11,7 @@ use App\Models\Product;
 use App\Support\Turnstile;
 use Illuminate\Support\Facades\Http;
 use Livewire\Exceptions\MethodNotFoundException;
+use Livewire\Features\SupportTesting\Testable;
 use Tests\Fakes\FakePaymentGateway;
 use Tests\Fixtures\StockedDrop;
 
@@ -239,4 +240,19 @@ it('trims a mixed order of a mince pack and 500g mince to what is left in one go
     $form->call('checkout')->assertRedirect('https://checkout.stripe.test/cs_test_1');
 
     expect($shop->mince->refresh()->available)->toBe(0);
+});
+
+it('keeps Meta’s cookies and the ad campaign from the customer’s browser on their order', function (): void {
+    FakePaymentGateway::swap();
+    $shop = StockedDrop::create();
+
+    Testable::create(OrderForm::class, ['drop' => $shop->drop], cookies: ['_fbp' => 'fb.1.1700000000000.111', '_fbc' => 'fb.1.1700000000000.click-abc', 'fl_campaign' => 'source=meta&campaign=Drop+week'])
+        ->set('box', (string) $shop->box->id)
+        ->set('deliveryMethod', 'pickup')
+        ->call('checkout')
+        ->assertRedirect('https://checkout.stripe.test/cs_test_1');
+
+    $order = Order::query()->sole();
+    expect($order->meta_visitor)->toMatchArray(['fbp' => 'fb.1.1700000000000.111', 'fbc' => 'fb.1.1700000000000.click-abc'])
+        ->and($order->only('utm_source', 'utm_medium', 'utm_campaign'))->toBe(['utm_source' => 'meta', 'utm_medium' => null, 'utm_campaign' => 'Drop week']);
 });

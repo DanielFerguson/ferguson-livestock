@@ -6,6 +6,7 @@ namespace App\Filament\Resources\Subscribers\Tables;
 
 use App\Filament\Resources\Subscribers\Actions\SubscriberActions;
 use App\Models\Subscriber;
+use App\Support\AdCampaign;
 use App\Support\AustralianMobile;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
@@ -28,12 +29,24 @@ class SubscribersTable
                 TextColumn::make('postcode')->placeholder('—')->searchable()->sortable(),
                 TextColumn::make('consented_at')->label('Joined')->date('j M Y', config()->string('shop.timezone'))->sortable(),
                 TextColumn::make('consent_source')->label('From')->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('utm_campaign')
+                    ->label('Ad')
+                    ->state(fn (Subscriber $record): ?string => $record->utm_source === null ? null : $record->utm_campaign ?? $record->utm_source)
+                    ->description(fn (Subscriber $record): ?string => $record->utm_campaign === null ? null : $record->utm_source)
+                    ->placeholder('—')
+                    ->toggleable(),
                 TextColumn::make('status')
                     ->state(fn (Subscriber $record): string => $record->isSubscribed() ? 'Subscribed' : 'Opted out')
                     ->badge()
                     ->color(fn (string $state): string => $state === 'Subscribed' ? 'success' : 'gray'),
             ])
             ->filters([
+                TernaryFilter::make('from_meta_ads')
+                    ->label('From Meta ads')
+                    ->queries(
+                        true: fn (Builder $query) => $query->where('utm_source', AdCampaign::META),
+                        false: fn (Builder $query) => $query->where(fn (Builder $query) => $query->whereNull('utm_source')->orWhere('utm_source', '!=', AdCampaign::META)),
+                    ),
                 TernaryFilter::make('opted_out')
                     ->label('Opted out')
                     ->queries(

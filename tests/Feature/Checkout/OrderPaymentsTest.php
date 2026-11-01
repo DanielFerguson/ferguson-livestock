@@ -5,12 +5,14 @@ declare(strict_types=1);
 use App\Checkout\OrderPayments;
 use App\Enums\DeliveryMethod;
 use App\Enums\OrderStatus;
+use App\Jobs\SendMetaEvent;
 use App\Mail\NewOrderNotification;
 use App\Mail\OrderConfirmation;
 use App\Models\Order;
 use App\Payments\CheckoutSession;
 use App\Stock\StockLedger;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Queue;
 use Tests\Fixtures\StockedDrop;
 
 function pendingOrder(StockedDrop $shop): Order
@@ -102,4 +104,45 @@ it('records refunds without putting stock back', function (): void {
     expect($order->refresh()->amount_refunded)->toBe(8000)
         ->and($order->refunded_at)->not->toBeNull()
         ->and($shop->box->refresh()->available)->toBe(4);
+});
+
+it('reports a paid order to Meta once, with the buyer’s details hashed and their browser from checkout', function (): void {
+    Mail::fake();
+    enableMetaAds();
+    Queue::fake([SendMetaEvent::class]);
+    $shop = StockedDrop::create();
+    $order = pendingOrder($shop);
+    $order->update(['meta_visitor' => ['ip' => '192.0.2.1', 'user_agent' => 'Test Browser', 'fbp' => 'fb.1.1700000000000.111', 'fbc' => null]]);
+    $paid = new CheckoutSession('cs_test_1', 'complete', 'paid', paymentIntentId: 'pi_1', customerName: ' Sam  Van Buyer ', email: ' Buyer@Example.test ', phone: '+61400000002',
+        shippingAddress: ['line1' => '1 Main St', 'line2' => null, 'city' => 'Snake Valley', 'state' => 'VIC', 'postal_code' => '3351', 'country' => 'AU']);
+
+    app(OrderPayments::class)->apply($order, $paid);
+    app(OrderPayments::class)->apply($order, $paid);
+
+    expect(queuedMetaEvent())->toMatchArray([
+        'event_name' => 'Purchase',
+        'event_time' => $order->refresh()->paid_at?->getTimestamp(),
+        'event_id' => "purchase-{$order->public_id}",
+        'user_data' => [
+            'em' => hash('sha256', 'buyer@example.test'),
+            'ph' => hash('sha256', '61400000002'),
+            'fn' => hash('sha256', 'sam'),
+            'ln' => hash('sha256', 'buyer'),
+            'ct' => hash('sha256', 'snakevalley'),
+            'st' => hash('sha256', 'vic'),
+            'zp' => hash('sha256', '3351'),
+            'country' => hash('sha256', 'au'),
+            'client_ip_address' => '192.0.2.1',
+            'client_user_agent' => 'Test Browser',
+            'fbp' => 'fb.1.1700000000000.111',
+        ],
+        'custom_data' => [
+            'value' => 160.0,
+            'currency' => 'AUD',
+            'content_type' => 'product',
+            'contents' => [['id' => (string) $shop->box->product_id, 'quantity' => 1]],
+            'num_items' => 1,
+            'order_id' => $order->reference(),
+        ],
+    ]);
 });

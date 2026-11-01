@@ -10,8 +10,8 @@ These values currently drive checkout and are treated as authoritative until Dan
 |---|---:|---|
 | 5kg beef box | $160 ($32/kg) | `src/config/products.ts` |
 | 10kg beef box | $275 ($27.50/kg) | `config/catalogue.php`: a bundle of two 5kg boxes |
-| Ballarat-region delivery | $15 flat fee | `src/config/products.ts` |
-| Farm pickup | Free | Current order flow |
+| Ballarat-region delivery | $15 flat fee, never free | `config/catalogue.php` (`delivery-fee`); confirmed by Daniel 1 Nov 2026 |
+| Farm pickup | Free | `config/shop.php` (`pickup`); confirmed by Daniel 1 Nov 2026 |
 | Farm locality | Snake Valley, Victoria 3351 | Existing public site and business schema |
 | Nearby centre | Ballarat | Existing delivery and location copy |
 | Breed | Murray Grey | Existing public site and cattle imagery |
@@ -47,13 +47,12 @@ Do not use `grass-fed`, `grass-finished`, `organic`, `dry-aged`, `hormone-free`,
 - Added growth promotant and routine-antibiotic practices.
 - Processor/butcher responsibility split and public naming preference.
 - Hanging/conditioning/ageing method.
-- Delivery postcodes/radius and any conditional free delivery.
+- Delivery postcodes/radius.
 - Farm pickup disclosure, schedule and directions.
 - Preferred public phone/SMS number and Daniel/Tahlia roles.
 - Three flagship cattle achievements and source material.
 - Authenticity, permission and attribution for customer testimonials.
 - Replacement/refund promise for seal, temperature or quality issues.
-- Final analytics and advertising stack.
 
 ## Content maintenance rule
 

@@ -14,11 +14,14 @@
     };
 @endphp
 
+{{-- No Meta pixel: this page's address holds the Stripe session that shows the order, so it stays away from Meta.
+     The purchase is reported from the server once Stripe confirms it. --}}
 <x-layouts.app
     title="Order Confirmed | Ferguson Livestock"
     description="Thanks for your order from Ferguson Livestock."
     robots="noindex, follow"
     :fonts="['source-sans', 'cormorant', 'caveat']"
+    :ad-tracking="false"
 >
     <div class="flex min-h-[80vh] items-center justify-center bg-cream-dark px-6 py-16">
         <x-confirmation-letter :heading="$heading" :subheading="$subheading">
