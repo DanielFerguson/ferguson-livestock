@@ -35,7 +35,7 @@ final class SmsRulesResource extends Resource
         - Do not send or schedule between 8pm and 8am Melbourne time unless the owner has said to.
 
         ## Sign-up confirmations
-        - Someone new to the wait list gets one automatic text saying they're on it, with the same prefix and suffix as a broadcast. A number only ever gets one, it waits until 8am during quiet hours, and it stops for the day at a daily limit. Nothing needs doing to send it. The owner can send it by hand from the subscribers page to people who joined before these were sent.
+        - Someone new to the wait list gets one automatic text saying they're on it, with the same prefix and suffix as a broadcast. A number only ever gets one, it waits until 8am during quiet hours, and it stops for the day at a daily limit. Nothing needs doing to send it. The owner can send it by hand from the subscribers page, one at a time or to a selection, for people who joined before these were sent.
 
         ## Replies
         - One-to-one, no prefix or suffix. Keep them short, warm, plain and specific. Never invent stock, prices or delivery promises: check the drop first.

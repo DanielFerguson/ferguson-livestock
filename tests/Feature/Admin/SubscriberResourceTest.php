@@ -66,7 +66,7 @@ it('shows where each person’s confirmation text is up to', function (): void {
         ->assertSeeText('Not sent');
 });
 
-it('sends a confirmation text by hand, past the daily limit', function (): void {
+it('sends a confirmation text by hand', function (): void {
     Queue::fake([SendSignUpConfirmation::class]);
     $subscriber = Subscriber::factory()->create();
 
@@ -74,7 +74,76 @@ it('sends a confirmation text by hand, past the daily limit', function (): void 
         ->callAction(TestAction::make('sendConfirmation')->table($subscriber))
         ->assertNotified('Confirmation text on its way');
 
-    Queue::assertPushed(SendSignUpConfirmation::class, fn (SendSignUpConfirmation $job): bool => $job->subscriberId === $subscriber->id && $job->ignoresDailyLimit);
+    Queue::assertPushed(SendSignUpConfirmation::class, fn (SendSignUpConfirmation $job): bool => $job->subscriberId === $subscriber->id);
+});
+
+it('shows a text as waiting and takes the button away as soon as it’s queued', function (): void {
+    Queue::fake([SendSignUpConfirmation::class]);
+    $subscriber = Subscriber::factory()->create();
+
+    $page = livewire(ListSubscribers::class)->callAction(TestAction::make('sendConfirmation')->table($subscriber));
+
+    $page->assertTableColumnStateSet('signUpConfirmation.status', SmsStatus::Queued, $subscriber);
+    $page->assertSeeText('Waiting');
+    $page->assertActionHidden(TestAction::make('sendConfirmation')->table($subscriber));
+});
+
+it('sends the confirmation text to everyone selected who can have one', function (): void {
+    Queue::fake([SendSignUpConfirmation::class]);
+    [$first, $second] = Subscriber::factory()->count(2)->create()->all();
+    $optedOut = Subscriber::factory()->unsubscribed()->create();
+    $alreadySent = Subscriber::factory()->create();
+    SmsMessage::factory()->signUpConfirmation()->create(['subscriber_id' => $alreadySent->id]);
+    $notSelected = Subscriber::factory()->create();
+
+    livewire(ListSubscribers::class)
+        ->selectTableRecords([$first, $second, $optedOut, $alreadySent])
+        ->callAction(TestAction::make('sendConfirmations')->table()->bulk())
+        ->assertNotified('2 confirmation texts on their way');
+
+    Queue::assertPushedTimes(SendSignUpConfirmation::class, 2);
+    expect($first->signUpConfirmation?->status)->toBe(SmsStatus::Queued);
+    expect($second->signUpConfirmation?->status)->toBe(SmsStatus::Queued);
+    expect($optedOut->signUpConfirmation)->toBeNull();
+    expect($notSelected->signUpConfirmation)->toBeNull();
+});
+
+it('shows who a bulk send reaches, what it costs and what it says before sending', function (): void {
+    [$first, $second] = Subscriber::factory()->count(2)->create()->all();
+    $optedOut = Subscriber::factory()->unsubscribed()->create();
+
+    $page = livewire(ListSubscribers::class)
+        ->selectTableRecords([$first, $second, $optedOut])
+        ->mountAction(TestAction::make('sendConfirmations')->table()->bulk());
+
+    $page->assertMountedActionModalSee(['It goes to 2 subscribers as 1 text each, about $0.16.', '1 of those selected is left out', 'on the wait list', 'Reply STOP to opt out']);
+    $page->assertMountedActionModalDontSee('after 8am');
+});
+
+it('says a bulk send will wait until morning during quiet hours', function (): void {
+    Queue::fake([SendSignUpConfirmation::class]);
+    $subscriber = Subscriber::factory()->create();
+    $this->travelTo(CarbonImmutable::parse('2026-10-01 22:00', 'Australia/Melbourne'));
+
+    $page = livewire(ListSubscribers::class)
+        ->selectTableRecords([$subscriber])
+        ->mountAction(TestAction::make('sendConfirmations')->table()->bulk());
+
+    $page->assertMountedActionModalSee('after 8am');
+    $page->callMountedAction();
+    $page->assertNotified('1 confirmation text queued for 8am');
+});
+
+it('says so when nobody selected can have a confirmation text', function (): void {
+    Queue::fake([SendSignUpConfirmation::class]);
+    $optedOut = Subscriber::factory()->unsubscribed()->create();
+
+    livewire(ListSubscribers::class)
+        ->selectTableRecords([$optedOut])
+        ->callAction(TestAction::make('sendConfirmations')->table()->bulk())
+        ->assertNotified('Nobody selected can have a confirmation text');
+
+    Queue::assertNotPushed(SendSignUpConfirmation::class);
 });
 
 it('shows exactly what will be sent before sending it', function (): void {
@@ -105,12 +174,15 @@ it('offers the confirmation text only to people who can have one', function (): 
     SmsMessage::factory()->signUpConfirmation()->create(['subscriber_id' => $alreadySent->id]);
     $failed = Subscriber::factory()->create();
     SmsMessage::factory()->signUpConfirmation()->create(['subscriber_id' => $failed->id, 'status' => SmsStatus::Failed]);
+    $queued = Subscriber::factory()->create();
+    SmsMessage::factory()->signUpConfirmation()->create(['subscriber_id' => $queued->id, 'status' => SmsStatus::Queued]);
 
     livewire(ListSubscribers::class)
         ->assertActionVisible(TestAction::make('sendConfirmation')->table($waiting))
         ->assertActionHidden(TestAction::make('sendConfirmation')->table($optedOut))
         ->assertActionHidden(TestAction::make('sendConfirmation')->table($alreadySent))
-        ->assertActionHidden(TestAction::make('sendConfirmation')->table($failed));
+        ->assertActionHidden(TestAction::make('sendConfirmation')->table($failed))
+        ->assertActionHidden(TestAction::make('sendConfirmation')->table($queued));
 });
 
 it('saves a corrected mobile number in the international format', function (): void {

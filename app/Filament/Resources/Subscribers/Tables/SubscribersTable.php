@@ -62,6 +62,9 @@ class SubscribersTable
                 SubscriberActions::sendConfirmation(),
                 EditAction::make(),
                 SubscriberActions::optOut(),
+            ])
+            ->toolbarActions([
+                SubscriberActions::sendConfirmations(),
             ]);
     }
 

@@ -91,13 +91,21 @@ class Subscriber extends Model
     }
 
     /**
-     * The one text they get on joining the wait list, once it's been sent.
+     * The one text they get on joining the wait list, from the moment it's queued.
      *
      * @return HasOne<SmsMessage, $this>
      */
     public function signUpConfirmation(): HasOne
     {
         return $this->hasOne(SmsMessage::class)->where('is_sign_up_confirmation', true);
+    }
+
+    /**
+     * Each person gets one at most, so that includes anyone whose text failed.
+     */
+    public function canBeSentConfirmation(): bool
+    {
+        return $this->isSubscribed() && $this->signUpConfirmation === null;
     }
 
     public function isSubscribed(): bool

@@ -260,6 +260,17 @@ it('promises no confirmation text to bots or to numbers already on the list', fu
     'opted out' => [['phone' => '0499 999 999']],
 ]);
 
+it('promises no confirmation text once the daily limit is reached, but still signs them up', function (): void {
+    config(['services.twilio.sid' => 'test-account', 'services.twilio.confirmations_per_day' => 1]);
+    Queue::fake([SendSignUpConfirmation::class]);
+    $this->post('/waitlist', waitlistForm(['phone' => '0411 111 111']));
+
+    $this->followingRedirects()->post('/waitlist', waitlistForm())->assertDontSee('quick text to confirm');
+
+    $this->assertDatabaseHas('subscribers', ['phone' => '+61412345678']);
+    Queue::assertPushedTimes(SendSignUpConfirmation::class, 1);
+});
+
 it('promises no confirmation text where Twilio isn’t set up', function (): void {
     config(['services.twilio.sid' => null]);
     Queue::fake([SendSignUpConfirmation::class]);

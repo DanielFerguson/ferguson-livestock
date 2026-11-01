@@ -13,6 +13,7 @@ use App\Sms\QuietHours;
 use App\Sms\SmsGateway;
 use App\Sms\SmsText;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -23,8 +24,9 @@ use Illuminate\Support\Facades\RateLimiter;
  * and lets a stranger whose number was typed in reply STOP.
  *
  * The form is public and takes any Australian mobile, so nothing typed on it goes in the text, a number is only
- * ever texted once, and a daily limit caps what a flood of fake sign-ups could cost. Sign-ups in quiet hours wait
- * until 8am. The sync queue never sends it (see WaitsUntilDue), so a machine without a worker can't text anyone.
+ * ever texted once, and a daily limit caps what a flood of fake sign-ups could cost. The text is stored as soon as
+ * it's queued, so the admin can see it waiting, and any queued in quiet hours wait until 8am. The sync queue never
+ * sends it (see WaitsUntilDue), so a machine without a worker can't text anyone.
  */
 class SendSignUpConfirmation implements ShouldQueue
 {
@@ -44,33 +46,52 @@ class SendSignUpConfirmation implements ShouldQueue
     /** @var list<int> */
     public array $backoff = [10, 30, 60, 120];
 
-    /**
-     * The daily limit is there for the public form, not for a text the admin chose to send.
-     */
-    public bool $ignoresDailyLimit = false;
-
     public function __construct(public int $subscriberId) {}
 
     /**
-     * The text for someone who joined before these were sent, asked for from the subscribers page.
-     */
-    public static function requestedByAdmin(Subscriber $subscriber): self
-    {
-        $job = new self($subscriber->id);
-        $job->ignoresDailyLimit = true;
-
-        return $job;
-    }
-
-    /**
      * Queue the text for someone new to the list. Someone already on it has no need of one, and a number that opted
-     * out comes back here as an existing subscriber.
+     * out comes back here as an existing subscriber. The daily limit is checked here, not when the text is sent, so
+     * nobody is promised a text it would stop.
      *
      * @return bool whether a text is on its way
      */
     public static function queueFor(Subscriber $subscriber): bool
     {
         if (! $subscriber->wasRecentlyCreated || blank(config('services.twilio.sid'))) {
+            return false;
+        }
+
+        if (RateLimiter::attempt(self::DAILY_LIMIT_KEY, config()->integer('services.twilio.confirmations_per_day'), fn (): bool => true, self::SECONDS_PER_DAY) === false) {
+            Log::warning('The daily limit on sign-up confirmation texts was reached, so one was skipped.', ['subscriber_id' => $subscriber->id]);
+
+            return false;
+        }
+
+        return self::queueIfNeeded($subscriber);
+    }
+
+    /**
+     * Queue the text unless they've opted out or already have one, sent or waiting. The admin calls this directly:
+     * the daily limit is there for the public form, not for a text they chose to send.
+     *
+     * @return bool whether a text was queued
+     */
+    public static function queueIfNeeded(Subscriber $subscriber): bool
+    {
+        if (! $subscriber->isSubscribed()) {
+            return false;
+        }
+
+        // The database holds each subscriber to one confirmation, so two requests at once can't both queue a text.
+        $message = SmsMessage::query()->createOrFirst(['subscriber_id' => $subscriber->id, 'is_sign_up_confirmation' => true], [
+            'direction' => SmsDirection::Outbound,
+            'to' => $subscriber->phone,
+            'from' => config()->string('services.twilio.from'),
+            'body' => SmsText::forBroadcast(self::BODY)->text,
+            'status' => SmsStatus::Queued,
+        ]);
+
+        if (! $message->wasRecentlyCreated) {
             return false;
         }
 
@@ -85,36 +106,32 @@ class SendSignUpConfirmation implements ShouldQueue
             return;
         }
 
-        $this->claim()?->sendWith($sms);
+        // Marked as sending in one transaction, so a retry or a second copy of this job finds nothing to send.
+        DB::transaction(function (): ?SmsMessage {
+            $message = $this->waitingText()->with('subscriber')->lock('for update skip locked')->first();
+
+            $message?->update(['status' => SmsStatus::Sending]);
+
+            return $message;
+        })?->sendWith($sms);
     }
 
     /**
-     * Store the text before it's sent, with the subscriber locked, so a retry or a second copy of this job finds it
-     * and sends nothing.
+     * When the retries run out, show the text as failed rather than leaving it waiting for ever.
      */
-    private function claim(): ?SmsMessage
+    public function failed(): void
     {
-        return DB::transaction(function (): ?SmsMessage {
-            $subscriber = Subscriber::query()->lockForUpdate()->find($this->subscriberId);
+        $this->waitingText()->update(['status' => SmsStatus::Failed]);
+    }
 
-            if ($subscriber?->isSubscribed() !== true || $subscriber->signUpConfirmation()->exists()) {
-                return null;
-            }
-
-            if (! $this->ignoresDailyLimit && RateLimiter::attempt(self::DAILY_LIMIT_KEY, config()->integer('services.twilio.confirmations_per_day'), fn (): bool => true, self::SECONDS_PER_DAY) === false) {
-                Log::warning('The daily limit on sign-up confirmation texts was reached, so one was skipped.', ['subscriber_id' => $subscriber->id]);
-
-                return null;
-            }
-
-            return $subscriber->messages()->create([
-                'direction' => SmsDirection::Outbound,
-                'to' => $subscriber->phone,
-                'from' => config()->string('services.twilio.from'),
-                'body' => SmsText::forBroadcast(self::BODY)->text,
-                'status' => SmsStatus::Sending,
-                'is_sign_up_confirmation' => true,
-            ]);
-        });
+    /**
+     * @return Builder<SmsMessage>
+     */
+    private function waitingText(): Builder
+    {
+        return SmsMessage::query()
+            ->where('subscriber_id', $this->subscriberId)
+            ->where('is_sign_up_confirmation', true)
+            ->where('status', SmsStatus::Queued);
     }
 }

@@ -6,12 +6,17 @@ namespace App\Filament\Resources\Subscribers\Actions;
 
 use App\Jobs\SendSignUpConfirmation;
 use App\Models\Subscriber;
+use App\Sms\BroadcastPreview;
 use App\Sms\QuietHours;
 use App\Sms\SmsText;
 use App\Support\SpreadsheetCell;
 use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Number;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -41,7 +46,6 @@ final class SubscriberActions
 
     /**
      * Send the wait-list confirmation to someone who hasn't had one, like people who joined before these were sent.
-     * Each person gets one at most, so it's not offered again after a text that failed.
      */
     public static function sendConfirmation(): Action
     {
@@ -49,17 +53,50 @@ final class SubscriberActions
             ->label('Send text')
             ->icon(Heroicon::OutlinedPaperAirplane)
             ->color('gray')
-            ->visible(fn (Subscriber $record): bool => $record->isSubscribed() && $record->signUpConfirmation === null)
+            ->visible(fn (Subscriber $record): bool => $record->canBeSentConfirmation())
             ->requiresConfirmation()
             ->modalIcon(Heroicon::OutlinedPaperAirplane)
             ->modalHeading('Send the confirmation text?')
             ->modalDescription(fn (): string => 'They’ll get this text'.(QuietHours::contains(now()) ? ' after 8am' : '').': '.SmsText::forBroadcast(SendSignUpConfirmation::BODY)->text)
             ->modalSubmitActionLabel('Send text')
             ->action(function (Subscriber $record): void {
-                dispatch(SendSignUpConfirmation::requestedByAdmin($record));
+                SendSignUpConfirmation::queueIfNeeded($record);
 
                 Notification::make()
                     ->title(QuietHours::contains(now()) ? 'Confirmation text queued for 8am' : 'Confirmation text on its way')
+                    ->success()
+                    ->send();
+            });
+    }
+
+    /**
+     * The same text for everyone selected. Anyone who has opted out or already has one is left out.
+     */
+    public static function sendConfirmations(): BulkAction
+    {
+        return BulkAction::make('sendConfirmations')
+            ->label('Send confirmation text')
+            ->icon(Heroicon::OutlinedPaperAirplane)
+            ->color('gray')
+            ->requiresConfirmation()
+            ->modalIcon(Heroicon::OutlinedPaperAirplane)
+            ->modalHeading('Send the confirmation text?')
+            ->modalDescription(fn (Collection $records): string => self::describeBulkSend($records))
+            ->modalSubmitActionLabel('Send texts')
+            ->deselectRecordsAfterCompletion()
+            ->action(function (Collection $records): void {
+                $queued = $records->filter(fn (Model $subscriber): bool => $subscriber instanceof Subscriber && SendSignUpConfirmation::queueIfNeeded($subscriber))->count();
+
+                if ($queued === 0) {
+                    Notification::make()->title('Nobody selected can have a confirmation text')->warning()->send();
+
+                    return;
+                }
+
+                $texts = Number::format($queued).' confirmation '.str('text')->plural($queued);
+
+                Notification::make()
+                    ->title(QuietHours::contains(now()) ? "{$texts} queued for 8am" : "{$texts} on ".($queued === 1 ? 'its' : 'their').' way')
                     ->success()
                     ->send();
             });
@@ -87,6 +124,24 @@ final class SubscriberActions
 
                 fclose($file);
             }, 'subscribers-'.now()->toDateString().'.csv', ['Content-Type' => 'text/csv']));
+    }
+
+    /**
+     * Who a bulk send reaches, what it costs, who it leaves out and what it says.
+     *
+     * @param  Collection<int, covariant Model>  $records
+     */
+    private static function describeBulkSend(Collection $records): string
+    {
+        $text = SmsText::forBroadcast(SendSignUpConfirmation::BODY);
+        $recipients = $records->loadMissing('signUpConfirmation')->filter(fn (Model $subscriber): bool => $subscriber instanceof Subscriber && $subscriber->canBeSentConfirmation())->count();
+        $leftOut = $records->count() - $recipients;
+
+        return implode(' ', array_filter([
+            (new BroadcastPreview($text, $recipients))->confirmation(),
+            $leftOut === 0 ? null : Number::format($leftOut).' of those selected '.($leftOut === 1 ? 'is' : 'are').' left out, because they’ve opted out or already have one.',
+            'They’ll get this text'.(QuietHours::contains(now()) ? ' after 8am' : '').': '.$text->text,
+        ], fn (?string $sentence): bool => $sentence !== null));
     }
 
     /**
