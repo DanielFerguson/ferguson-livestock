@@ -155,6 +155,8 @@ return [
             'persistent' => env('REDIS_PERSISTENT', false),
         ],
 
+        // Without timeouts phpredis waits PHP's default 60 seconds on a connection that never answers, long after
+        // Cloud's gateway has given the visitor a 504 at 20. Five seconds is several times a cold wake of the cache.
         'default' => [
             'url' => env('REDIS_URL'),
             'host' => env('REDIS_HOST', '127.0.0.1'),
@@ -162,6 +164,8 @@ return [
             'password' => env('REDIS_PASSWORD'),
             'port' => env('REDIS_PORT', '6379'),
             'database' => env('REDIS_DB', '0'),
+            'timeout' => env('REDIS_TIMEOUT', 5),
+            'read_timeout' => env('REDIS_READ_TIMEOUT', 5),
             'max_retries' => env('REDIS_MAX_RETRIES', 3),
             'backoff_algorithm' => env('REDIS_BACKOFF_ALGORITHM', 'decorrelated_jitter'),
             'backoff_base' => env('REDIS_BACKOFF_BASE', 100),
@@ -175,6 +179,8 @@ return [
             'password' => env('REDIS_PASSWORD'),
             'port' => env('REDIS_PORT', '6379'),
             'database' => env('REDIS_CACHE_DB', '1'),
+            'timeout' => env('REDIS_TIMEOUT', 5),
+            'read_timeout' => env('REDIS_READ_TIMEOUT', 5),
             'max_retries' => env('REDIS_MAX_RETRIES', 3),
             'backoff_algorithm' => env('REDIS_BACKOFF_ALGORITHM', 'decorrelated_jitter'),
             'backoff_base' => env('REDIS_BACKOFF_BASE', 100),
