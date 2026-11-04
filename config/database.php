@@ -152,7 +152,10 @@ return [
         'options' => [
             'cluster' => env('REDIS_CLUSTER', 'redis'),
             'prefix' => env('REDIS_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')).'-database-'),
-            'persistent' => env('REDIS_PERSISTENT', false),
+            // Laravel Cloud sets REDIS_PERSISTENT, but when the cache stops answering a kept-open connection (as when it
+            // sleeps), phpredis throws "read error on connection" instead of opening a new one. Connecting afresh for each
+            // request costs a few milliseconds.
+            'persistent' => false,
         ],
 
         // Without timeouts phpredis waits PHP's default 60 seconds on a connection that never answers, long after
