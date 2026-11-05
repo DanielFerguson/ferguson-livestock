@@ -25,5 +25,8 @@
     },
     "optionalDependencies": {
         "@laravel/multiplex": "^0.4.5"
+    },
+    "overrides": {
+        "fflate": "0.7.5"
     }
 }
