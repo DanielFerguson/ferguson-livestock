@@ -14,11 +14,13 @@ use App\Stock\DropSnapshot;
 use App\Support\Catalogue;
 use App\Support\Faqs;
 use App\Support\ResponsiveImages;
+use App\Support\RetryingPhpRedisConnector;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\DevCommands;
 use Illuminate\Http\Request;
+use Illuminate\Redis\RedisManager;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -42,6 +44,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(PaymentGateway::class, fn (): PaymentGateway => StripePaymentGateway::fromConfig());
 
         $this->app->singleton(SmsGateway::class, fn (): SmsGateway => TwilioSmsGateway::fromConfig());
+
+        // The cache can turn a new connection away as it sleeps or wakes; try again rather than fail the request.
+        $this->app->extend('redis', fn (RedisManager $redis): RedisManager => $redis->extend('phpredis', fn (): RetryingPhpRedisConnector => new RetryingPhpRedisConnector));
 
         $this->app->singleton(ResponsiveImages::class, function (): ResponsiveImages {
             /** @var array<string, array{source: string, widths: non-empty-list<int>, aspect?: string}> $variants */
