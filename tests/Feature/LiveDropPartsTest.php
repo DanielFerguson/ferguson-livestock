@@ -79,6 +79,31 @@ it('adds the announced date to the sold-out message', function (): void {
         ->assertSee('The next drop is Saturday 14 November.');
 });
 
+it('shows the announcement bar on the order page, with the wait list link going to the homepage’s form', function (): void {
+    $this->travelTo('2026-10-01 12:00');
+    StockedDrop::create(drop: ['opens_at' => CarbonImmutable::parse('2026-10-10 09:00', 'Australia/Melbourne')->utc()]);
+
+    $this->get(route('order'))
+        ->assertSee('Next drop opens Saturday 10 October at 9:00am')
+        ->assertSee('href="'.route('home').'#waitlist"', escape: false);
+});
+
+it('links the order page’s bar to the wait list on that page between drops', function (): void {
+    $this->get(route('order'))
+        ->assertSee('Next drop coming soon')
+        ->assertSee('href="#waitlist"', escape: false);
+});
+
+it('leaves the link to the order page out of the bar on the order page', function (int $boxes, string $link): void {
+    StockedDrop::create(boxes: $boxes, mince: $boxes);
+
+    $this->get(route('home'))->assertSee($link);
+    $this->get(route('order'))->assertDontSee($link);
+})->with([
+    'while orders are open' => [5, 'Order now'],
+    'once the boxes have sold out' => [0, 'See what’s left'],
+]);
+
 it('leaves each box’s stock to the live script on the beef boxes page, which is cached', function (): void {
     $shop = StockedDrop::create(boxes: 3);
 

@@ -55,6 +55,13 @@ it('shows an unpublished drop on its secret link, but nowhere public', function 
     $this->get(route('order'))->assertDontSee('5kg Beef Box');
 });
 
+it('keeps the announcement bar off the early-access page', function (): void {
+    $shop = earlyDrop();
+
+    $this->get(route('order'))->assertSee('Next drop coming soon');
+    $this->get(route('early-access', ['token' => $shop->drop->early_access_token]))->assertDontSee('Next drop coming soon');
+});
+
 it('is a 404 for a wrong, replaced or switched-off link, or a closed drop', function (): void {
     $shop = earlyDrop();
     $old = $shop->drop->early_access_token;

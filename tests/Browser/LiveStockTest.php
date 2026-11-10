@@ -28,6 +28,22 @@ it('updates what’s left while the page is open, and trims a choice to match', 
         ->assertNoJavaScriptErrors();
 });
 
+it('counts down to a scheduled drop in the announcement bar', function (): void {
+    StockedDrop::create(drop: ['opens_at' => now()->addDays(2)->addMinutes(30)]);
+
+    visit(route('order'))
+        ->assertSee('· in 2d 0h')
+        ->assertNoJavaScriptErrors();
+});
+
+it('counts down to an announced date before the drop is published', function (): void {
+    Drop::factory()->announced()->create(['opens_at' => now()->addDays(2)->addMinutes(30)]);
+
+    visit(route('home'))
+        ->assertSee('· opens in 2d 0h')
+        ->assertNoJavaScriptErrors();
+});
+
 it('opens the drop on time, without a reload', function (): void {
     StockedDrop::create(drop: ['opens_at' => now()->addSeconds(3)]);
 

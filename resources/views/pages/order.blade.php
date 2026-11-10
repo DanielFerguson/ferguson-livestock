@@ -9,6 +9,14 @@
     :ad-tracking="! isset($earlyAccessToken)"
     :meta-events="$drop !== null ? [['ViewContent', ['content_name' => $drop->name], null]] : []"
 >
+    {{-- Not on an early-access link: the people ordering through it would be told orders haven't opened. --}}
+    @unless (isset($earlyAccessToken))
+        <x-slot:banner>
+            {{-- The wait list form is only on this page between drops. --}}
+            <x-announcement-bar on-order-page :waitlist-url="$drop !== null ? route('home').'#waitlist' : '#waitlist'" />
+        </x-slot:banner>
+    @endunless
+
     @if ($drop !== null)
         <section class="bg-cream-dark py-12 lg:py-16">
             <div class="mx-auto max-w-4xl px-6">

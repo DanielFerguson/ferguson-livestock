@@ -9,7 +9,8 @@
  *                                    "announced" stands in for none/closed while the next drop's date is announced
  *   data-drop-stock="product-slug"   "3 left", "Sold out" or "Available"
  *   data-drop-announced              shown only while the next drop's date is announced and hasn't passed
- *   data-drop-countdown              time until the drop opens, by the server's clock
+ *   data-drop-countdown              time until the drop opens, or until an announced date while that is what's
+ *                                    showing, by the server's clock
  *   data-drop-held                   how many checkouts could still free stock up
  *   data-drop-paused                 shown while updates can't get through
  *
@@ -47,6 +48,9 @@ function shown() {
 }
 
 const viewKey = () => `${shown()}:${announced()}`;
+
+/** Milliseconds until what's coming next opens: the announced date while that is what's showing, else the drop. */
+const countdownLeft = () => (shown() === 'announced' ? Date.parse(snapshot.announced.opens_at) - serverNow() : opensIn());
 
 /** Keep in step with App\Stock\StockLabel. */
 function stockText(item) {
@@ -128,7 +132,7 @@ function render() {
 }
 
 function tick() {
-    for (const el of document.querySelectorAll('[data-drop-countdown]')) el.textContent = countdown(opensIn());
+    for (const el of document.querySelectorAll('[data-drop-countdown]')) el.textContent = countdown(countdownLeft());
 }
 
 setInterval(() => {
@@ -138,7 +142,7 @@ setInterval(() => {
         poll();
     } else if (viewKey() !== lastView) {
         render(); // an announced date has just passed
-    } else if (state() === 'scheduled') {
+    } else if (['scheduled', 'announced'].includes(shown())) {
         tick();
     }
 }, 1000);
