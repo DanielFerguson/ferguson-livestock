@@ -9,19 +9,20 @@
     <div class="clear-both grid gap-3">
         @foreach ($boxes as $item)
             @php($weight = (int) ($item->product->box_details['weight_kg'] ?? 0))
-            <label class="flex cursor-pointer items-center gap-4 border border-forest/15 p-4 has-checked:border-sage has-checked:bg-mint/10 has-disabled:cursor-not-allowed has-disabled:opacity-60">
+            {{-- A sold-out box is shaded and struck through, like a sold-out extra. --}}
+            <label class="group flex cursor-pointer items-center gap-4 border border-forest/15 p-4 has-checked:border-sage has-checked:bg-mint/10 has-disabled:cursor-not-allowed has-disabled:bg-cream">
                 <input type="radio" name="box" value="{{ $item->id }}" wire:model="box" class="h-5 w-5 accent-sage"
                     @disabled($available($item) < 1) x-bind:disabled="items[{{ $item->id }}].available < 1">
                 <span class="flex-1">
-                    <span class="block font-semibold text-forest">{{ $item->product->name }}</span>
+                    <span class="block font-semibold text-forest group-has-disabled:text-gray-500 group-has-disabled:line-through">{{ $item->product->name }}</span>
                     <span class="block text-sm text-gray-600">{{ $item->product->box_details['best_for'] ?? '' }}</span>
                 </span>
                 <span class="text-right">
-                    <span class="block font-bold text-forest">{{ Money::format($item->price) }}</span>
+                    <span class="block font-bold text-forest group-has-disabled:text-gray-500 group-has-disabled:line-through">{{ Money::format($item->price) }}</span>
                     @if ($weight > 0)
-                        <span class="block text-xs text-sage">{{ Money::perKg(intdiv($item->price, $weight)) }}</span>
+                        <span class="block text-xs text-sage group-has-disabled:hidden">{{ Money::perKg(intdiv($item->price, $weight)) }}</span>
                     @endif
-                    <span class="block text-sm text-gray-700" data-drop-stock="{{ $item->product->slug }}">{{ StockLabel::text($available($item)) }}</span>
+                    <span class="block text-sm text-gray-700 group-has-disabled:font-semibold group-has-disabled:text-forest" data-drop-stock="{{ $item->product->slug }}">{{ StockLabel::text($available($item)) }}</span>
                 </span>
             </label>
         @endforeach

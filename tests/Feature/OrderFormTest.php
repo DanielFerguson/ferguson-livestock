@@ -25,6 +25,17 @@ it('shows the open drop’s boxes, extras and delivery days with what’s left',
         ->assertSee(now()->addDays(3)->format('l j F'));
 });
 
+it('marks an extra as sold out only when none are left', function (int $mince, int $marked): void {
+    $shop = StockedDrop::create(mince: $mince);
+
+    $form = livewire(OrderForm::class, ['drop' => $shop->drop])->html();
+
+    expect(preg_match_all('/<li[^>]*\sdata-sold-out\s/', $form))->toBe($marked);
+})->with([
+    'none left' => [0, 1],
+    'some left' => [10, 0],
+]);
+
 it('sends the customer to Stripe with what they chose', function (): void {
     FakePaymentGateway::swap();
     $shop = StockedDrop::create();
