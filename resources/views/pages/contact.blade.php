@@ -26,7 +26,7 @@
                     </div>
                     <div>
                         <dt class="eyebrow text-sage">Farm</dt>
-                        <dd class="mt-2 text-lg text-gray-700">{{ config('shop.location.locality') }}, {{ config('shop.location.region') }}<br>Visits and pickup by arrangement.</dd>
+                        <dd class="mt-2 text-lg text-gray-700">{{ config('shop.location.locality') }}, {{ config('shop.location.region') }}<br>Pickup {{ config('shop.pickup.days') }}, {{ config('shop.pickup.hours') }}. Visits by arrangement.</dd>
                     </div>
                 </dl>
             </div>

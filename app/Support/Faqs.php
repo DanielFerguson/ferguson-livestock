@@ -39,11 +39,13 @@ final readonly class Faqs
             [
                 'question' => 'Where do you deliver?',
                 'answer' => sprintf(
-                    'We personally deliver across the %s. Delivery is %s per order. %s is also available %s.',
+                    'We personally deliver across the %s. Delivery is %s per order. %s is also available %s, %s, %s.',
                     $deliveryArea,
                     $deliveryFee === null ? 'a flat fee' : Money::format($deliveryFee),
                     config()->string('shop.pickup.label'),
                     config()->string('shop.location.proximity'),
+                    config()->string('shop.pickup.days'),
+                    config()->string('shop.pickup.hours'),
                 ),
             ],
             [

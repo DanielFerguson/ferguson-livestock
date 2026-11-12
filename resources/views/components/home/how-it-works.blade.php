@@ -3,7 +3,7 @@
         ['Check the current drop', 'See which boxes and individual cuts are available now.'],
         ['Choose what suits you', 'Pick a 5kg or 10kg box, then add any available extra cuts.'],
         ['Professionally prepared', 'A licensed local facility prepares and vacuum-seals each cut before collection or delivery.'],
-        ['Delivery or pickup', 'Choose personal delivery across the '.config('shop.delivery.area_name').' or free farm pickup by arrangement in '.config('shop.location.locality').'.'],
+        ['Delivery or pickup', 'Choose personal delivery across the '.config('shop.delivery.area_name').' or free farm pickup in '.config('shop.location.locality').', '.config('shop.pickup.days').', '.config('shop.pickup.hours').'.'],
     ];
 @endphp
 

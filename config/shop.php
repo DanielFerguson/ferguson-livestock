@@ -65,9 +65,11 @@ return [
 
     'pickup' => [
         'label' => 'Free farm pickup',
-        'description' => 'Farm pickup by arrangement in Snake Valley.',
+        'description' => 'Free farm pickup in Snake Valley, Saturday or Sunday, 10am to 4pm.',
         // On each of a drop's delivery days, as the order page and confirmations say.
         'hours' => '10am to 4pm',
+        // For pages that aren't about one drop: the days drops are collected and delivered.
+        'days' => 'Saturday or Sunday',
     ],
 
     'social' => [

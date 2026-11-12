@@ -4,7 +4,7 @@
 @php
     $area = config()->string('shop.delivery.area_name');
     $title = 'Beef Delivery and Farm Pickup Ballarat | Ferguson Livestock';
-    $description = "Personal Ferguson Livestock delivery across the {$area}, plus free farm pickup by arrangement in Snake Valley, and what to do if something isn’t right.";
+    $description = "Personal Ferguson Livestock delivery across the {$area}, plus free farm pickup in Snake Valley from 10am to 4pm, and what to do if something isn’t right.";
     $deliveryFee = $catalogue->deliveryFee();
 @endphp
 
@@ -17,7 +17,7 @@
                 size="page"
                 tone="dark"
                 align="center"
-                intro="We personally deliver orders across the {{ $area }}, or you can collect from the farm by arrangement."
+                intro="We personally deliver orders across the {{ $area }} on {{ config('shop.pickup.days') }} night, or you can collect from the farm {{ config('shop.pickup.days') }}, {{ config('shop.pickup.hours') }}."
             >
                 Delivery with a farmer at the other end.
             </x-section-heading>
@@ -33,8 +33,8 @@
             </article>
             <article class="border border-forest/10 bg-white p-8">
                 <p class="eyebrow mb-3 text-sage">Farm pickup</p>
-                <h2 class="font-display text-4xl font-semibold text-forest">Free by arrangement</h2>
-                <p class="mt-4 leading-relaxed text-gray-700">Collect from Ferguson Livestock in {{ config('shop.location.locality') }}. We confirm the pickup window and directions after your order. Please don’t arrive without a confirmed time—the farm is a working property, not a shopfront.</p>
+                <h2 class="font-display text-4xl font-semibold text-forest">Free, {{ config('shop.pickup.hours') }}</h2>
+                <p class="mt-4 leading-relaxed text-gray-700">Collect from Ferguson Livestock in {{ config('shop.location.locality') }} on {{ config('shop.pickup.days') }}, between {{ str_replace(' to ', ' and ', config()->string('shop.pickup.hours')) }}. We send directions after your order. Please come within those hours—the farm is a working property, not a shopfront.</p>
             </article>
         </div>
         <div class="mx-auto mt-10 max-w-5xl px-6 text-center">
