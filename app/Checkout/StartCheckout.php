@@ -222,8 +222,11 @@ final readonly class StartCheckout
      */
     private function deliveryFee(Drop $drop, CheckoutRequest $request): DropItem
     {
-        // "Either night" leaves the day empty: any of the drop's delivery nights suits the customer.
-        if (! $request->deliveryDay instanceof CarbonImmutable && ! $request->eitherNight) {
+        // "Either night" leaves the day empty: any of the drop's delivery nights suits the customer. It's only a choice
+        // when the drop delivers on more than one night, as the order page only offers it then.
+        $eitherNight = $request->eitherNight && ! $request->deliveryDay instanceof CarbonImmutable && count($drop->delivery_days) > 1;
+
+        if (! $request->deliveryDay instanceof CarbonImmutable && ! $eitherNight) {
             throw new InvalidCheckout('Choose which night suits you for delivery.');
         }
 

@@ -79,3 +79,12 @@ it('limits one address to sixty tries for as long as a hold lasts, however many 
 
     expect(Order::query()->where('status', OrderStatus::Pending)->count())->toBe(61);
 });
+
+it('only takes “either night” for a drop that delivers on more than one night', function (): void {
+    $shop = StockedDrop::create();
+
+    expect(fn (): string => app(StartCheckout::class)(new CheckoutRequest($shop->drop->id, [$shop->mince->id => 1], DeliveryMethod::Delivery, null, 'visitor-a', '192.0.2.1', eitherNight: true)))
+        ->toThrow(InvalidCheckout::class, 'Choose which night suits you for delivery.');
+
+    expect(Order::query()->count())->toBe(0);
+});
