@@ -115,6 +115,7 @@ final class Presenter
             'phone' => $order->phone === null ? null : AustralianMobile::readable($order->phone),
             'delivery_method' => $order->delivery_method->value,
             'delivery_day' => $order->delivery_day?->toDateString(),
+            'delivery_night' => $order->deliveryNightShort(),
             'total' => self::money($order->total),
             'amount_refunded' => self::money($order->amount_refunded),
             'paid_at' => self::time($order->paid_at),

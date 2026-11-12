@@ -32,7 +32,7 @@ class OrdersTable
                 TextColumn::make('customer_name')->label('Customer')->placeholder('—')->searchable(['customer_name', 'email', 'phone']),
                 TextColumn::make('delivery')
                     ->state(fn (Order $record): string => $record->delivery_method === DeliveryMethod::Delivery
-                        ? 'Delivery, '.($record->delivery_day?->format('D j M') ?? '')
+                        ? 'Delivery, '.$record->deliveryNightShort()
                         : 'Farm pickup')
                     ->description(fn (Order $record): ?string => $record->shipping_address['city'] ?? null),
                 TextColumn::make('total')->formatStateUsing(fn (int $state): string => Money::format($state))->alignEnd(),

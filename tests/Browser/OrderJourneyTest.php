@@ -79,12 +79,12 @@ it('puts the stock back and says so when the customer presses back on the paymen
         ->and($shop->box->refresh()->available)->toBe(5);
 });
 
-it('shows a sold-out box as sold out and won’t let it be chosen', function (): void {
+it('leaves sold-out boxes off the order page, and says they’ve gone', function (): void {
     $shop = StockedDrop::create(boxes: 0);
 
     visit(route('order'))
-        ->assertSee('Sold out')
-        ->assertDisabled('input[name="box"][value="'.$shop->box->id.'"]')
+        ->assertSee('The boxes have sold out. Extras can still be ordered below.')
+        ->assertMissing('label:has(input[name="box"][value="'.$shop->box->id.'"])')
         ->assertNoJavaScriptErrors();
 });
 

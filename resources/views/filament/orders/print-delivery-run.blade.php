@@ -26,7 +26,7 @@
     </div>
 
     <x-filament::section heading="Deliveries" :description="$run->deliveries->count().' '.str('order')->plural($run->deliveries->count())">
-        @forelse ($run->deliveries->groupBy(fn ($order) => $order->delivery_day?->format('l j F') ?? 'No day') as $day => $orders)
+        @forelse ($run->deliveries->groupBy(fn ($order) => $order->delivery_day?->format('l j F') ?? 'Either night') as $day => $orders)
             <p class="run-day">{{ $day }}</p>
             @foreach ($orders as $order)
                 <div class="run-order">

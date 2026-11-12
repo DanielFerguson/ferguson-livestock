@@ -25,15 +25,28 @@ it('shows the open drop’s boxes, extras and delivery days with what’s left',
         ->assertSee(now()->addDays(3)->format('l j F'));
 });
 
-it('marks an extra as sold out only when none are left', function (int $mince, int $marked): void {
+it('leaves an extra off the list only once none are left', function (int $mince, int $hidden): void {
     $shop = StockedDrop::create(mince: $mince);
 
     $form = livewire(OrderForm::class, ['drop' => $shop->drop])->html();
 
-    expect(preg_match_all('/<li[^>]*\sdata-sold-out\s/', $form))->toBe($marked);
+    expect(preg_match_all('/<li[^>]*\shidden\s/', $form))->toBe($hidden);
 })->with([
     'none left' => [0, 1],
     'some left' => [10, 0],
+]);
+
+it('leaves sold-out boxes off the list, and says so once they’re all gone', function (int $boxes, int $hiddenBoxes, bool $soldOutLine): void {
+    $shop = StockedDrop::create(boxes: $boxes);
+
+    $form = livewire(OrderForm::class, ['drop' => $shop->drop])->html();
+
+    expect(preg_match_all('/<label[^>]*\shidden\s[^>]*>\s*<input type="radio" name="box" value="\d+"/', $form))->toBe($hiddenBoxes)
+        ->and(preg_match('/<p[^>]*\shidden\s[^>]*>The boxes have sold out/', $form) === 0)->toBe($soldOutLine);
+})->with([
+    'plenty left' => [5, 0, false],
+    'one 5kg box left, too few for a 10kg box' => [1, 1, false],
+    'none left' => [0, 2, true],
 ]);
 
 it('sends the customer to Stripe with what they chose', function (): void {
@@ -50,6 +63,32 @@ it('sends the customer to Stripe with what they chose', function (): void {
 
     expect(Order::query()->sole()->status)->toBe(OrderStatus::Pending)
         ->and(Order::query()->sole()->total)->toBe(16000 + 2 * 1200 + 1500);
+});
+
+it('says when deliveries and farm pickups happen, and lets the customer leave the night open', function (): void {
+    $shop = StockedDrop::create(drop: ['delivery_days' => ['2026-11-14', '2026-11-15']]);
+
+    livewire(OrderForm::class, ['drop' => $shop->drop])->assertSeeInOrder([
+        'Saturday or Sunday night, around the Ballarat region.',
+        'Saturday or Sunday, 10am to 4pm, from our farm in Snake Valley.',
+        'Which night suits you?', 'Saturday 14 November', 'Sunday 15 November', 'Either night',
+    ]);
+});
+
+it('takes a delivery for either night, leaving the night open', function (): void {
+    FakePaymentGateway::swap();
+    $shop = StockedDrop::create(drop: ['delivery_days' => [now()->addDays(3)->toDateString(), now()->addDays(4)->toDateString()]]);
+
+    livewire(OrderForm::class, ['drop' => $shop->drop])
+        ->set("extras.{$shop->mince->id}", 1)
+        ->set('deliveryMethod', 'delivery')
+        ->set('deliveryDay', OrderForm::EITHER_NIGHT)
+        ->call('checkout')
+        ->assertRedirect('https://checkout.stripe.test/cs_test_1');
+
+    expect(Order::query()->sole())
+        ->delivery_day->toBeNull()
+        ->total->toBe(1200 + 1500);
 });
 
 it('won’t start checkout when Cloudflare’s bot check fails', function (): void {
@@ -128,7 +167,7 @@ it('says what to fix when the order can’t be taken', function (): void {
         ->set("extras.{$shop->mince->id}", 1)
         ->set('deliveryMethod', 'delivery')
         ->call('checkout')
-        ->assertSet('problem', 'Choose a delivery day.')
+        ->assertSet('problem', 'Choose which night suits you for delivery.')
         ->assertNoRedirect();
 });
 

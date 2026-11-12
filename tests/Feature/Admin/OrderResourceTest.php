@@ -104,6 +104,17 @@ it('prints the delivery run by suburb, with pickups separate', function (): void
         ->assertSeeInOrder(['October drop', 'Deliveries', 'Ada', 'Ballarat', 'Cam', 'Creswick', 'Farm pickups', 'Pat']);
 });
 
+it('puts deliveries for either night after the named nights on the run', function (): void {
+    $drop = Drop::factory()->open()->create(['delivery_days' => ['2026-11-14', '2026-11-15']]);
+    paidOrder($drop, 'Ballarat', '3350', ['customer_name' => 'Ada', 'delivery_day' => null]);
+    paidOrder($drop, 'Creswick', '3363', ['customer_name' => 'Cam', 'delivery_day' => '2026-11-15']);
+
+    $days = array_map(fn (string $line): string => str_getcsv($line, escape: '')[5] ?? '', array_slice(explode("\n", trim(DeliveryRun::forDrop($drop)->toCsv())), 1));
+
+    expect($days)->toBe(['Sun 15 Nov', 'Either night']);
+    livewire(PrintDeliveryRun::class, ['drop' => $drop->id])->assertSeeInOrder(['Sunday 15 November', 'Cam', 'Either night', 'Ada']);
+});
+
 it('shows everything about an order', function (): void {
     $order = paidOrder(Drop::factory()->open()->create(), 'Ballarat', '3350', ['customer_name' => 'Sam Buyer', 'email' => 'buyer@example.test', 'delivery_method' => DeliveryMethod::Delivery]);
 

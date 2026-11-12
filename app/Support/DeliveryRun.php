@@ -43,7 +43,8 @@ final readonly class DeliveryRun
         return new self(
             $drop,
             $orders->filter($isDelivery)->sortBy([
-                fn (Order $a, Order $b): int => ($a->delivery_day?->toDateString() ?? '') <=> ($b->delivery_day?->toDateString() ?? ''),
+                // Customers happy with either night come after the named nights, to fit in wherever suits the run.
+                fn (Order $a, Order $b): int => ($a->delivery_day?->toDateString() ?? '9999-12-31') <=> ($b->delivery_day?->toDateString() ?? '9999-12-31'),
                 fn (Order $a, Order $b): int => strcasecmp($a->shipping_address['city'] ?? '', $b->shipping_address['city'] ?? ''),
                 fn (Order $a, Order $b): int => ($a->shipping_address['postal_code'] ?? '') <=> ($b->shipping_address['postal_code'] ?? ''),
             ])->values(),
@@ -87,7 +88,7 @@ final readonly class DeliveryRun
                 SpreadsheetCell::safe($order->phone === null ? null : AustralianMobile::readable($order->phone)),
                 SpreadsheetCell::safe($order->email),
                 $order->delivery_method->getLabel(),
-                $order->delivery_day?->format('D j M'),
+                $order->deliveryNightShort(),
                 SpreadsheetCell::safe(trim(($order->shipping_address['line1'] ?? '').' '.($order->shipping_address['line2'] ?? ''))),
                 SpreadsheetCell::safe($order->shipping_address['city'] ?? null),
                 SpreadsheetCell::safe($order->shipping_address['postal_code'] ?? null),

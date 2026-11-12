@@ -22,6 +22,7 @@ final readonly class CheckoutRequest
      * @param  string|null  $earlyAccessToken  the secret from an early-access link; checkout checks it against the drop's own
      * @param  MetaVisitor|null  $visitor  the customer's browser, for matching the order to a Meta ad
      * @param  AdCampaign|null  $campaign  the tagged ad link that brought the customer to the site, if any
+     * @param  bool  $eitherNight  for a delivery, the customer said any of the drop's delivery nights suits, so there's no day
      */
     public function __construct(
         public int $dropId,
@@ -34,5 +35,6 @@ final readonly class CheckoutRequest
         public ?string $earlyAccessToken = null,
         public ?MetaVisitor $visitor = null,
         public ?AdCampaign $campaign = null,
+        public bool $eitherNight = false,
     ) {}
 }

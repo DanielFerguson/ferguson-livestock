@@ -28,17 +28,17 @@ it('updates what’s left while the page is open, and trims a choice to match', 
         ->assertNoJavaScriptErrors();
 });
 
-it('marks an extra as sold out when the last one goes while the page is open', function (): void {
+it('takes an extra off the list when the last one goes while the page is open', function (): void {
     $shop = StockedDrop::create(mince: 10);
     $row = 'li:has([aria-label="One more 500g Beef Mince"])';
 
-    $page = visit(route('order'))->assertAttributeMissing($row, 'data-sold-out');
+    $page = visit(route('order'))->assertVisible($row);
 
     DropItem::query()->whereKey($shop->mince->id)->update(['available' => 0]);
     DropSnapshot::forget();
 
-    $page->assertSee('Sold out')
-        ->assertAttribute($row, 'data-sold-out', 'true')
+    $page->assertSee('The extras have sold out.')
+        ->assertMissing($row)
         ->assertNoJavaScriptErrors();
 });
 

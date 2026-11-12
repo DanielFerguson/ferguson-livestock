@@ -33,7 +33,23 @@ it('confirms the order to the customer, with what they bought and when it arrive
 
     $mail->assertHasSubject("Your Ferguson Livestock order {$order->reference()}")
         ->assertHasReplyTo(config()->string('shop.email'))
-        ->assertSeeInOrderInHtml(['Thanks, Sam!', $order->reference(), '5kg Beef Box', '$160', 'Delivery', '$15', '$175', 'Saturday 10 October', '1 Main St', 'Ballarat 3350']);
+        ->assertSeeInOrderInHtml(['Thanks, Sam!', $order->reference(), '5kg Beef Box', '$160', 'Delivery', '$15', '$175', 'Saturday night, 10 October', '1 Main St', 'Ballarat 3350']);
+});
+
+it('tells a customer who chose either night that it comes one of the drop’s nights', function (): void {
+    Mail::fake();
+    $shop = StockedDrop::create(drop: ['delivery_days' => ['2026-11-14', '2026-11-15']]);
+    $order = app(StockLedger::class)->reserve($shop->drop, [$shop->box->id => 1, $shop->delivery->id => 1], DeliveryMethod::Delivery, null, 'fingerprint', now()->addMinutes(31));
+
+    (new OrderConfirmation($order))->assertSeeInHtml('Delivery</strong> on Saturday or Sunday night, to:', escape: false);
+});
+
+it('tells a pickup customer when to come to the farm', function (): void {
+    Mail::fake();
+    $shop = StockedDrop::create(drop: ['delivery_days' => ['2026-11-14', '2026-11-15']]);
+    $order = app(StockLedger::class)->reserve($shop->drop, [$shop->box->id => 1], DeliveryMethod::Pickup, null, 'fingerprint', now()->addMinutes(31));
+
+    (new OrderConfirmation($order))->assertSeeInHtml('from Snake Valley, Saturday or Sunday, 10am to 4pm.');
 });
 
 it('tells the farm who ordered and where it’s going', function (): void {

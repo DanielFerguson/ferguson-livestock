@@ -59,8 +59,16 @@ class OrderForm extends Component
      */
     public array $extras = [];
 
+    /**
+     * The delivery choice for "any of the drop's delivery nights suits me".
+     */
+    public const string EITHER_NIGHT = 'either';
+
     public string $deliveryMethod = '';
 
+    /**
+     * The chosen delivery night as Y-m-d, EITHER_NIGHT, or '' before the customer has chosen.
+     */
     public string $deliveryDay = '';
 
     /**
@@ -104,7 +112,7 @@ class OrderForm extends Component
         }
 
         try {
-            $url = $start(new CheckoutRequest($this->dropId, $this->quantities(), $deliveryMethod, $this->chosenDay(), session()->getId(), (string) request()->ip(), $turnstileToken, $this->earlyAccessToken, MetaVisitor::fromRequest(request()), AdCampaign::fromCookie(request())));
+            $url = $start(new CheckoutRequest($this->dropId, $this->quantities(), $deliveryMethod, $this->chosenDay(), session()->getId(), (string) request()->ip(), $turnstileToken, $this->earlyAccessToken, MetaVisitor::fromRequest(request()), AdCampaign::fromCookie(request()), eitherNight: $this->deliveryDay === self::EITHER_NIGHT));
         } catch (InsufficientStock) {
             $drop = $this->drop();
             $this->cutTo($drop, $stock->fit($drop, $this->quantities()));
@@ -199,7 +207,7 @@ class OrderForm extends Component
     private function chosenDay(): ?CarbonImmutable
     {
         try {
-            return $this->deliveryDay === '' ? null : CarbonImmutable::parse($this->deliveryDay);
+            return in_array($this->deliveryDay, ['', self::EITHER_NIGHT], true) ? null : CarbonImmutable::parse($this->deliveryDay);
         } catch (InvalidFormatException) {
             return null;
         }

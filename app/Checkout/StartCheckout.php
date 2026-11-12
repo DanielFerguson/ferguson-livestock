@@ -222,12 +222,13 @@ final readonly class StartCheckout
      */
     private function deliveryFee(Drop $drop, CheckoutRequest $request): DropItem
     {
-        if (! $request->deliveryDay instanceof CarbonImmutable) {
-            throw new InvalidCheckout('Choose a delivery day.');
+        // "Either night" leaves the day empty: any of the drop's delivery nights suits the customer.
+        if (! $request->deliveryDay instanceof CarbonImmutable && ! $request->eitherNight) {
+            throw new InvalidCheckout('Choose which night suits you for delivery.');
         }
 
-        if (! in_array($request->deliveryDay->toDateString(), $drop->delivery_days, true)) {
-            throw new InvalidCheckout('That delivery day isn’t available. Choose another.');
+        if ($request->deliveryDay instanceof CarbonImmutable && ! in_array($request->deliveryDay->toDateString(), $drop->delivery_days, true)) {
+            throw new InvalidCheckout('That delivery night isn’t available. Choose another.');
         }
 
         $fee = $drop->items->first(fn (DropItem $item): bool => $item->product->type === ProductType::Delivery);

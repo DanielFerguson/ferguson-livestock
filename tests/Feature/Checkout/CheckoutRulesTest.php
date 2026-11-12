@@ -38,8 +38,8 @@ it('explains what’s wrong with an order it can’t take', function (Closure $c
     'over the limit' => [fn (StockedDrop $shop): array => [$shop->mince->id => 11], DeliveryMethod::Pickup, null, 'You can order up to 10 of 500g Beef Mince.'],
     'another drop’s item' => [fn (StockedDrop $shop): array => [DropItem::factory()->create()->id => 1], DeliveryMethod::Pickup, null, 'Something in your order isn’t part of this drop.'],
     'the delivery fee on its own' => [fn (StockedDrop $shop): array => [$shop->delivery->id => 1], DeliveryMethod::Pickup, null, 'Something in your order isn’t part of this drop.'],
-    'no delivery day' => [fn (StockedDrop $shop): array => [$shop->mince->id => 1], DeliveryMethod::Delivery, null, 'Choose a delivery day.'],
-    'a day that isn’t offered' => [fn (StockedDrop $shop): array => [$shop->mince->id => 1], DeliveryMethod::Delivery, '2020-01-01', 'That delivery day isn’t available. Choose another.'],
+    'no delivery day' => [fn (StockedDrop $shop): array => [$shop->mince->id => 1], DeliveryMethod::Delivery, null, 'Choose which night suits you for delivery.'],
+    'a day that isn’t offered' => [fn (StockedDrop $shop): array => [$shop->mince->id => 1], DeliveryMethod::Delivery, '2020-01-01', 'That delivery night isn’t available. Choose another.'],
 ]);
 
 it('only takes orders while the drop is open', function (): void {

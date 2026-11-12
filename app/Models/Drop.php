@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -118,6 +119,30 @@ class Drop extends Model
             ->where('opens_at', '>', now())
             ->oldest('opens_at')
             ->first();
+    }
+
+    /**
+     * The days of the week orders go out, delivered at night or picked up from the farm: "Saturday or Sunday".
+     * Null before any delivery days are set.
+     */
+    public function deliveryWeekdays(): ?string
+    {
+        $weekdays = array_values(array_unique(array_map(
+            fn (string $day): string => CarbonImmutable::parse($day)->format('l'),
+            $this->delivery_days,
+        )));
+
+        return $weekdays === [] ? null : Arr::join($weekdays, ', ', ' or ');
+    }
+
+    /**
+     * When orders can be collected from the farm: "Saturday or Sunday, 10am to 4pm".
+     */
+    public function pickupTimes(): string
+    {
+        $weekdays = $this->deliveryWeekdays();
+
+        return ($weekdays === null ? '' : $weekdays.', ').config()->string('shop.pickup.hours');
     }
 
     /**

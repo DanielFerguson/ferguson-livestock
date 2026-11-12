@@ -52,9 +52,9 @@
             </div>
 
             @if ($order->delivery_method === DeliveryMethod::Delivery)
-                <p>We’ll pack everything fresh, vacuum-seal it and deliver it on {{ $order->delivery_day?->format('l j F') }}, in the afternoon or evening. We’ll be in touch to confirm a time. Everything arrives in insulated packaging, ready to go straight in the freezer or fridge.</p>
+                <p>We’ll pack everything fresh, vacuum-seal it and deliver it on {{ $order->deliveryNight() }}. We’ll be in touch to confirm a time. Everything arrives in insulated packaging, ready to go straight in the freezer or fridge.</p>
             @else
-                <p>We’ll pack everything fresh and vacuum-seal it, ready for you to collect from our farm in {{ config('shop.location.locality') }}. We’ll be in touch to arrange a time.</p>
+                <p>We’ll pack everything fresh and vacuum-seal it, ready for you to collect from our farm in {{ config('shop.location.locality') }}, {{ $order->loadMissing('drop')->drop->pickupTimes() }}.</p>
             @endif
 
             <p>If you have any questions in the meantime, reply to your confirmation email or call us on <a class="underline" href="tel:{{ config('shop.phone.international') }}">{{ config('shop.phone.display') }}</a>.</p>

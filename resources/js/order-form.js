@@ -56,6 +56,11 @@ document.addEventListener('alpine:init', () => {
             this.$wire.extras[id] = Math.max(this.quantity(id) - 1, 0);
         },
 
+        /** Whether any box (or, with false, any extra) is still in stock, so the list isn't left empty. */
+        anyLeft(boxes) {
+            return Object.values(this.items).some((item) => item.box === boxes && item.available > 0);
+        },
+
         hasItems() {
             const box = this.$wire.box;
             return (box !== '' && box !== 'none') || Object.keys(this.items).some((id) => this.quantity(id) > 0);

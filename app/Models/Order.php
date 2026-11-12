@@ -103,6 +103,36 @@ class Order extends Model
         return 'FL-'.strtoupper(substr($this->public_id, -6));
     }
 
+    /**
+     * The night a delivery goes out, as customers read it: "Saturday night, 14 November", or "Saturday or Sunday
+     * night" when they said either night suits. Null for a pickup.
+     */
+    public function deliveryNight(): ?string
+    {
+        if ($this->delivery_method !== DeliveryMethod::Delivery) {
+            return null;
+        }
+
+        if ($this->delivery_day instanceof CarbonImmutable) {
+            return $this->delivery_day->format('l').' night, '.$this->delivery_day->format('j F');
+        }
+
+        return ($this->loadMissing('drop')->drop->deliveryWeekdays() ?? 'Either').' night';
+    }
+
+    /**
+     * The delivery night as the farm reads it on its lists: "Sat 14 Nov", or "Either night" when the customer said
+     * either suits. Null for a pickup.
+     */
+    public function deliveryNightShort(): ?string
+    {
+        if ($this->delivery_method !== DeliveryMethod::Delivery) {
+            return null;
+        }
+
+        return $this->delivery_day?->format('D j M') ?? 'Either night';
+    }
+
     public function firstName(): ?string
     {
         return $this->customer_name === null ? null : explode(' ', trim($this->customer_name))[0];

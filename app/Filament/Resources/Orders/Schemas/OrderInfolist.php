@@ -52,7 +52,7 @@ class OrderInfolist
                 Section::make('Delivery')
                     ->schema([
                         TextEntry::make('delivery_method')->label('How'),
-                        TextEntry::make('delivery_day')->label('Day')->date('l j F')->visible(fn (Order $record): bool => $record->delivery_method === DeliveryMethod::Delivery),
+                        TextEntry::make('delivery_day')->label('Night')->date('l j F')->placeholder('Either night')->visible(fn (Order $record): bool => $record->delivery_method === DeliveryMethod::Delivery),
                         TextEntry::make('address')
                             ->state(fn (Order $record): ?string => $record->shipping_address === null ? null : implode(', ', array_filter([
                                 $record->shipping_address['line1'], $record->shipping_address['line2'],
