@@ -35,3 +35,11 @@ it('counts a drop’s paid orders from people Meta ads brought in, by mobile num
         'revenue' => (17500 - 1500) + 1200 + 16000 + 27500,
     ])->and(MetaAdResults::signUps())->toBe(['sign_ups' => 3, 'sign_ups_last_30_days' => 1]);
 });
+
+it('leaves out cash orders, even from someone who joined from an ad', function (): void {
+    $drop = Drop::factory()->open()->create(['opens_at' => now()->subDay()]);
+    $friend = Subscriber::factory()->fromMetaAd()->create(['phone' => '+61400000001', 'created_at' => now()->subDays(45)]);
+    Order::factory()->for($drop)->cashOwed()->create(['phone' => $friend->phone, 'status' => OrderStatus::Paid, 'total' => 16000]);
+
+    expect(MetaAdResults::forDrop($drop))->toBe(['sign_ups_before_drop' => 1, 'of_whom_bought' => 0, 'orders' => 0, 'revenue' => 0]);
+});

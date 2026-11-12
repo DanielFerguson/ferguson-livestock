@@ -19,6 +19,8 @@ enum OrderStatus: string implements HasColor, HasLabel
     case Expired = 'expired';
     /** A delayed payment that didn't clear. Stock went back on sale. */
     case Failed = 'failed';
+    /** Recorded by hand for family or friends; stock stays held until the cash is paid or the order is cancelled. */
+    case CashOwed = 'cash_owed';
 
     public function getLabel(): string
     {
@@ -29,6 +31,7 @@ enum OrderStatus: string implements HasColor, HasLabel
             self::Fulfilled => 'Fulfilled',
             self::Expired => 'Abandoned',
             self::Failed => 'Payment failed',
+            self::CashOwed => 'Cash owed',
         };
     }
 
@@ -41,6 +44,7 @@ enum OrderStatus: string implements HasColor, HasLabel
             self::Fulfilled => 'info',
             self::Expired => 'gray',
             self::Failed => 'danger',
+            self::CashOwed => 'warning',
         };
     }
 }

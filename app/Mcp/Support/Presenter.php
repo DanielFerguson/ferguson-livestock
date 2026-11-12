@@ -108,6 +108,7 @@ final class Presenter
             'id' => $order->id,
             'status' => $order->status->value,
             'status_label' => $order->status->getLabel(),
+            'payment_method' => $order->payment_method->value,
             'drop' => ['id' => $order->drop_id, 'name' => $order->drop->name],
             'customer' => $order->customer_name,
             'email' => $order->email,

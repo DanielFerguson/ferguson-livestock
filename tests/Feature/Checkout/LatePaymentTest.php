@@ -162,7 +162,7 @@ it('holds an order for the shop’s hold time but leaves Stripe’s page open fo
 
     app(StartCheckout::class)(new CheckoutRequest($shop->drop->id, [$shop->mince->id => 1], DeliveryMethod::Pickup, null, 'visitor-a', '192.0.2.1'));
 
-    expect(Order::query()->sole()->expires_at->equalTo(now()->addMinutes(15)))->toBeTrue()
+    expect(Order::query()->sole()->expires_at?->equalTo(now()->addMinutes(15)))->toBeTrue()
         ->and($stripe->createdSessions[0]->expiresAt->equalTo(now()->addMinutes(31)))->toBeTrue();
 });
 

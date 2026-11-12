@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Filament\Resources\Orders;
 
 use App\Enums\OrderStatus;
+use App\Filament\Resources\Orders\Pages\CreateCashOrder;
 use App\Filament\Resources\Orders\Pages\ListOrders;
 use App\Filament\Resources\Orders\Pages\PrintDeliveryRun;
 use App\Filament\Resources\Orders\Pages\ViewOrder;
+use App\Filament\Resources\Orders\Schemas\CashOrderForm;
 use App\Filament\Resources\Orders\Schemas\OrderInfolist;
 use App\Filament\Resources\Orders\Tables\OrdersTable;
 use App\Models\Order;
@@ -20,7 +22,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Orders are placed by customers and moved on by Stripe, so they're only viewed and fulfilled here.
+ * Orders are placed by customers and moved on by Stripe, so they're only viewed and fulfilled here. The one exception
+ * is a cash order for family or friends, which the owner records by hand.
  */
 class OrderResource extends Resource
 {
@@ -36,11 +39,11 @@ class OrderResource extends Resource
     }
 
     /**
-     * Paid orders still to pack and deliver.
+     * Orders still to pack and deliver: paid ones, and cash ones put aside for friends.
      */
     public static function getNavigationBadge(): ?string
     {
-        $toFulfil = Order::query()->where('status', OrderStatus::Paid)->count();
+        $toFulfil = Order::query()->whereIn('status', [OrderStatus::Paid, OrderStatus::CashOwed])->count();
 
         return $toFulfil > 0 ? (string) $toFulfil : null;
     }
@@ -63,15 +66,16 @@ class OrderResource extends Resource
         return OrdersTable::configure($table);
     }
 
-    public static function canCreate(): bool
+    public static function form(Schema $schema): Schema
     {
-        return false;
+        return CashOrderForm::configure($schema);
     }
 
     public static function getPages(): array
     {
         return [
             'index' => ListOrders::route('/'),
+            'create' => CreateCashOrder::route('/create'),
             'delivery-run' => PrintDeliveryRun::route('/delivery-run/{drop}'),
             'view' => ViewOrder::route('/{record}'),
         ];

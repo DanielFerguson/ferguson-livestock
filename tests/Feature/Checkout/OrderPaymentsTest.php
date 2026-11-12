@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Actions\Orders\RecordCashOrder;
 use App\Checkout\OrderPayments;
 use App\Enums\DeliveryMethod;
 use App\Enums\OrderStatus;
@@ -14,6 +15,7 @@ use App\Stock\StockLedger;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Tests\Fixtures\StockedDrop;
+use Tests\Fixtures\StockInvariant;
 
 function pendingOrder(StockedDrop $shop): Order
 {
@@ -145,4 +147,46 @@ it('reports a paid order to Meta once, with the buyer’s details hashed and the
             'order_id' => $order->reference(),
         ],
     ]);
+});
+
+it('marks a cash order paid once the cash is handed over, without emailing anyone', function (): void {
+    Mail::fake();
+    $this->freezeSecond();
+    $shop = StockedDrop::create();
+    $order = app(RecordCashOrder::class)(drop: $shop->drop, quantities: [$shop->box->id => 1], deliveryMethod: DeliveryMethod::Pickup, deliveryDay: null, customerName: 'Sam', phone: null, address: null, paid: false);
+
+    $marked = app(OrderPayments::class)->markCashReceived($order);
+
+    expect($marked)->toBeTrue()
+        ->and($order->refresh()->status)->toBe(OrderStatus::Paid)
+        ->and($order->paid_at)->toEqual(now()->toImmutable())
+        ->and($shop->box->refresh()->available)->toBe(4);
+    Mail::assertNothingOutgoing();
+});
+
+it('cancels a cash order the friend no longer wants, putting its stock back on sale', function (): void {
+    $shop = StockedDrop::create(boxes: 5);
+    $order = app(RecordCashOrder::class)(drop: $shop->drop, quantities: [$shop->box->id => 2], deliveryMethod: DeliveryMethod::Pickup, deliveryDay: null, customerName: 'Sam', phone: null, address: null, paid: false);
+
+    $cancelled = app(OrderPayments::class)->cancelCashOrder($order);
+
+    expect($cancelled)->toBeTrue()
+        ->and($order->refresh()->status)->toBe(OrderStatus::Expired)
+        ->and($order->released_at)->not->toBeNull()
+        ->and($shop->box->refresh()->available)->toBe(5);
+    StockInvariant::check($shop->drop);
+});
+
+it('only cancels cash orders still waiting on the cash', function (): void {
+    $shop = StockedDrop::create(boxes: 5);
+    $paid = app(RecordCashOrder::class)(drop: $shop->drop, quantities: [$shop->box->id => 1], deliveryMethod: DeliveryMethod::Pickup, deliveryDay: null, customerName: 'Sam', phone: null, address: null, paid: true);
+    $atCheckout = pendingOrder($shop);
+
+    expect(app(OrderPayments::class)->cancelCashOrder($paid))->toBeFalse()
+        ->and(app(OrderPayments::class)->cancelCashOrder($atCheckout))->toBeFalse()
+        ->and(app(OrderPayments::class)->markCashReceived($atCheckout))->toBeFalse();
+
+    expect($paid->refresh()->status)->toBe(OrderStatus::Paid)
+        ->and($atCheckout->refresh()->status)->toBe(OrderStatus::Pending)
+        ->and($shop->box->refresh()->available)->toBe(3);
 });

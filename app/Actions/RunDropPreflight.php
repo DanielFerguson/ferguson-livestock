@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\Enums\PaymentMethod;
 use App\Enums\ProductType;
 use App\Models\Bundle;
 use App\Models\Drop;
@@ -13,6 +14,7 @@ use App\Payments\PriceCheck;
 use App\Payments\StripeWebhookEvents;
 use App\Support\Turnstile;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
@@ -58,8 +60,11 @@ final readonly class RunDropPreflight
 
         $problems = [];
         $hasOpened = now()->gte($drop->opens_at);
-        // Units sold or held through the early-access link before opening are expected, not a leftover.
-        $hasEarlyOrders = $drop->orders()->where('via_early_access', true)->exists();
+        // Units sold or held through the early-access link, or put aside for friends paying cash, before opening are
+        // expected, not a leftover.
+        $hasEarlyOrders = $drop->orders()
+            ->where(fn (Builder $query) => $query->where('via_early_access', true)->orWhere('payment_method', PaymentMethod::Cash))
+            ->exists();
 
         foreach ($drop->items as $item) {
             $bundle = $item->product->bundle;

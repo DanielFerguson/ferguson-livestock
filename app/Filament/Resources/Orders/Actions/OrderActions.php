@@ -10,6 +10,7 @@ use App\Filament\Resources\Orders\OrderResource;
 use App\Models\Drop;
 use App\Models\Order;
 use App\Support\DeliveryRun;
+use App\Support\Money;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Forms\Components\Select;
@@ -33,6 +34,41 @@ final class OrderActions
                 $orders->markFulfilled($record);
 
                 Notification::make()->title('Marked fulfilled')->success()->send();
+            });
+    }
+
+    public static function markCashReceived(): Action
+    {
+        return Action::make('markCashReceived')
+            ->label('Cash received')
+            ->icon(Heroicon::OutlinedBanknotes)
+            ->color('success')
+            ->visible(fn (Order $record): bool => $record->status === OrderStatus::CashOwed)
+            ->requiresConfirmation()
+            ->modalHeading(fn (Order $record): string => 'Got '.Money::format($record->total).' from '.($record->customer_name ?? 'them').'?')
+            ->modalSubmitActionLabel('Yes, mark paid')
+            ->action(function (Order $record, OrderPayments $orders): void {
+                $orders->markCashReceived($record);
+
+                Notification::make()->title('Marked paid')->success()->send();
+            });
+    }
+
+    public static function cancelCashOrder(): Action
+    {
+        return Action::make('cancelCashOrder')
+            ->label('Cancel order')
+            ->icon(Heroicon::OutlinedXCircle)
+            ->color('danger')
+            ->visible(fn (Order $record): bool => $record->status === OrderStatus::CashOwed)
+            ->requiresConfirmation()
+            ->modalHeading(fn (Order $record): string => 'Cancel '.($record->customer_name ?? 'this').'’s order?')
+            ->modalDescription('Its stock goes back on sale on the website.')
+            ->modalSubmitActionLabel('Cancel order')
+            ->action(function (Order $record, OrderPayments $orders): void {
+                $orders->cancelCashOrder($record);
+
+                Notification::make()->title('Order cancelled')->body('Its stock is back on sale.')->success()->send();
             });
     }
 

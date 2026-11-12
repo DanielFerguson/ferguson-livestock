@@ -16,6 +16,8 @@ class ViewOrder extends ViewRecord
     {
         return [
             OrderActions::markFulfilled(),
+            OrderActions::markCashReceived(),
+            OrderActions::cancelCashOrder(),
         ];
     }
 }

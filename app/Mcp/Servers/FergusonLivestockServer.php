@@ -46,10 +46,13 @@ use App\Mcp\Tools\Drops\SetDropItemTool;
 use App\Mcp\Tools\Drops\UnpublishDropTool;
 use App\Mcp\Tools\Drops\UpdateDropTool;
 use App\Mcp\Tools\Drops\UpdateProductTool;
+use App\Mcp\Tools\Orders\CancelCashOrderTool;
 use App\Mcp\Tools\Orders\GetDeliveryRunTool;
 use App\Mcp\Tools\Orders\GetOrderTool;
 use App\Mcp\Tools\Orders\ListOrdersTool;
+use App\Mcp\Tools\Orders\MarkCashReceivedTool;
 use App\Mcp\Tools\Orders\MarkOrderFulfilledTool;
+use App\Mcp\Tools\Orders\RecordCashOrderTool;
 use App\Mcp\Tools\Overview\GetOverviewTool;
 use App\Mcp\Tools\Stripe\CheckStripeSetupTool;
 use App\Mcp\Tools\Stripe\GetStripeEventTool;
@@ -75,6 +78,7 @@ Conventions
 - Early access: a drop can have a secret link that lets family and close friends order before it is public (enable-early-access-tool). It works on an unpublished drop, uses the same stock, and keeps working once the drop opens. Keep the drop unpublished until the public should see it. The owner shares the link themselves; never text it to the wait list.
 - Stock lives on a drop's items. Raising or lowering an item's quantity never takes it below what customers have already bought or are checking out.
 - A bundle is a product sold as N units of another product (10kg box = 2 × 5kg box). It has no stock of its own: put its component on the drop with a quantity, then add the bundle with its own Stripe price.
+- Cash orders are only for the owner's family and friends, recorded when the owner asks (record-cash-order-tool). Never offer cash payment to customers. A cash order takes stock like a website order and stays Cash owed until the owner says the cash is in (mark-cash-received-tool).
 
 Irreversible actions (texting subscribers, scheduling a broadcast, publishing or deleting a drop, sending a reply) are two steps. Call the matching prepare/preview tool, show the owner exactly what will happen (recipients, the message, cost, any warnings) and wait for their yes in the conversation. Only then call the action tool with the confirmation_token. Never reuse or invent a token; if anything is edited after the preview, prepare again.
 
@@ -136,6 +140,9 @@ class FergusonLivestockServer extends Server
         UnpublishDropTool::class,
         UpdateDropTool::class,
         MarkOrderFulfilledTool::class,
+        RecordCashOrderTool::class,
+        MarkCashReceivedTool::class,
+        CancelCashOrderTool::class,
     ];
 
     protected array $resources = [

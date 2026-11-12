@@ -13,12 +13,12 @@ use App\Models\OrderItem;
 use Illuminate\Support\Collection;
 
 /**
- * A drop's paid orders in the order they're packed and driven: deliveries by day, then suburb and postcode,
- * then farm pickups by name.
+ * A drop's paid orders, and cash orders still to be paid for, in the order they're packed and driven: deliveries by
+ * day, then suburb and postcode, then farm pickups by name.
  */
 final readonly class DeliveryRun
 {
-    private const array CSV_COLUMNS = ['order', 'name', 'phone', 'email', 'method', 'day', 'address', 'suburb', 'postcode', 'items', 'total'];
+    private const array CSV_COLUMNS = ['order', 'name', 'phone', 'email', 'method', 'day', 'address', 'suburb', 'postcode', 'items', 'total', 'cash_to_collect'];
 
     /**
      * @param  Collection<int, Order>  $deliveries
@@ -34,7 +34,7 @@ final readonly class DeliveryRun
     {
         $orders = Order::query()
             ->whereBelongsTo($drop)
-            ->whereIn('status', [OrderStatus::Paid, OrderStatus::Fulfilled])
+            ->whereIn('status', [OrderStatus::Paid, OrderStatus::Fulfilled, OrderStatus::CashOwed])
             ->with('items.product')
             ->get();
 
@@ -62,6 +62,14 @@ final readonly class DeliveryRun
             ->implode(', ');
     }
 
+    /**
+     * "$165" for a cash order still to be paid for, so it's collected on the doorstep or at pickup; null otherwise.
+     */
+    public static function cashToCollect(Order $order): ?string
+    {
+        return $order->status === OrderStatus::CashOwed ? Money::format($order->total) : null;
+    }
+
     public function toCsv(): string
     {
         $file = fopen('php://temp', 'r+');
@@ -85,6 +93,7 @@ final readonly class DeliveryRun
                 SpreadsheetCell::safe($order->shipping_address['postal_code'] ?? null),
                 self::items($order),
                 Money::format($order->total),
+                self::cashToCollect($order),
             ], escape: '');
         }
 

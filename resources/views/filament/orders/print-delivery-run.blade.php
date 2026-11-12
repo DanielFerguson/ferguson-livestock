@@ -39,7 +39,12 @@
                         {{ $order->shipping_address['line1'] ?? '' }}@if (($order->shipping_address['line2'] ?? null) !== null), {{ $order->shipping_address['line2'] }}@endif<br>
                         <strong>{{ $order->shipping_address['city'] ?? '' }}</strong> {{ $order->shipping_address['postal_code'] ?? '' }}
                     </div>
-                    <div>{{ DeliveryRun::items($order) }}</div>
+                    <div>
+                        {{ DeliveryRun::items($order) }}
+                        @if (DeliveryRun::cashToCollect($order) !== null)
+                            <br><strong>Collect {{ DeliveryRun::cashToCollect($order) }} cash</strong>
+                        @endif
+                    </div>
                 </div>
             @endforeach
         @empty
@@ -55,7 +60,12 @@
                     {{ $order->phone === null ? '' : AustralianMobile::readable($order->phone) }}<br>
                     <span class="run-muted">{{ $order->reference() }}</span>
                 </div>
-                <div style="grid-column: span 2">{{ DeliveryRun::items($order) }}</div>
+                <div style="grid-column: span 2">
+                    {{ DeliveryRun::items($order) }}
+                    @if (DeliveryRun::cashToCollect($order) !== null)
+                        <br><strong>Collect {{ DeliveryRun::cashToCollect($order) }} cash</strong>
+                    @endif
+                </div>
             </div>
         @empty
             <p>No paid pickups yet.</p>

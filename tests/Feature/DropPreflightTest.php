@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Actions\Orders\RecordCashOrder;
 use App\Actions\RunDropPreflight;
+use App\Enums\DeliveryMethod;
 use App\Models\Drop;
 use App\Models\DropItem;
 use App\Models\Product;
@@ -219,4 +221,14 @@ it('asks for a delivery day on a drop that hasn’t been saved yet, instead of f
 
     expect($drop->delivery_days)->toBe([])
         ->and(app(RunDropPreflight::class)($drop)['problems'])->toContain('Add at least one delivery day.');
+});
+
+it('doesn’t flag stock put aside for friends paying cash as held before opening', function (): void {
+    $drop = readyDrop($this->stripe);
+    $box = $drop->items()->whereNotNull('quantity')->sole();
+    app(RecordCashOrder::class)(drop: $drop, quantities: [$box->id => 1], deliveryMethod: DeliveryMethod::Pickup, deliveryDay: null, customerName: 'Sam', phone: null, address: null, paid: false);
+
+    $report = app(RunDropPreflight::class)($drop->refresh());
+
+    expect(implode(' ', $report['problems']))->not->toContain('before the drop has opened');
 });

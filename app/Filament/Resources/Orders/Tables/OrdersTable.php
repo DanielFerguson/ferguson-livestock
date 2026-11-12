@@ -45,7 +45,7 @@ class OrdersTable
                 SelectFilter::make('status')
                     ->multiple()
                     ->options(OrderStatus::class)
-                    ->default([OrderStatus::Paid->value, OrderStatus::Processing->value, OrderStatus::Fulfilled->value]),
+                    ->default([OrderStatus::Paid->value, OrderStatus::Processing->value, OrderStatus::Fulfilled->value, OrderStatus::CashOwed->value]),
                 SelectFilter::make('drop')->relationship('drop', 'name'),
                 SelectFilter::make('delivery_method')->label('Delivery or pickup')->options(DeliveryMethod::class),
                 SelectFilter::make('delivery_day')
@@ -55,6 +55,8 @@ class OrdersTable
             ])
             ->recordActions([
                 OrderActions::markFulfilled(),
+                OrderActions::markCashReceived(),
+                OrderActions::cancelCashOrder(),
             ])
             ->toolbarActions([
                 OrderActions::markSelectedFulfilled(),

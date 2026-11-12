@@ -172,6 +172,36 @@ final readonly class OrderPayments
         });
     }
 
+    /**
+     * The friend has handed over the cash for an order put aside for them. Nothing is sent; it's not a website sale.
+     */
+    public function markCashReceived(Order $order): bool
+    {
+        if (! $this->transition($order, [OrderStatus::CashOwed], OrderStatus::Paid)) {
+            return false;
+        }
+
+        $order->update(['paid_at' => now()]);
+
+        return true;
+    }
+
+    /**
+     * The friend no longer wants an order put aside for them: its stock goes back on sale.
+     */
+    public function cancelCashOrder(Order $order): bool
+    {
+        return DB::transaction(function () use ($order): bool {
+            if (! $this->transition($order, [OrderStatus::CashOwed], OrderStatus::Expired)) {
+                return false;
+            }
+
+            $this->stock->release($order);
+
+            return true;
+        });
+    }
+
     public function markFulfilled(Order $order): bool
     {
         if (! $this->transition($order, [OrderStatus::Paid], OrderStatus::Fulfilled)) {

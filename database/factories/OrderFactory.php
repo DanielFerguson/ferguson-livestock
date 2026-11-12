@@ -6,6 +6,7 @@ namespace Database\Factories;
 
 use App\Enums\DeliveryMethod;
 use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
 use App\Models\Drop;
 use App\Models\Order;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -59,6 +60,23 @@ class OrderFactory extends Factory
             'phone' => null,
             'shipping_address' => null,
             'stripe_payment_intent_id' => null,
+            'paid_at' => null,
+        ]);
+    }
+
+    /**
+     * Put aside by hand for a friend who'll pay cash, so it never went near Stripe.
+     */
+    public function cashOwed(): static
+    {
+        return $this->state(fn (): array => [
+            'status' => OrderStatus::CashOwed,
+            'payment_method' => PaymentMethod::Cash,
+            'email' => null,
+            'stripe_checkout_session_id' => null,
+            'stripe_payment_intent_id' => null,
+            'session_fingerprint' => null,
+            'expires_at' => null,
             'paid_at' => null,
         ]);
     }

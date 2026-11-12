@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Support;
 
 use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
 use App\Models\Drop;
 use App\Models\Order;
 use App\Models\Subscriber;
@@ -41,6 +42,8 @@ final class MetaAdResults
         $orders = Order::query()
             ->where('drop_id', $drop->id)
             ->whereIn('status', [OrderStatus::Paid, OrderStatus::Fulfilled])
+            // A friend paying cash isn't a sale an ad made, even if they once joined the wait list from one.
+            ->where('payment_method', PaymentMethod::Stripe)
             ->where(fn (Builder $query) => $query
                 ->where('utm_source', AdCampaign::META)
                 ->orWhereIn('phone', self::adSubscribers()->select('phone')))

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Actions\Orders\RecordCashOrder;
 use App\Checkout\CheckoutRequest;
 use App\Checkout\StartCheckout;
 use App\Enums\DeliveryMethod;
@@ -79,6 +80,19 @@ it('puts stock back from orders that never reached Stripe', function (): void {
         ->and($shop->box->refresh()->available)->toBe(5);
 });
 
+it('leaves cash orders put aside for friends alone, however long ago', function (): void {
+    FakePaymentGateway::swap();
+    $shop = StockedDrop::create(boxes: 5);
+    $this->travel(-3)->hours();
+    $order = app(RecordCashOrder::class)(drop: $shop->drop, quantities: [$shop->box->id => 1], deliveryMethod: DeliveryMethod::Pickup, deliveryDay: null, customerName: 'Sam', phone: null, address: null, paid: false);
+    $this->travelBack();
+
+    Artisan::call('orders:sweep');
+
+    expect($order->refresh()->status)->toBe(OrderStatus::CashOwed)
+        ->and($shop->box->refresh()->available)->toBe(4);
+});
+
 it('leaves customers who are still at the payment page alone', function (): void {
     $stripe = FakePaymentGateway::swap();
     $order = leftAtPaymentPage(StockedDrop::create(), minutesAgo: 10);
@@ -99,7 +113,7 @@ it('settles a payment page once Stripe has closed it, without waiting for the ho
 
     Queue::assertPushed(SettleOrderWhenPaymentPageCloses::class, fn (SettleOrderWhenPaymentPageCloses $job): bool => $job->orderId === $order->id);
 
-    $this->travelTo($order->expires_at->addMinutes(3));
+    $this->travelTo(($order->expires_at ?? $this->fail('A checkout’s order always has an expiry.'))->addMinutes(3));
     app()->call([new SettleOrderWhenPaymentPageCloses($order->id), 'handle']);
 
     expect($order->refresh()->status)->toBe(OrderStatus::Expired)

@@ -31,7 +31,9 @@ final readonly class SettleClosedCheckout
      */
     public static function dueAt(Order $order): CarbonImmutable
     {
-        return $order->stripe_checkout_session_id === null ? $order->created_at->addMinutes(self::GRACE_MINUTES) : $order->expires_at;
+        return $order->stripe_checkout_session_id !== null && $order->expires_at instanceof CarbonImmutable
+            ? $order->expires_at
+            : $order->created_at->addMinutes(self::GRACE_MINUTES);
     }
 
     /**

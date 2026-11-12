@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\Orders\Schemas;
 
 use App\Enums\DeliveryMethod;
+use App\Enums\PaymentMethod;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Support\AustralianMobile;
@@ -28,6 +29,7 @@ class OrderInfolist
                     ->schema([
                         TextEntry::make('reference')->state(fn (Order $record): string => $record->reference()),
                         TextEntry::make('status')->badge(),
+                        TextEntry::make('payment_method')->label('Payment'),
                         TextEntry::make('drop.name')->label('Drop'),
                         TextEntry::make('created_at')->label('Placed')->dateTime('D j M Y, g:ia', $timezone),
                         TextEntry::make('paid_at')->label('Paid')->dateTime('D j M Y, g:ia', $timezone)->placeholder('Not yet'),
@@ -73,6 +75,7 @@ class OrderInfolist
                 Section::make('Stripe')
                     ->collapsed()
                     ->columnSpanFull()
+                    ->visible(fn (Order $record): bool => $record->payment_method === PaymentMethod::Stripe)
                     ->schema([
                         TextEntry::make('stripe_payment_intent_id')
                             ->label('Payment')

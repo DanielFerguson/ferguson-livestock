@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\DeliveryMethod;
 use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
 use Carbon\CarbonImmutable;
 use Database\Factories\OrderFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -18,12 +19,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * A customer's order in a drop. Its stock is held from the moment it's created until it's paid, or released
- * exactly once if it expires or its payment fails.
+ * exactly once if it expires, its payment fails or (for a cash order) it's cancelled.
  *
  * @property int $id
  * @property string $public_id
  * @property int $drop_id
  * @property OrderStatus $status
+ * @property PaymentMethod $payment_method
  * @property DeliveryMethod $delivery_method
  * @property CarbonImmutable|null $delivery_day
  * @property string|null $customer_name
@@ -34,13 +36,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $amount_refunded
  * @property string|null $stripe_checkout_session_id
  * @property string|null $stripe_payment_intent_id
- * @property string $session_fingerprint
+ * @property string|null $session_fingerprint
  * @property bool $via_early_access
  * @property array{ip: string|null, user_agent: string|null, fbp: string|null, fbc: string|null}|null $meta_visitor
  * @property string|null $utm_source
  * @property string|null $utm_medium
  * @property string|null $utm_campaign
- * @property CarbonImmutable $expires_at
+ * @property CarbonImmutable|null $expires_at
  * @property CarbonImmutable|null $paid_at
  * @property CarbonImmutable|null $released_at
  * @property CarbonImmutable|null $fulfilled_at
@@ -50,13 +52,22 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read Drop $drop
  * @property-read Collection<int, OrderItem> $items
  */
-#[Fillable(['drop_id', 'status', 'delivery_method', 'delivery_day', 'customer_name', 'email', 'phone', 'shipping_address', 'total', 'amount_refunded', 'stripe_checkout_session_id', 'stripe_payment_intent_id', 'session_fingerprint', 'via_early_access', 'meta_visitor', 'utm_source', 'utm_medium', 'utm_campaign', 'expires_at', 'paid_at', 'released_at', 'fulfilled_at', 'refunded_at'])]
+#[Fillable(['drop_id', 'status', 'payment_method', 'delivery_method', 'delivery_day', 'customer_name', 'email', 'phone', 'shipping_address', 'total', 'amount_refunded', 'stripe_checkout_session_id', 'stripe_payment_intent_id', 'session_fingerprint', 'via_early_access', 'meta_visitor', 'utm_source', 'utm_medium', 'utm_campaign', 'expires_at', 'paid_at', 'released_at', 'fulfilled_at', 'refunded_at'])]
 class Order extends Model
 {
     /** @use HasFactory<OrderFactory> */
     use HasFactory;
 
     use HasUlids;
+
+    /**
+     * Mirrors the column's default, so an order checkout has just created knows it's paid through Stripe.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'payment_method' => 'stripe',
+    ];
 
     /**
      * Only the public ID is a ULID; the primary key stays an auto-incrementing integer.
@@ -104,6 +115,7 @@ class Order extends Model
     {
         return [
             'status' => OrderStatus::class,
+            'payment_method' => PaymentMethod::class,
             'delivery_method' => DeliveryMethod::class,
             'delivery_day' => 'immutable_date',
             'shipping_address' => 'array',

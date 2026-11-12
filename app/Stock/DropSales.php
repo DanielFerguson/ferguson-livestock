@@ -19,7 +19,8 @@ final class DropSales
      */
     public static function forItem(DropItem $item): array
     {
-        $sold = self::lines($item, [OrderStatus::Paid, OrderStatus::Fulfilled]);
+        // A cash order put aside for a friend is sold, though the cash may not be in hand yet.
+        $sold = self::lines($item, [OrderStatus::Paid, OrderStatus::Fulfilled, OrderStatus::CashOwed]);
 
         return [
             'sold' => $sold->sum(fn (OrderItem $line): int => $line->quantity),

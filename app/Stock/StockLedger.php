@@ -16,6 +16,7 @@ use App\Models\DropItem;
 use App\Models\Order;
 use App\Models\OrderItem;
 use Carbon\CarbonImmutable;
+use Closure;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -49,28 +50,64 @@ final class StockLedger
      */
     public function reserve(Drop $drop, array $quantities, DeliveryMethod $deliveryMethod, ?CarbonImmutable $deliveryDay, string $sessionFingerprint, CarbonImmutable $expiresAt, bool $earlyAccess = false): Order
     {
-        $order = $this->waitingForLocks(fn (): Order => DB::transaction(function () use ($drop, $quantities, $deliveryMethod, $deliveryDay, $sessionFingerprint, $expiresAt, $earlyAccess): Order {
+        return $this->hold($drop, $quantities, [
+            'status' => OrderStatus::Pending,
+            'delivery_method' => $deliveryMethod,
+            'delivery_day' => $deliveryDay,
+            'session_fingerprint' => $sessionFingerprint,
+            'via_early_access' => $earlyAccess,
+            'expires_at' => $expiresAt,
+        ], function (Drop $drop) use ($earlyAccess): void {
+            if (! $drop->status()->isOpen() && (! $earlyAccess || ! $drop->acceptsEarlyOrders())) {
+                throw new DropNotOpen;
+            }
+        });
+    }
+
+    /**
+     * Hold stock for an order the owner records by hand, like a cash order for a friend. It's held the same way as a
+     * checkout's, but the drop needn't be open: the owner can put an order aside before it opens.
+     *
+     * @param  array<int, int>  $quantities  drop item ID => quantity, including the delivery fee for deliveries
+     * @param  array<string, mixed>  $attributes  the order's status, payment method, delivery and customer details
+     *
+     * @throws InsufficientStock
+     * @throws CheckoutBusy
+     */
+    public function setAside(Drop $drop, array $quantities, array $attributes): Order
+    {
+        return $this->hold($drop, $quantities, $attributes);
+    }
+
+    /**
+     * @param  array<int, int>  $quantities
+     * @param  array<string, mixed>  $attributes
+     * @param  (Closure(Drop): void)|null  $mayOrder  throws when the freshly loaded drop can't take this order
+     *
+     * @param-immediately-invoked-callable $mayOrder
+     *
+     * @throws InsufficientStock
+     * @throws CheckoutBusy
+     */
+    private function hold(Drop $drop, array $quantities, array $attributes, ?Closure $mayOrder = null): Order
+    {
+        $order = $this->waitingForLocks(fn (): Order => DB::transaction(function () use ($drop, $quantities, $attributes, $mayOrder): Order {
             // Postgres only: give up on a stock row that stays locked, rather than queueing behind it indefinitely.
             DB::statement("SET LOCAL lock_timeout = '".self::LOCK_TIMEOUT."'");
 
             $drop = Drop::query()->with('items.product.bundle')->findOrFail($drop->id);
 
-            if (! $drop->status()->isOpen() && (! $earlyAccess || ! $drop->acceptsEarlyOrders())) {
-                throw new DropNotOpen;
+            if ($mayOrder instanceof Closure) {
+                $mayOrder($drop);
             }
 
             $lines = $this->lines($drop, $quantities);
             $this->takeStock($lines);
 
             $order = Order::query()->create([
+                ...$attributes,
                 'drop_id' => $drop->id,
-                'status' => OrderStatus::Pending,
-                'delivery_method' => $deliveryMethod,
-                'delivery_day' => $deliveryDay,
                 'total' => array_sum(array_map(fn (StockLine $line): int => $line->item->price * $line->quantity, $lines)),
-                'session_fingerprint' => $sessionFingerprint,
-                'via_early_access' => $earlyAccess,
-                'expires_at' => $expiresAt,
             ]);
 
             foreach ($lines as $line) {
