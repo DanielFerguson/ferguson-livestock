@@ -102,13 +102,13 @@ it('refuses something the order’s drop doesn’t sell', function (Closure $giv
 ]);
 
 it('takes a free item back off, putting its stock back on sale', function (): void {
-    $shop = StockedDrop::create(mince: 10);
-    $order = app(GiveFreeItems::class)(samsPickup($shop), [$shop->mince->id => 2]);
+    $shop = StockedDrop::create(boxes: 5);
+    $order = app(GiveFreeItems::class)(samsPickup($shop), [$shop->largeBox->id => 1]);
 
     app(TakeBackFreeItem::class)($order->items->sole('free', true));
 
     expect($order->items()->pluck('drop_item_id')->all())->toBe([$shop->box->id])
-        ->and($shop->mince->refresh()->available)->toBe(10);
+        ->and($shop->box->refresh()->available)->toBe(4);
     StockInvariant::check($shop->drop);
 });
 
@@ -119,7 +119,7 @@ it('only takes back what was given free, and only once', function (): void {
     app(TakeBackFreeItem::class)($free);
 
     expect(fn () => app(TakeBackFreeItem::class)($order->items->sole('free', false)))
-        ->toThrow(CannotChangeOrder::class, '5kg Beef Box was paid for, so it stays on the order.')
+        ->toThrow(CannotChangeOrder::class, '5kg Beef Box wasn’t given free, so it stays on the order.')
         ->and(fn () => app(TakeBackFreeItem::class)($free))
         ->toThrow(CannotChangeOrder::class, 'has already come off the order');
 

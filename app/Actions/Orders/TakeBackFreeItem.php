@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\Orders;
 
 use App\Exceptions\CannotChangeOrder;
+use App\Exceptions\CheckoutBusy;
 use App\Models\OrderItem;
 use App\Stock\StockLedger;
 
@@ -22,10 +23,16 @@ final readonly class TakeBackFreeItem
     public function __invoke(OrderItem $line): void
     {
         if (! $line->free) {
-            throw new CannotChangeOrder("{$line->product->name} was paid for, so it stays on the order.");
+            throw new CannotChangeOrder("{$line->product->name} wasn’t given free, so it stays on the order.");
         }
 
-        if (! $this->stock->takeBackFree($line)) {
+        try {
+            $takenBack = $this->stock->takeBackFree($line);
+        } catch (CheckoutBusy $exception) {
+            throw new CannotChangeOrder('Lots of orders are coming in right now. Try again in a moment.', $exception->getCode(), previous: $exception);
+        }
+
+        if (! $takenBack) {
             throw new CannotChangeOrder("That {$line->product->name} has already come off the order, or the order was cancelled.");
         }
     }

@@ -160,10 +160,14 @@ final class StockLedger
     /**
      * Take a free line off its order and put its stock back on sale, for an item given by mistake. Returns false,
      * changing nothing, when the line isn't free or is already gone, or its order's stock went back on sale already.
+     *
+     * @throws CheckoutBusy
      */
     public function takeBackFree(OrderItem $line): bool
     {
-        $takenBack = DB::transaction(function () use ($line): bool {
+        $takenBack = $this->waitingForLocks(fn (): bool => DB::transaction(function () use ($line): bool {
+            DB::statement("SET LOCAL lock_timeout = '".self::LOCK_TIMEOUT."'");
+
             $order = Order::query()->lockForUpdate()->find($line->order_id);
             $free = OrderItem::query()->whereKey($line->id)->where('free', true)->first();
 
@@ -178,7 +182,7 @@ final class StockLedger
             $free->delete();
 
             return true;
-        });
+        }, attempts: 3));
 
         if ($takenBack) {
             DropSnapshot::forget();
