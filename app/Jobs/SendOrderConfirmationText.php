@@ -4,35 +4,30 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
-use App\Enums\OrderStatus;
-use App\Enums\SmsDirection;
 use App\Enums\SmsStatus;
 use App\Exceptions\SmsNotSent;
 use App\Jobs\Concerns\WaitsUntilDue;
-use App\Models\Order;
 use App\Models\SmsMessage;
-use App\Models\Subscriber;
-use App\Sms\OrderConfirmationText;
 use App\Sms\QuietHours;
 use App\Sms\SmsGateway;
-use App\Support\AustralianMobile;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Texts a customer what they ordered and when it arrives or can be collected (see OrderConfirmationText).
+ * Sends a saved order confirmation text (see OrderConfirmationTexts) once it's due: straight away, or at 8am if it
+ * was saved in quiet hours, unless the owner chose to send it now.
  *
- * The orders are claimed before the text goes, so a retry, a second copy of this job or the admin sending the drop's
- * texts again never texts anyone twice. A text due in quiet hours waits until 8am, unless the owner chose to send
- * it then. The sync queue never sends it (see WaitsUntilDue), so a machine without a worker can't text anyone.
+ * The text is marked as sending before it goes, so a retry, the morning's copy of this job or the owner pressing
+ * "Send now" never sends it twice. The sync queue never sends it (see WaitsUntilDue), so a machine without a worker
+ * can't text anyone.
  */
 class SendOrderConfirmationText implements ShouldQueue
 {
     use Queueable, WaitsUntilDue;
 
     /**
-     * An unexpected error, like the database dropping out, is retried: orders already claimed aren't texted again.
+     * An unexpected error, like the database dropping out, is retried: a text already claimed isn't sent again.
      */
     public int $tries = 5;
 
@@ -40,10 +35,9 @@ class SendOrderConfirmationText implements ShouldQueue
     public array $backoff = [10, 30, 60, 120];
 
     /**
-     * @param  list<int>  $orderIds  one person's orders, all going out the same way
      * @param  bool  $evenInQuietHours  the owner chose to send now, though it's between 8pm and 8am
      */
-    public function __construct(public array $orderIds, public bool $evenInQuietHours = false) {}
+    public function __construct(public int $messageId, public bool $evenInQuietHours = false) {}
 
     public function handle(SmsGateway $sms): void
     {
@@ -51,44 +45,38 @@ class SendOrderConfirmationText implements ShouldQueue
             return;
         }
 
-        $orders = Order::query()->with(['items.product', 'drop'])->whereKey($this->orderIds)->orderBy('id')->get();
-        $phone = AustralianMobile::toE164((string) $orders->first()?->phone);
+        $message = DB::transaction(function (): ?SmsMessage {
+            $message = SmsMessage::query()
+                ->with('subscriber')
+                ->whereKey($this->messageId)
+                ->where('is_order_confirmation', true)
+                ->where('status', SmsStatus::Queued)
+                ->lock('for update skip locked')
+                ->first();
 
-        if ($phone === null) {
+            $message?->update(['status' => SmsStatus::Sending]);
+
+            return $message;
+        });
+
+        if (! $message instanceof SmsMessage) {
             return;
         }
 
-        $subscriber = Subscriber::query()->firstWhere('phone', $phone);
+        // They may have texted STOP while it waited.
+        if ($message->subscriber !== null && ! $message->subscriber->isSubscribed()) {
+            $message->update(['status' => SmsStatus::Skipped]);
 
-        if ($subscriber instanceof Subscriber && ! $subscriber->isSubscribed()) {
             return;
         }
-
-        $claimed = $this->claim(array_values(array_map(fn (Order $order): int => $order->id, $orders->all())));
-        $toText = array_values(array_filter($orders->all(), fn (Order $order): bool => in_array($order->id, $claimed, true)));
-
-        if ($toText === []) {
-            return;
-        }
-
-        $text = OrderConfirmationText::for($toText);
-
-        $message = SmsMessage::query()->create([
-            'subscriber_id' => $subscriber?->id,
-            'direction' => SmsDirection::Outbound,
-            'to' => $phone,
-            'from' => config()->string('services.twilio.from'),
-            'body' => $text->text,
-            'status' => SmsStatus::Sending,
-        ]);
 
         try {
-            $sent = $sms->send($phone, $text->text);
+            $sent = $sms->send($message->to, $message->body);
         } catch (SmsNotSent $exception) {
             $message->update(['status' => SmsStatus::Failed, 'error_code' => $exception->errorCode]);
 
             if ($exception->recipientOptedOut()) {
-                $subscriber?->optOut();
+                $message->subscriber?->optOut();
             }
 
             return;
@@ -98,26 +86,10 @@ class SendOrderConfirmationText implements ShouldQueue
     }
 
     /**
-     * Mark the orders still waiting for their text as texted, in one transaction, so nobody else sends it.
-     *
-     * @param  list<int>  $orderIds
-     * @return list<int> the orders this job now texts about
+     * When the retries run out, show the text as failed rather than leaving it waiting for ever.
      */
-    private function claim(array $orderIds): array
+    public function failed(): void
     {
-        return DB::transaction(function () use ($orderIds): array {
-            /** @var list<int> $waiting */
-            $waiting = Order::query()
-                ->whereKey($orderIds)
-                ->whereNull('confirmation_texted_at')
-                ->whereIn('status', [OrderStatus::Paid, OrderStatus::CashOwed])
-                ->lockForUpdate()
-                ->pluck('id')
-                ->all();
-
-            Order::query()->whereKey($waiting)->update(['confirmation_texted_at' => now()]);
-
-            return $waiting;
-        });
+        SmsMessage::query()->whereKey($this->messageId)->whereIn('status', [SmsStatus::Queued, SmsStatus::Sending])->update(['status' => SmsStatus::Failed]);
     }
 }

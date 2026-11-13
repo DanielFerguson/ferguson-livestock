@@ -20,7 +20,7 @@ use Laravel\Mcp\Server\Tool;
 use Laravel\Mcp\Server\Tools\Annotations\IsDestructive;
 use Laravel\Mcp\Server\Tools\Annotations\IsOpenWorld;
 
-#[Description('Step 2: text the drop\'s customers their order confirmations, exactly as prepare-order-texts showed. Needs its confirmation_token, and nothing changed since (a new order or a text already sent voids it). Sends real texts straight away and cannot be undone; nobody is ever texted twice about the same order.')]
+#[Description('Step 2: text the drop\'s customers their order confirmations now, exactly as prepare-order-texts showed: the new texts and those waiting for 8am. Needs its confirmation_token, and nothing changed since (a new order or a text already sent voids it). Sends real texts straight away and cannot be undone; nobody is ever texted twice about the same order.')]
 #[IsDestructive]
 #[IsOpenWorld]
 final class SendOrderTextsTool extends Tool
@@ -54,7 +54,7 @@ final class SendOrderTextsTool extends Tool
             return Response::error('That confirmation_token is not valid for these texts (used, expired, or the orders changed since). Call prepare-order-texts again and show the owner the texts.');
         }
 
-        $people = $texts->send($drop);
+        $people = $texts->sendNow($drop);
 
         McpAudit::record('send-order-texts', $request->all(), "queued {$people}");
 

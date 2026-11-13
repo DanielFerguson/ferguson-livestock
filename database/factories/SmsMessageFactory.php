@@ -49,6 +49,22 @@ class SmsMessageFactory extends Factory
     }
 
     /**
+     * A text telling a customer what they ordered, sent by default. Link it to its orders.
+     */
+    public function orderConfirmation(SmsStatus $status = SmsStatus::Sent): static
+    {
+        return $this->state(fn (): array => [
+            'subscriber_id' => null,
+            'sms_broadcast_id' => null,
+            'is_order_confirmation' => true,
+            'body' => 'Ferguson Livestock: Hi Sam, thanks for your order FL-ABC123: 1 x 5kg Beef Box.',
+            'status' => $status,
+            'twilio_sid' => $status === SmsStatus::Queued ? null : 'SM'.fake()->unique()->regexify('[a-f0-9]{32}'),
+            'sent_at' => $status === SmsStatus::Queued ? null : now(),
+        ]);
+    }
+
+    /**
      * A reply from a subscriber's phone.
      */
     public function reply(string $body = 'Thanks!'): static

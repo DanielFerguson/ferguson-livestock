@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -32,6 +33,7 @@ use Illuminate\Support\Facades\DB;
  * @property int|null $segments
  * @property int|null $error_code
  * @property bool $is_sign_up_confirmation
+ * @property bool $is_order_confirmation
  * @property CarbonImmutable|null $sent_at
  * @property CarbonImmutable|null $delivered_at
  * @property CarbonImmutable|null $read_at
@@ -40,7 +42,7 @@ use Illuminate\Support\Facades\DB;
  * @property-read Subscriber|null $subscriber
  * @property-read SmsBroadcast|null $broadcast
  */
-#[Fillable(['subscriber_id', 'contact_phone', 'sms_broadcast_id', 'direction', 'to', 'from', 'body', 'status', 'twilio_sid', 'segments', 'error_code', 'is_sign_up_confirmation', 'sent_at', 'delivered_at', 'read_at'])]
+#[Fillable(['subscriber_id', 'contact_phone', 'sms_broadcast_id', 'direction', 'to', 'from', 'body', 'status', 'twilio_sid', 'segments', 'error_code', 'is_sign_up_confirmation', 'is_order_confirmation', 'sent_at', 'delivered_at', 'read_at'])]
 class SmsMessage extends Model
 {
     /** @use HasFactory<SmsMessageFactory> */
@@ -62,6 +64,16 @@ class SmsMessage extends Model
     public function subscriber(): BelongsTo
     {
         return $this->belongsTo(Subscriber::class);
+    }
+
+    /**
+     * The orders an order confirmation text is about: one, or all of a customer's that go out the same way.
+     *
+     * @return HasMany<Order, $this>
+     */
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class, 'confirmation_sms_message_id');
     }
 
     /**
@@ -147,6 +159,7 @@ class SmsMessage extends Model
             'segments' => 'integer',
             'error_code' => 'integer',
             'is_sign_up_confirmation' => 'boolean',
+            'is_order_confirmation' => 'boolean',
             'sent_at' => 'immutable_datetime',
             'delivered_at' => 'immutable_datetime',
             'read_at' => 'immutable_datetime',

@@ -138,7 +138,7 @@ it('refuses an order that is missing something or doesn’t fit the drop', funct
 })->with([
     'nothing chosen' => [fn (StockedDrop $shop): Order => recordCashOrder($shop, quantities: [$shop->box->id => 0]), 'Choose at least one item.'],
     'the delivery fee as an item' => [fn (StockedDrop $shop): Order => recordCashOrder($shop, quantities: [$shop->delivery->id => 1]), 'isn’t sold in'],
-    'an item from another drop' => [fn (StockedDrop $shop): Order => recordCashOrder($shop, quantities: [DropItem::factory()->for(Drop::factory()->open())->create()->id => 1]), 'isn’t sold in'],
+    'an item from another drop' => [fn (StockedDrop $shop): Order => recordCashOrder($shop, quantities: [DropItem::factory()->for(Drop::factory()->draft())->create()->id => 1]), 'isn’t sold in'],
     'no name' => [fn (StockedDrop $shop): Order => recordCashOrder($shop, customerName: '  '), 'Add the name of the person the order is for.'],
     'not a mobile number' => [fn (StockedDrop $shop): Order => recordCashOrder($shop, phone: '5331 1234'), '5331 1234 isn’t an Australian mobile number.'],
     'a day the drop doesn’t deliver' => [

@@ -6,11 +6,13 @@ use App\Actions\Orders\RecordCashOrder;
 use App\Checkout\OrderPayments;
 use App\Enums\DeliveryMethod;
 use App\Enums\OrderStatus;
+use App\Enums\SmsStatus;
 use App\Jobs\SendMetaEvent;
 use App\Jobs\SendOrderConfirmationText;
 use App\Mail\NewOrderNotification;
 use App\Mail\OrderConfirmation;
 use App\Models\Order;
+use App\Models\SmsMessage;
 use App\Payments\CheckoutSession;
 use App\Stock\StockLedger;
 use Illuminate\Support\Facades\Mail;
@@ -200,7 +202,10 @@ it('texts the customer their order once it’s paid', function (): void {
 
     app(OrderPayments::class)->markPaid($order, stripeCheckout('complete', 'paid'));
 
-    Queue::assertPushed(SendOrderConfirmationText::class, fn (SendOrderConfirmationText $job): bool => $job->orderIds === [$order->id] && ! $job->evenInQuietHours);
+    $text = $order->refresh()->confirmationText;
+    expect($text?->status)->toBe(SmsStatus::Queued)
+        ->and($text?->to)->toBe('+61400000002');
+    Queue::assertPushed(SendOrderConfirmationText::class, fn (SendOrderConfirmationText $job): bool => $job->messageId === $text?->id && ! $job->evenInQuietHours);
 });
 
 it('doesn’t text when a cash order is marked paid', function (): void {
@@ -212,4 +217,5 @@ it('doesn’t text when a cash order is marked paid', function (): void {
     app(OrderPayments::class)->markCashReceived($order);
 
     Queue::assertNotPushed(SendOrderConfirmationText::class);
+    expect(SmsMessage::query()->count())->toBe(0);
 });

@@ -21,20 +21,23 @@ use Laravel\Mcp\Server\Tool;
 use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 
-#[Description('Step 1 of texting a drop\'s customers their order confirmation: what they ordered, and the pickup times and farm address, or their delivery night. Shows every text exactly as it will be sent, whose orders are left out and why (already collected, already texted, no mobile, opted out), and the cost, without sending. One text per person, covering all their orders. Orders paid from now on are texted automatically when paid, so this is for orders that haven\'t been. Returns a confirmation_token for send-order-texts. Show the owner the texts and wait for their yes.')]
+#[Description('Step 1 of texting a drop\'s customers their order confirmation now: what they ordered, and the pickup times and farm address, or their delivery night. Shows, without sending: new texts for orders not yet texted (one per person, covering all their orders), texts already saved and waiting for 8am (paid in quiet hours), whose orders are left out and why (already collected, already texted, no mobile, opted out), and the cost. Paid orders are texted automatically, so this is for orders that haven\'t been, or to send the waiting ones early. Returns a confirmation_token for send-order-texts. Show the owner the texts and wait for their yes.')]
 #[IsReadOnly]
 #[IsIdempotent]
 final class PrepareOrderTextsTool extends Tool
 {
     /**
-     * What the owner agrees to: these exact texts to these people.
+     * What the owner agrees to: these exact new texts to these people, and these waiting ones.
      *
-     * @param  array{texts: list<array{phone: string, text: string, ...}>, ...}  $preview
-     * @return list<array{string, string}>
+     * @param  array{texts: list<array{phone: string, text: string, ...}>, waiting: list<array{message_id: int, ...}>, ...}  $preview
+     * @return array{new: list<array{string, string}>, waiting: list<int>}
      */
     public static function fingerprint(array $preview): array
     {
-        return array_map(fn (array $text): array => [$text['phone'], $text['text']], $preview['texts']);
+        return [
+            'new' => array_map(fn (array $text): array => [$text['phone'], $text['text']], $preview['texts']),
+            'waiting' => array_map(fn (array $text): int => $text['message_id'], $preview['waiting']),
+        ];
     }
 
     public function handle(Request $request, OrderConfirmationTexts $texts, ConfirmationTokens $tokens): Response|ResponseFactory
@@ -48,11 +51,12 @@ final class PrepareOrderTextsTool extends Tool
         }
 
         $preview = $texts->preview($drop);
-        $segments = array_sum(array_column($preview['texts'], 'segments'));
+        $segments = array_sum(array_column($preview['texts'], 'segments')) + array_sum(array_column($preview['waiting'], 'segments'));
         $quietHours = QuietHours::contains(now());
+        $anything = $preview['texts'] !== [] || $preview['waiting'] !== [];
 
         return Response::structured([
-            'people' => count($preview['texts']),
+            'people' => count($preview['texts']) + count($preview['waiting']),
             'texts_in_total' => $segments,
             'estimated_cost' => Presenter::money($segments * config()->integer('services.twilio.segment_cost')),
             'warnings' => $quietHours ? ['It is quiet hours (8pm to 8am Melbourne). Only send now if the owner has agreed to text customers at this hour.'] : [],
@@ -63,9 +67,16 @@ final class PrepareOrderTextsTool extends Tool
                 'text' => $text['text'],
                 'texts' => $text['segments'],
             ], $preview['texts']),
+            'waiting_for_8am' => array_map(fn (array $text): array => [
+                'to' => AustralianMobile::readable($text['phone']),
+                'name' => $text['name'],
+                'orders' => $text['orders'],
+                'text' => $text['text'],
+                'texts' => $text['segments'],
+            ], $preview['waiting']),
             'skipped' => $preview['skipped'],
-            'confirmation_token' => $preview['texts'] === [] ? null : $tokens->issue('send-order-texts', "order-texts:{$drop->id}", self::fingerprint($preview)),
-            'next' => $preview['texts'] === []
+            'confirmation_token' => $anything ? $tokens->issue('send-order-texts', "order-texts:{$drop->id}", self::fingerprint($preview)) : null,
+            'next' => ! $anything
                 ? 'Nobody is waiting for an order text.'
                 : 'Show the owner every text and the skipped orders, and call send-order-texts with the confirmation_token once they say yes'.($quietHours ? ', with acknowledge_quiet_hours only if they agreed to text now.' : '.'),
         ]);
