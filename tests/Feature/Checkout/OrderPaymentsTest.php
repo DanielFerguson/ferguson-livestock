@@ -7,6 +7,7 @@ use App\Checkout\OrderPayments;
 use App\Enums\DeliveryMethod;
 use App\Enums\OrderStatus;
 use App\Jobs\SendMetaEvent;
+use App\Jobs\SendOrderConfirmationText;
 use App\Mail\NewOrderNotification;
 use App\Mail\OrderConfirmation;
 use App\Models\Order;
@@ -189,4 +190,26 @@ it('only cancels cash orders still waiting on the cash', function (): void {
     expect($paid->refresh()->status)->toBe(OrderStatus::Paid)
         ->and($atCheckout->refresh()->status)->toBe(OrderStatus::Pending)
         ->and($shop->box->refresh()->available)->toBe(3);
+});
+
+it('texts the customer their order once it’s paid', function (): void {
+    Mail::fake();
+    Queue::fake([SendOrderConfirmationText::class]);
+    config(['services.twilio.sid' => 'ACtest']);
+    $order = pendingOrder(StockedDrop::create());
+
+    app(OrderPayments::class)->markPaid($order, stripeCheckout('complete', 'paid'));
+
+    Queue::assertPushed(SendOrderConfirmationText::class, fn (SendOrderConfirmationText $job): bool => $job->orderIds === [$order->id] && ! $job->evenInQuietHours);
+});
+
+it('doesn’t text when a cash order is marked paid', function (): void {
+    Queue::fake([SendOrderConfirmationText::class]);
+    config(['services.twilio.sid' => 'ACtest']);
+    $shop = StockedDrop::create();
+    $order = app(RecordCashOrder::class)(drop: $shop->drop, quantities: [$shop->box->id => 1], deliveryMethod: DeliveryMethod::Pickup, deliveryDay: null, customerName: 'Sam', phone: '0412 345 678', address: null, paid: false);
+
+    app(OrderPayments::class)->markCashReceived($order);
+
+    Queue::assertNotPushed(SendOrderConfirmationText::class);
 });

@@ -27,6 +27,7 @@ final class SmsRulesResource extends Resource
         - Only people on the wait list who agreed to receive texts and have not opted out. Broadcasts always exclude opted-out people.
         - A person opts out by replying STOP (or similar). They can only opt back in by texting START from their own phone. Never opt anyone back in on their behalf.
         - Replies can only go to a number that has texted the shop first, and never to someone who has opted out.
+        - Customers with a paid order get one text about it (order confirmations below), wait list or not, unless their number has opted out.
 
         ## Broadcasts
         - The text "Ferguson Livestock: " is added at the start and "Reply STOP to opt out" at the end. Don't write either yourself.
@@ -36,6 +37,10 @@ final class SmsRulesResource extends Resource
 
         ## Sign-up confirmations
         - Someone new to the wait list gets one automatic text saying they're on it, with the same prefix and suffix as a broadcast. A number only ever gets one, it waits until 8am during quiet hours, and it stops for the day at a daily limit. Nothing needs doing to send it. The owner can send it by hand from the subscribers page, one at a time or to a selection, for people who joined before these were sent.
+
+        ## Order confirmations
+        - A paid website order is texted what was ordered and when: pickup times and the farm address, or "after 4pm on" their delivery night. It names the shop but has no STOP line, as it's about their order. It's sent automatically when paid, waiting until 8am in quiet hours. Each order is only ever texted once.
+        - prepare-order-texts / send-order-texts send a drop's waiting ones together, one text per person. Show the owner every text first.
 
         ## Replies
         - One-to-one, no prefix or suffix. Keep them short, warm, plain and specific. Never invent stock, prices or delivery promises: check the drop first.

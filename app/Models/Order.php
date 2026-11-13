@@ -44,6 +44,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $utm_campaign
  * @property CarbonImmutable|null $expires_at
  * @property CarbonImmutable|null $paid_at
+ * @property CarbonImmutable|null $confirmation_texted_at
  * @property CarbonImmutable|null $released_at
  * @property CarbonImmutable|null $fulfilled_at
  * @property CarbonImmutable|null $refunded_at
@@ -52,7 +53,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read Drop $drop
  * @property-read Collection<int, OrderItem> $items
  */
-#[Fillable(['drop_id', 'status', 'payment_method', 'delivery_method', 'delivery_day', 'customer_name', 'email', 'phone', 'shipping_address', 'total', 'amount_refunded', 'stripe_checkout_session_id', 'stripe_payment_intent_id', 'session_fingerprint', 'via_early_access', 'meta_visitor', 'utm_source', 'utm_medium', 'utm_campaign', 'expires_at', 'paid_at', 'released_at', 'fulfilled_at', 'refunded_at'])]
+#[Fillable(['drop_id', 'status', 'payment_method', 'delivery_method', 'delivery_day', 'customer_name', 'email', 'phone', 'shipping_address', 'total', 'amount_refunded', 'stripe_checkout_session_id', 'stripe_payment_intent_id', 'session_fingerprint', 'via_early_access', 'meta_visitor', 'utm_source', 'utm_medium', 'utm_campaign', 'expires_at', 'paid_at', 'confirmation_texted_at', 'released_at', 'fulfilled_at', 'refunded_at'])]
 class Order extends Model
 {
     /** @use HasFactory<OrderFactory> */
@@ -155,6 +156,7 @@ class Order extends Model
             'meta_visitor' => 'array',
             'expires_at' => 'immutable_datetime',
             'paid_at' => 'immutable_datetime',
+            'confirmation_texted_at' => 'immutable_datetime',
             'released_at' => 'immutable_datetime',
             'fulfilled_at' => 'immutable_datetime',
             'refunded_at' => 'immutable_datetime',

@@ -8,6 +8,7 @@ use App\Enums\OrderStatus;
 use App\Exceptions\InsufficientStock;
 use App\Exceptions\PaymentProviderUnavailable;
 use App\Jobs\SendMetaEvent;
+use App\Jobs\SendOrderConfirmationText;
 use App\Mail\LatePaymentNotification;
 use App\Mail\NewOrderNotification;
 use App\Mail\OrderConfirmation;
@@ -69,6 +70,11 @@ final readonly class OrderPayments
         }
 
         Mail::to(config()->string('shop.email'))->queue(new NewOrderNotification($order));
+
+        // What they ordered and when it arrives, by text too. One paid in quiet hours waits until 8am.
+        if (filled($order->phone) && filled(config('services.twilio.sid'))) {
+            SendOrderConfirmationText::dispatch([$order->id])->afterCommit();
+        }
 
         if (MetaConversions::isEnabled()) {
             SendMetaEvent::dispatch(MetaEvents::purchase($order));

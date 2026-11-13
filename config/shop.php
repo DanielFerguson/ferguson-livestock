@@ -50,6 +50,10 @@ return [
     ],
 
     'location' => [
+        // Where customers collect farm pickups. Given in their order text, not shown on the site.
+        'street' => '306 Snake Valley-Chepstowe Rd',
+        // Where fergusonlivestock.com.au/farm sends people: the farm on Google Maps.
+        'map_url' => 'https://www.google.com/maps/search/?api=1&query='.rawurlencode('306 Snake Valley-Chepstowe Rd, Snake Valley VIC 3351'),
         'locality' => 'Snake Valley',
         'region' => 'VIC',
         'postal_code' => '3351',
