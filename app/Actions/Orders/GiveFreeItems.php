@@ -25,6 +25,10 @@ final readonly class GiveFreeItems
 
     public function __construct(private StockLedger $stock) {}
 
+    /**
+     * Whether an order's stock is held for good, so free items can go on it: it's paid for or put aside for cash, and
+     * its stock hasn't gone back on sale.
+     */
     public static function canTakeFreeItems(Order $order): bool
     {
         return in_array($order->status, self::CAN_TAKE_FREE_ITEMS, true) && $order->released_at === null;
@@ -55,7 +59,7 @@ final readonly class GiveFreeItems
         try {
             $this->stock->addFree($order, $quantities, function (Order $order): void {
                 if (! self::canTakeFreeItems($order)) {
-                    throw new CannotChangeOrder("Order {$order->reference()} is {$order->status->getLabel()}; only paid, fulfilled and cash owed orders can take free items.");
+                    throw new CannotChangeOrder("Order {$order->reference()} is ‘{$order->status->getLabel()}’. Only paid, fulfilled and cash owed orders can take free items.");
                 }
             });
         } catch (InsufficientStock $exception) {

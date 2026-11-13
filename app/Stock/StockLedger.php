@@ -26,8 +26,9 @@ use InvalidArgumentException;
  *
  * Holding happens in one transaction that locks the stock rows in ID order, so concurrent orders queue behind
  * each other (and can't deadlock) and each order gets all of its items or none. Releasing is guarded by the
- * order's `released_at`, so stock goes back exactly once. The database's CHECK constraint backs both up:
- * `available` can never go below zero or above the quantity.
+ * order's `released_at`, so stock goes back exactly once. Anything that changes an existing order's lines locks the
+ * order row first, then its stock rows in ID order, as cancelling and late payment do, so they can't deadlock. The
+ * database's CHECK constraint backs all of it up: `available` can never go below zero or above the quantity.
  */
 final class StockLedger
 {
@@ -132,10 +133,11 @@ final class StockLedger
      *
      * @throws InsufficientStock
      * @throws CheckoutBusy
+     * @throws InvalidArgumentException when the order's stock has already gone back on sale
      */
     public function addFree(Order $order, array $quantities, Closure $mayAdd): void
     {
-        $this->waitingForLocks(fn () => DB::transaction(function () use ($order, $quantities, $mayAdd): void {
+        $this->waitingForLocks(fn (): null => DB::transaction(function () use ($order, $quantities, $mayAdd): void {
             DB::statement("SET LOCAL lock_timeout = '".self::LOCK_TIMEOUT."'");
 
             $order = Order::query()->lockForUpdate()->findOrFail($order->id);

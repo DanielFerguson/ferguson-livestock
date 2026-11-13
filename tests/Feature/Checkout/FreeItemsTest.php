@@ -10,7 +10,9 @@ use App\Exceptions\CannotChangeOrder;
 use App\Models\Drop;
 use App\Models\DropItem;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Stock\StockLedger;
+use Illuminate\Database\QueryException;
 use Tests\Fixtures\StockedDrop;
 use Tests\Fixtures\StockInvariant;
 
@@ -70,18 +72,18 @@ it('says what’s left when there isn’t enough, giving nothing', function (): 
         ->and($shop->mince->refresh()->available)->toBe(1);
 });
 
-it('refuses an order whose stock isn’t held for good', function (Closure $checkoutOutcome): void {
+it('refuses an order whose stock isn’t held for good', function (Closure $checkoutOutcome, string $status): void {
     $shop = StockedDrop::create(mince: 10);
     $order = samsPickup($shop, OrderStatus::Pending);
     $checkoutOutcome($order);
 
     expect(fn (): Order => app(GiveFreeItems::class)($order, [$shop->mince->id => 1]))
-        ->toThrow(CannotChangeOrder::class, 'only paid, fulfilled and cash owed orders can take free items');
+        ->toThrow(CannotChangeOrder::class, "is ‘{$status}’. Only paid, fulfilled and cash owed orders can take free items.");
 
     expect($shop->mince->refresh()->available)->toBe(10);
 })->with([
-    'at checkout' => [fn (Order $order): null => null],
-    'abandoned' => [fn (Order $order): bool => app(OrderPayments::class)->markExpired($order)],
+    'at checkout' => [fn (Order $order): null => null, 'At checkout'],
+    'abandoned' => [fn (Order $order): bool => app(OrderPayments::class)->markExpired($order), 'Abandoned'],
 ]);
 
 it('refuses something the order’s drop doesn’t sell', function (Closure $give, string $message): void {
@@ -96,3 +98,8 @@ it('refuses something the order’s drop doesn’t sell', function (Closure $giv
     'the delivery fee' => [fn (StockedDrop $shop, Order $order): Order => app(GiveFreeItems::class)($order, [$shop->delivery->id => 1]), 'isn’t sold in'],
     'another drop’s item' => [fn (StockedDrop $shop, Order $order): Order => app(GiveFreeItems::class)($order, [DropItem::factory()->for(Drop::factory()->draft())->create()->id => 1]), 'isn’t sold in'],
 ]);
+
+it('never lets a free line carry a price, whatever the code does', function (): void {
+    expect(fn (): OrderItem => OrderItem::factory()->free()->create(['unit_price' => 100]))
+        ->toThrow(QueryException::class, 'order_items_free_costs_nothing');
+});
