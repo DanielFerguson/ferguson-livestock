@@ -158,6 +158,36 @@ final class StockLedger
     }
 
     /**
+     * Take a free line off its order and put its stock back on sale, for an item given by mistake. Returns false,
+     * changing nothing, when the line isn't free or is already gone, or its order's stock went back on sale already.
+     */
+    public function takeBackFree(OrderItem $line): bool
+    {
+        $takenBack = DB::transaction(function () use ($line): bool {
+            $order = Order::query()->lockForUpdate()->find($line->order_id);
+            $free = OrderItem::query()->whereKey($line->id)->where('free', true)->first();
+
+            if (! $order instanceof Order || $order->released_at !== null || ! $free instanceof OrderItem) {
+                return false;
+            }
+
+            if ($free->stock_drop_item_id !== null) {
+                DropItem::query()->whereKey($free->stock_drop_item_id)->increment('available', $free->quantity * $free->stock_units);
+            }
+
+            $free->delete();
+
+            return true;
+        });
+
+        if ($takenBack) {
+            DropSnapshot::forget();
+        }
+
+        return $takenBack;
+    }
+
+    /**
      * Take back the stock of an order that was released but then paid for after all. Returns false, taking nothing,
      * when there isn't enough left. Call it inside the transaction that marks the order paid, so a refusal can undo it.
      */

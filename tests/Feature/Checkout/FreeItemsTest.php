@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Actions\Orders\GiveFreeItems;
+use App\Actions\Orders\RecordCashOrder;
+use App\Actions\Orders\TakeBackFreeItem;
 use App\Checkout\OrderPayments;
 use App\Enums\DeliveryMethod;
 use App\Enums\OrderStatus;
@@ -98,6 +100,45 @@ it('refuses something the order’s drop doesn’t sell', function (Closure $giv
     'the delivery fee' => [fn (StockedDrop $shop, Order $order): Order => app(GiveFreeItems::class)($order, [$shop->delivery->id => 1]), 'isn’t sold in'],
     'another drop’s item' => [fn (StockedDrop $shop, Order $order): Order => app(GiveFreeItems::class)($order, [DropItem::factory()->for(Drop::factory()->draft())->create()->id => 1]), 'isn’t sold in'],
 ]);
+
+it('takes a free item back off, putting its stock back on sale', function (): void {
+    $shop = StockedDrop::create(mince: 10);
+    $order = app(GiveFreeItems::class)(samsPickup($shop), [$shop->mince->id => 2]);
+
+    app(TakeBackFreeItem::class)($order->items->sole('free', true));
+
+    expect($order->items()->pluck('drop_item_id')->all())->toBe([$shop->box->id])
+        ->and($shop->mince->refresh()->available)->toBe(10);
+    StockInvariant::check($shop->drop);
+});
+
+it('only takes back what was given free, and only once', function (): void {
+    $shop = StockedDrop::create(mince: 10);
+    $order = app(GiveFreeItems::class)(samsPickup($shop), [$shop->mince->id => 2]);
+    $free = $order->items->sole('free', true);
+    app(TakeBackFreeItem::class)($free);
+
+    expect(fn () => app(TakeBackFreeItem::class)($order->items->sole('free', false)))
+        ->toThrow(CannotChangeOrder::class, '5kg Beef Box was paid for, so it stays on the order.')
+        ->and(fn () => app(TakeBackFreeItem::class)($free))
+        ->toThrow(CannotChangeOrder::class, 'has already come off the order');
+
+    expect($shop->mince->refresh()->available)->toBe(10)
+        ->and($shop->box->refresh()->available)->toBe(4);
+});
+
+it('puts free items back on sale with the rest when a cash order is cancelled, and only once', function (): void {
+    $shop = StockedDrop::create(boxes: 5, mince: 10);
+    $owed = app(RecordCashOrder::class)(drop: $shop->drop, quantities: [$shop->box->id => 1], deliveryMethod: DeliveryMethod::Pickup, deliveryDay: null, customerName: 'Sam', phone: null, address: null, paid: false);
+    $free = app(GiveFreeItems::class)($owed, [$shop->mince->id => 2])->items->sole('free', true);
+
+    app(OrderPayments::class)->cancelCashOrder($owed);
+
+    expect(fn () => app(TakeBackFreeItem::class)($free))->toThrow(CannotChangeOrder::class, 'or the order was cancelled');
+    expect($shop->box->refresh()->available)->toBe(5)
+        ->and($shop->mince->refresh()->available)->toBe(10);
+    StockInvariant::check($shop->drop);
+});
 
 it('never lets a free line carry a price, whatever the code does', function (): void {
     expect(fn (): OrderItem => OrderItem::factory()->free()->create(['unit_price' => 100]))
