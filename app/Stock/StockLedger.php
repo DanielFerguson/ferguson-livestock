@@ -110,16 +110,7 @@ final class StockLedger
                 'total' => array_sum(array_map(fn (StockLine $line): int => $line->item->price * $line->quantity, $lines)),
             ]);
 
-            foreach ($lines as $line) {
-                $order->items()->create([
-                    'drop_item_id' => $line->item->id,
-                    'product_id' => $line->item->product_id,
-                    'quantity' => $line->quantity,
-                    'unit_price' => $line->item->price,
-                    'stock_drop_item_id' => $line->stock?->id,
-                    'stock_units' => $line->unitsEach,
-                ]);
-            }
+            $this->addLines($order, $lines);
 
             return $order->load('items');
         }, attempts: 3));
@@ -127,6 +118,41 @@ final class StockLedger
         DropSnapshot::forget();
 
         return $order;
+    }
+
+    /**
+     * Hold stock for items given away on an order, like a sample pack handed over at pickup. They're added as free
+     * lines, so the order's total doesn't change. The order is locked first, so it can't be cancelled, releasing its
+     * stock, while they're added.
+     *
+     * @param  array<int, int>  $quantities  drop item ID => quantity
+     * @param  Closure(Order): void  $mayAdd  throws when the freshly locked order can't take them
+     *
+     * @param-immediately-invoked-callable $mayAdd
+     *
+     * @throws InsufficientStock
+     * @throws CheckoutBusy
+     */
+    public function addFree(Order $order, array $quantities, Closure $mayAdd): void
+    {
+        $this->waitingForLocks(fn () => DB::transaction(function () use ($order, $quantities, $mayAdd): void {
+            DB::statement("SET LOCAL lock_timeout = '".self::LOCK_TIMEOUT."'");
+
+            $order = Order::query()->lockForUpdate()->findOrFail($order->id);
+            $mayAdd($order);
+
+            // Stock taken for an order that's already given its stock back would never be given back.
+            if ($order->released_at !== null) {
+                throw new InvalidArgumentException("Order {$order->id}’s stock has been released.");
+            }
+
+            $drop = Drop::query()->with('items.product.bundle')->findOrFail($order->drop_id);
+            $lines = $this->lines($drop, $quantities);
+            $this->takeStock($lines);
+            $this->addLines($order, $lines, free: true);
+        }, attempts: 3));
+
+        DropSnapshot::forget();
     }
 
     /**
@@ -204,6 +230,24 @@ final class StockLedger
         }
 
         return $released;
+    }
+
+    /**
+     * @param  list<StockLine>  $lines
+     */
+    private function addLines(Order $order, array $lines, bool $free = false): void
+    {
+        foreach ($lines as $line) {
+            $order->items()->create([
+                'drop_item_id' => $line->item->id,
+                'product_id' => $line->item->product_id,
+                'quantity' => $line->quantity,
+                'unit_price' => $free ? 0 : $line->item->price,
+                'free' => $free,
+                'stock_drop_item_id' => $line->stock?->id,
+                'stock_units' => $line->unitsEach,
+            ]);
+        }
     }
 
     /**

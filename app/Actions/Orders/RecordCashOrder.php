@@ -80,7 +80,7 @@ final readonly class RecordCashOrder
                 'paid_at' => $paid ? now() : null,
             ])->refresh();
         } catch (InsufficientStock $exception) {
-            throw new CannotRecordOrder($this->shortage($drop, $exception), $exception->getCode(), previous: $exception);
+            throw new CannotRecordOrder($exception->describe($drop), $exception->getCode(), previous: $exception);
         } catch (CheckoutBusy $exception) {
             throw new CannotRecordOrder('Lots of orders are coming in right now. Try again in a moment.', $exception->getCode(), previous: $exception);
         }
@@ -158,21 +158,5 @@ final readonly class RecordCashOrder
         }
 
         return ['line1' => $street, 'line2' => null, 'city' => $suburb, 'state' => 'VIC', 'postal_code' => $postcode, 'country' => 'AU'];
-    }
-
-    /**
-     * "Only 3 × 5kg Beef Box left. 500g Beef Mince is sold out."
-     */
-    private function shortage(Drop $drop, InsufficientStock $exception): string
-    {
-        $parts = [];
-
-        foreach ($exception->available as $dropItemId => $left) {
-            $name = $drop->items->first(fn (DropItem $item): bool => $item->id === $dropItemId)?->product->name ?? 'One of the items';
-
-            $parts[] = $left > 0 ? "Only {$left} × {$name} left." : "{$name} is sold out.";
-        }
-
-        return $parts === [] ? 'There isn’t enough stock left for this order.' : implode(' ', $parts);
     }
 }

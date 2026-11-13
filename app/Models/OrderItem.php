@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * One line of an order, at the price when it was placed.
+ * One line of an order, at the price when it was placed, or free when it was given away.
  *
  * @property int $id
  * @property int $order_id
@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $product_id
  * @property int $quantity
  * @property int $unit_price
+ * @property bool $free
  * @property int|null $stock_drop_item_id
  * @property int $stock_units
  * @property CarbonImmutable $created_at
@@ -28,11 +29,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read DropItem $dropItem
  * @property-read Product $product
  */
-#[Fillable(['order_id', 'drop_item_id', 'product_id', 'quantity', 'unit_price', 'stock_drop_item_id', 'stock_units'])]
+#[Fillable(['order_id', 'drop_item_id', 'product_id', 'quantity', 'unit_price', 'free', 'stock_drop_item_id', 'stock_units'])]
 class OrderItem extends Model
 {
     /** @use HasFactory<OrderItemFactory> */
     use HasFactory;
+
+    /**
+     * Mirrors the column's default, so a line checkout has just created knows it's sold, not given away.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'free' => false,
+    ];
 
     /**
      * @return BelongsTo<Order, $this>
@@ -71,6 +81,7 @@ class OrderItem extends Model
         return [
             'quantity' => 'integer',
             'unit_price' => 'integer',
+            'free' => 'boolean',
             'stock_units' => 'integer',
         ];
     }

@@ -31,4 +31,12 @@ class OrderItemFactory extends Factory
             'stock_units' => 1,
         ];
     }
+
+    /**
+     * Given away rather than sold, like a sample pack at pickup.
+     */
+    public function free(): static
+    {
+        return $this->state(fn (): array => ['free' => true, 'unit_price' => 0]);
+    }
 }
