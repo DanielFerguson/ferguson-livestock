@@ -57,7 +57,9 @@ final readonly class OrderConfirmationText
         $words = array_values(array_filter($words === false ? [] : $words, fn (string $word): bool => ! in_array(strtolower(rtrim($word, '.')), self::TITLES, true)));
         $name = $words[0] ?? '';
 
-        if (mb_strlen(rtrim($name, '.')) < 2) {
+        // The customer typed this, and the text goes from the shop's number to whatever phone they gave, so only a
+        // plain name is used: never a link or anything else someone could get the shop to text a stranger.
+        if (preg_match("/^[\\p{L}'-]{2,20}$/u", $name) !== 1) {
             return null;
         }
 

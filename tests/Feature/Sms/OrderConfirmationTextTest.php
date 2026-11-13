@@ -78,6 +78,8 @@ it('greets someone by name only when they gave one', function (string $customer,
     'an initial' => ['C Perrin', 'Hi there'],
     'a title and a name' => ['Miss Shannon Douglas ', 'Hi Shannon'],
     'capitals and a double space' => ['JUSTIN  BROWN', 'Hi Justin'],
+    'a link instead of a name' => ['bit.ly/claim-prize Smith', 'Hi there'],
+    'a name with an apostrophe' => ["D'Arcy Smith", "Hi D'Arcy"],
 ]);
 
 it('sends the map link in pickup texts to the farm on Google Maps', function (): void {
