@@ -6,6 +6,7 @@ namespace App\Filament\Resources\Drops\Pages;
 
 use App\Filament\Resources\Drops\Actions\DropActions;
 use App\Filament\Resources\Drops\DropResource;
+use App\Filament\Resources\Drops\Widgets\DropRevenueOverview;
 use App\Models\Drop;
 use App\Models\DropItem;
 use Filament\Actions\DeleteAction;
@@ -31,6 +32,13 @@ class EditDrop extends EditRecord
             DropActions::closeNow(),
             DeleteAction::make()
                 ->visible(fn (Drop $record): bool => $record->whyItCantBeDeleted() === null),
+        ];
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            DropRevenueOverview::class,
         ];
     }
 

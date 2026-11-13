@@ -9,6 +9,7 @@ use App\Filament\Resources\Drops\Pages\EditDrop;
 use App\Filament\Resources\Drops\Pages\ListDrops;
 use App\Filament\Resources\Drops\Schemas\DropForm;
 use App\Filament\Resources\Drops\Tables\DropsTable;
+use App\Filament\Resources\Drops\Widgets\DropRevenueOverview;
 use App\Models\Drop;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -40,6 +41,13 @@ class DropResource extends Resource
     {
         return [
             //
+        ];
+    }
+
+    public static function getWidgets(): array
+    {
+        return [
+            DropRevenueOverview::class,
         ];
     }
 
