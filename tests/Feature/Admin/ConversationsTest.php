@@ -9,6 +9,9 @@ use App\Models\ConversationState;
 use App\Models\SmsMessage;
 use App\Models\Subscriber;
 use App\Models\User;
+use App\Notifications\AdminPush;
+use Illuminate\Support\Facades\Notification;
+use NotificationChannels\WebPush\PushSubscription;
 use Tests\Fakes\FakeSmsGateway;
 
 use function Pest\Livewire\livewire;
@@ -262,4 +265,62 @@ it('doesn’t say someone who opted out needs a reply', function (): void {
 
     livewire(Conversations::class)->set('filter', 'needs_reply')->assertDontSee('Stop please')
         ->set('filter', 'all')->assertSee('Stop please');
+});
+
+/**
+ * What a phone's browser hands over when it signs up for pushes.
+ *
+ * @return array{endpoint: string, keys: array{p256dh: string, auth: string}, contentEncoding: string}
+ */
+function phonePushSignUp(string $endpoint = 'https://web.push.apple.com/QGuHRmBXgM'): array
+{
+    return [
+        'endpoint' => $endpoint,
+        'keys' => ['p256dh' => 'BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA_0QTpQtUbVlUls0VJXg7A8u-Ts1XbjhazAkj7I99e8QcYP7DkM', 'auth' => 'tBHItJI5svbpez7KI4CCXg'],
+        'contentEncoding' => 'aes128gcm',
+    ];
+}
+
+it('signs this phone up for pushes, once however often it’s saved', function (): void {
+    livewire(Conversations::class)
+        ->call('savePushSubscription', phonePushSignUp())
+        ->call('savePushSubscription', phonePushSignUp())
+        ->assertHasNoErrors();
+
+    expect(PushSubscription::query()->sole())
+        ->endpoint->toBe('https://web.push.apple.com/QGuHRmBXgM')
+        ->auth_token->toBe('tBHItJI5svbpez7KI4CCXg')
+        ->subscribable_id->toBe(auth()->id());
+});
+
+it('refuses a push address that isn’t a secure web address', function (string $endpoint): void {
+    livewire(Conversations::class)
+        ->call('savePushSubscription', phonePushSignUp($endpoint))
+        ->assertHasErrors('endpoint');
+
+    expect(PushSubscription::query()->count())->toBe(0);
+})->with(['http://web.push.apple.com/QGuHRmBXgM', 'not a web address']);
+
+it('stops pushing to this phone when notifications are turned off', function (): void {
+    livewire(Conversations::class)
+        ->call('savePushSubscription', phonePushSignUp())
+        ->call('removePushSubscription', 'https://web.push.apple.com/QGuHRmBXgM');
+
+    expect(PushSubscription::query()->count())->toBe(0);
+});
+
+it('sends a test push to the admin’s phones straight away', function (): void {
+    Notification::fake();
+
+    livewire(Conversations::class)->call('sendTestPush')->assertNotified('Test sent');
+
+    Notification::assertSentTo(auth()->user(), AdminPush::class, fn (AdminPush $push): bool => $push->title === 'Notifications are on');
+});
+
+it('offers notifications for new texts once the push keys are set', function (): void {
+    config(['webpush.vapid.public_key' => null]);
+    livewire(Conversations::class)->assertSee('aren’t set up yet')->assertDontSee('Turn on notifications');
+
+    config(['webpush.vapid.public_key' => 'BPublicKey']);
+    livewire(Conversations::class)->assertSee('Turn on notifications')->assertDontSee('aren’t set up yet');
 });

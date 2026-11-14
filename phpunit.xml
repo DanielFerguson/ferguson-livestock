@@ -47,5 +47,7 @@
         <env name="NIGHTWATCH_ENABLED" value="false"/>
         <env name="TURNSTILE_SITE_KEY" value=""/>
         <env name="TURNSTILE_SECRET_KEY" value=""/>
+        <env name="VAPID_PUBLIC_KEY" value=""/>
+        <env name="VAPID_PRIVATE_KEY" value=""/>
     </php>
 </phpunit>

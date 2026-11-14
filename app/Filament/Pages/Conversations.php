@@ -11,16 +11,23 @@ use App\Exceptions\CannotReply;
 use App\Models\ConversationState;
 use App\Models\SmsMessage;
 use App\Models\Subscriber;
+use App\Models\User;
+use App\Notifications\AdminPush;
 use App\Sms\BroadcastPreview;
 use App\Sms\ConversationList;
 use App\Sms\SmsText;
 use App\Support\Money;
 use BackedEnum;
+use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Url;
+use Minishlink\WebPush\ContentEncoding;
+use NotificationChannels\WebPush\PushSubscription;
 use UnitEnum;
 
 /**
@@ -131,6 +138,49 @@ class Conversations extends Page
     }
 
     /**
+     * The key a phone signs up for pushes with. Null until the site's push keys are set.
+     */
+    public function pushPublicKey(): ?string
+    {
+        $key = config('webpush.vapid.public_key');
+
+        return is_string($key) && $key !== '' ? $key : null;
+    }
+
+    /**
+     * Sign this phone up for a push with each new text. The browser hands over where to send them and the keys to
+     * encrypt them with. Saving the same phone again refreshes its keys.
+     *
+     * @param  array<mixed>  $subscription
+     */
+    public function savePushSubscription(array $subscription): bool
+    {
+        /** @var array{endpoint: string, keys: array{p256dh: string, auth: string}, contentEncoding: string} $valid */
+        $valid = Validator::make($subscription, [
+            'endpoint' => ['required', 'string', 'url:https', 'max:'.PushSubscription::ENDPOINT_MAX_LENGTH],
+            'keys.p256dh' => ['required', 'string', 'max:255'],
+            'keys.auth' => ['required', 'string', 'max:255'],
+            'contentEncoding' => ['required', Rule::enum(ContentEncoding::class)],
+        ])->validate();
+
+        $this->admin()->updatePushSubscription($valid['endpoint'], $valid['keys']['p256dh'], $valid['keys']['auth'], $valid['contentEncoding']);
+
+        return true;
+    }
+
+    public function removePushSubscription(string $endpoint): void
+    {
+        $this->admin()->deletePushSubscription($endpoint);
+    }
+
+    public function sendTestPush(): void
+    {
+        $this->admin()->notifyNow(AdminPush::test());
+
+        Notification::make()->title('Test sent')->body('It should show up on your phone in a few seconds. If it doesn’t, turn notifications off and on again.')->success()->send();
+    }
+
+    /**
      * @return Collection<int, array{phone: string, name: ?string, last: SmsMessage, unread: int, optedOut: bool, followUp: bool, needsReply: bool, attention: bool}>
      */
     public function conversations(): Collection
@@ -194,5 +244,16 @@ class Conversations extends Page
         $preview = new BroadcastPreview(new SmsText(SmsText::tidy($this->draft)), 1);
 
         return $preview->length().', about '.Money::format($preview->estimatedCost());
+    }
+
+    private function admin(): User
+    {
+        $user = Filament::auth()->user();
+
+        if (! $user instanceof User) {
+            abort(403);
+        }
+
+        return $user;
     }
 }
