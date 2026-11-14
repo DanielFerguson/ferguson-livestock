@@ -49,6 +49,21 @@ it('keeps the page out of search results, caches and Meta’s pixel', function (
     expect($response->headers->get('Cache-Control'))->toContain('no-store')->toContain('private');
 });
 
+it('turns away too many tries without handing the page’s address to Meta’s pixel', function (): void {
+    app()->detectEnvironment(fn (): string => 'production');
+    enableMetaAds();
+    $order = samsWeekendOrder();
+
+    foreach (range(1, 30) as $try) {
+        $this->get($order->pageUrl())->assertOk();
+    }
+
+    $this->get($order->pageUrl())
+        ->assertTooManyRequests()
+        ->assertDontSee('fbq(', false)
+        ->assertSee('<meta name="referrer" content="strict-origin">', false);
+});
+
 it('is a plain 404 for a wrong link', function (): void {
     $this->get('/orders/'.str_repeat('a', Order::ACCESS_TOKEN_LENGTH))->assertNotFound();
 });

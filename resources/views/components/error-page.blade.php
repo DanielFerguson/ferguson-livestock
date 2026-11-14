@@ -1,6 +1,7 @@
 @props(['title', 'description', 'eyebrow', 'heading', 'message'])
 
-<x-layouts.app :title="$title" :description="$description" robots="noindex, follow">
+{{-- An error can come up on a private address, like an order page whose visitor tried too often, so Meta's pixel stays off. --}}
+<x-layouts.app :title="$title" :description="$description" robots="noindex, follow" :ad-tracking="false">
     <div class="bg-cream px-6 py-24 text-center lg:py-36">
         <p class="eyebrow mb-4 text-sage">{{ $eyebrow }}</p>
         <h1 class="mx-auto max-w-2xl font-display text-5xl font-semibold text-forest md:text-7xl">{{ $heading }}</h1>

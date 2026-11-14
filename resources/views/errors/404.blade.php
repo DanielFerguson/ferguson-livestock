@@ -1,7 +1,9 @@
+{{-- A missing page's address can still hold a secret, like an old order link's, so Meta's pixel stays off. --}}
 <x-layouts.app
     title="Page Not Found | Ferguson Livestock"
     description="The page you were looking for could not be found."
     robots="noindex, follow"
+    :ad-tracking="false"
 >
     <div class="bg-cream px-6 py-24 text-center lg:py-36">
         <p class="eyebrow mb-4 text-sage">404 · Wrong paddock</p>
