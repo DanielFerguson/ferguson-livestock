@@ -40,8 +40,9 @@ so it works on any phone without JavaScript. Rejected: a Livewire component; the
 
 - Pickup texts: `Map: fergusonlivestock.com.au/farm` becomes `Your order & map: https://fergs.au/…`.
 - Delivery texts: `Your order: https://fergs.au/…` goes before "Questions?".
-- A text covering several orders links the first; that order's page lists the others under "Also in this text"
-  (orders sharing its `confirmation_sms_message_id`), each linked.
+- A text covering several orders links the first; that order's page names the others by reference under "Your other
+  orders" (orders sharing its `confirmation_sms_message_id` and email), without links: an order's page is only ever
+  linked from its own text or email, since phone numbers and emails are typed in and prove nothing.
 - A typical order's text stays at two parts (about 282 characters for a pickup).
 - The confirmation email gets a "View your order" button.
 

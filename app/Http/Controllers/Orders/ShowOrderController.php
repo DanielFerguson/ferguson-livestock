@@ -28,10 +28,12 @@ class ShowOrderController extends Controller
     }
 
     /**
-     * The customer's other orders that their order text covered. The text only links this one, so its page links them.
+     * The customer's other orders that their order text covered, which the page names by reference. The text only
+     * links this one; each of the others' pages is linked from its own confirmation email.
      *
-     * Texts group orders by phone number, which anyone can type at checkout, so only orders with the same email are
-     * linked: someone who ordered with your number and their own email can't reach your order from theirs.
+     * Texts group orders by phone number, which anyone can type at checkout, so only orders with the same email count
+     * as theirs. Typed details never earn a link to another order's page, though: those come only from its own text or
+     * email.
      *
      * @return Collection<int, Order>
      */
