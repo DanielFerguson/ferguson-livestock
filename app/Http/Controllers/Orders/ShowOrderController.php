@@ -18,7 +18,7 @@ class ShowOrderController extends Controller
 {
     public function __invoke(Order $customerOrder, ChangeDeliveryNight $nights): View
     {
-        $customerOrder->load(['items.product', 'drop']);
+        $customerOrder->load(['items.product', 'drop', 'feedback']);
 
         return view('pages.order-details', [
             'order' => $customerOrder,

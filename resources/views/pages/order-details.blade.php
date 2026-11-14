@@ -41,6 +41,7 @@
                 <div class="space-y-8 print:hidden">
                     @include('pages.order-details._email')
                     @include('pages.order-details._questions')
+                    @include('pages.order-details._feedback')
                 </div>
             </x-slot:actions>
         </x-confirmation-letter>

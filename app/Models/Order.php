@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
 /**
@@ -55,6 +56,7 @@ use Illuminate\Support\Str;
  * @property-read Drop $drop
  * @property-read SmsMessage|null $confirmationText
  * @property-read Collection<int, OrderItem> $items
+ * @property-read OrderFeedback|null $feedback
  */
 #[Fillable(['drop_id', 'status', 'payment_method', 'delivery_method', 'delivery_day', 'customer_name', 'email', 'phone', 'shipping_address', 'total', 'amount_refunded', 'stripe_checkout_session_id', 'stripe_payment_intent_id', 'session_fingerprint', 'via_early_access', 'meta_visitor', 'utm_source', 'utm_medium', 'utm_campaign', 'expires_at', 'paid_at', 'confirmation_sms_message_id', 'released_at', 'fulfilled_at', 'refunded_at'])]
 class Order extends Model
@@ -122,6 +124,16 @@ class Order extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    /**
+     * What the customer thought of it, left on its page.
+     *
+     * @return HasOne<OrderFeedback, $this>
+     */
+    public function feedback(): HasOne
+    {
+        return $this->hasOne(OrderFeedback::class);
     }
 
     /**
