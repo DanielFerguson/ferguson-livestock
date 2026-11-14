@@ -6,6 +6,9 @@ use App\Enums\SmsDirection;
 use App\Enums\SmsStatus;
 use App\Models\SmsMessage;
 use App\Models\Subscriber;
+use App\Models\User;
+use App\Notifications\AdminPush;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Testing\TestResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Twilio\Security\RequestValidator;
@@ -161,4 +164,48 @@ it('stores a reply once when Twilio sends it again', function (): void {
     postFromTwilio('webhooks.twilio.inbound', $data)->assertOk();
 
     expect(SmsMessage::query()->count())->toBe(1);
+});
+
+it('pushes a new text to the admin’s phone', function (): void {
+    Notification::fake();
+    config(['shop.admin_email' => 'daniel@example.com']);
+    $admin = User::factory()->create(['email' => 'daniel@example.com']);
+    $jess = Subscriber::factory()->create(['first_name' => 'Jess']);
+
+    postFromTwilio('webhooks.twilio.inbound', ['MessageSid' => 'SMreply1', 'From' => $jess->phone, 'To' => '+61400000000', 'Body' => 'Can I swap to Thursday pickup?'])
+        ->assertOk();
+
+    Notification::assertSentTo($admin, AdminPush::class, fn (AdminPush $push): bool => $push->title === 'Jess' && $push->body === 'Can I swap to Thursday pickup?');
+});
+
+it('pushes a text once when Twilio sends it again', function (): void {
+    Notification::fake();
+    config(['shop.admin_email' => 'daniel@example.com']);
+    $admin = User::factory()->create(['email' => 'daniel@example.com']);
+    $data = ['MessageSid' => 'SMreply1', 'From' => '+61499999999', 'To' => '+61400000000', 'Body' => 'Hello'];
+
+    postFromTwilio('webhooks.twilio.inbound', $data)->assertOk();
+    postFromTwilio('webhooks.twilio.inbound', $data)->assertOk();
+
+    Notification::assertSentToTimes($admin, AdminPush::class, 1);
+});
+
+it('doesn’t push STOP or START texts, which need no answer', function (string $body): void {
+    Notification::fake();
+    config(['shop.admin_email' => 'daniel@example.com']);
+    User::factory()->create(['email' => 'daniel@example.com']);
+
+    postFromTwilio('webhooks.twilio.inbound', ['MessageSid' => 'SMreply1', 'From' => '+61499999999', 'To' => '+61400000000', 'Body' => $body])->assertOk();
+
+    Notification::assertNothingSent();
+})->with(['Stop please', 'START']);
+
+it('keeps a text without pushing it while there’s no admin account', function (): void {
+    Notification::fake();
+    config(['shop.admin_email' => 'daniel@example.com']);
+
+    postFromTwilio('webhooks.twilio.inbound', ['MessageSid' => 'SMreply1', 'From' => '+61499999999', 'To' => '+61400000000', 'Body' => 'Hello'])->assertOk();
+
+    expect(SmsMessage::query()->count())->toBe(1);
+    Notification::assertNothingSent();
 });

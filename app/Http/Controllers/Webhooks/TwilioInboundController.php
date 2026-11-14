@@ -9,6 +9,8 @@ use App\Enums\SmsStatus;
 use App\Http\Controllers\Controller;
 use App\Models\SmsMessage;
 use App\Models\Subscriber;
+use App\Models\User;
+use App\Notifications\AdminPush;
 use App\Sms\OptInKeywords;
 use App\Sms\OptOutKeywords;
 use Illuminate\Http\Request;
@@ -16,7 +18,7 @@ use Illuminate\Http\Response;
 
 /**
  * Replies to the shop's number arrive here. Replies asking to stop opt the sender out straight away, and START
- * opts someone back in.
+ * opts someone back in. Every other new text is pushed to the admin's phone.
  */
 class TwilioInboundController extends Controller
 {
@@ -27,7 +29,7 @@ class TwilioInboundController extends Controller
         $subscriber = Subscriber::query()->firstWhere('phone', $from);
 
         // Twilio sends a reply again if we're slow to answer, so each one is stored once, by its ID.
-        SmsMessage::query()->createOrFirst(['twilio_sid' => $request->string('MessageSid')->value()], [
+        $text = SmsMessage::query()->createOrFirst(['twilio_sid' => $request->string('MessageSid')->value()], [
             'subscriber_id' => $subscriber?->id,
             'direction' => SmsDirection::Inbound,
             'to' => $request->string('To')->value(),
@@ -41,6 +43,8 @@ class TwilioInboundController extends Controller
             $subscriber?->optOut();
         } elseif (OptInKeywords::matches($body)) {
             $subscriber?->optBackIn();
+        } elseif ($text->wasRecentlyCreated) {
+            User::admin()?->notify(AdminPush::forText($text));
         }
 
         // An empty TwiML response: no automatic reply. Twilio answers STOP itself.
