@@ -6,6 +6,7 @@ namespace App\Mcp\Support;
 
 use App\Exceptions\CannotChangeBroadcast;
 use App\Exceptions\CannotChangeDrop;
+use App\Exceptions\CannotChangeOrder;
 use App\Exceptions\CannotRecordOrder;
 use App\Exceptions\CannotReply;
 use App\Exceptions\SmsNotSent;
@@ -27,7 +28,7 @@ final class Changes
     {
         try {
             $response = $change();
-        } catch (CannotChangeDrop|CannotChangeBroadcast|CannotRecordOrder|CannotReply|SmsNotSent $exception) {
+        } catch (CannotChangeDrop|CannotChangeBroadcast|CannotChangeOrder|CannotRecordOrder|CannotReply|SmsNotSent $exception) {
             McpAudit::record($tool, $arguments, 'refused: '.$exception->getMessage());
 
             return Response::error($exception->getMessage());
