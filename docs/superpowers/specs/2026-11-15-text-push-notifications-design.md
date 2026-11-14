@@ -16,7 +16,7 @@ screen) and forwarding each text by SMS or email (duplicate texts or buried emai
 - STOP and START texts (`OptOutKeywords`, `OptInKeywords`) don't push. They need no reply and still show in
   Conversations.
 - Pushes go to the admin account (`shop.admin_email`), to every device that has turned notifications on under it.
-  No admin account: log a warning and skip, like the pre-flight alerts.
+  No admin account: no push.
 - The title is the subscriber's name, or the number when the sender isn't a subscriber. The body is the text.
   Tapping it opens `/admin/conversations?phone=<number>`.
 - The icon badge shows `ConversationList::attentionCount()`, the same count as the sidebar badge. It's set when a
@@ -43,7 +43,8 @@ a subscription when the push service reports it gone. VAPID keys come from `VAPI
 - `laravel-notification-channels/webpush` ^13 (supports Laravel 13).
 - `public/admin-sw.js`, a service worker scoped to `/admin/`. On `push` it shows the notification and sets the
   badge. On `notificationclick` it focuses an open admin window and takes it to the conversation, or opens one.
-- `App\Notifications\NewTextReceived`: queued, sent through `WebPushChannel`, built from the `SmsMessage`.
+- `App\Notifications\AdminPush`: queued, sent through `WebPushChannel`. `AdminPush::forText()` builds one for a
+  new text and `AdminPush::test()` the test push. The link is relative, so a tap stays inside the installed app.
 - `TwilioInboundController`: after storing a text, if it was just created and isn't STOP or START, notify the admin.
   The admin lookup is shared with `CheckDropBeforeItOpens`.
 - Conversations page "Notifications" control: Livewire methods to save the phone's subscription, remove it, and
