@@ -127,7 +127,7 @@ it('shows what the customer typed as plain text', function (): void {
 it('links the customer’s other orders that the same text covered', function (): void {
     $text = SmsMessage::factory()->orderConfirmation(SmsStatus::Sent)->create();
     $order = samsWeekendOrder(['confirmation_sms_message_id' => $text->id]);
-    $sameText = Order::factory()->for($order->drop)->create(['confirmation_sms_message_id' => $text->id]);
+    $sameText = Order::factory()->for($order->drop)->create(['confirmation_sms_message_id' => $text->id, 'email' => 'SAM@example.com']);
     $otherText = Order::factory()->for($order->drop)->create(['confirmation_sms_message_id' => SmsMessage::factory()->orderConfirmation()->create()->id]);
 
     $this->get($order->pageUrl())
@@ -135,6 +135,17 @@ it('links the customer’s other orders that the same text covered', function ()
         ->assertSeeInOrder(['Your other orders', $sameText->reference()])
         ->assertSee($sameText->access_token)
         ->assertDontSee($otherText->reference());
+});
+
+it('doesn’t link an order in the same text that someone else placed with the customer’s number', function (): void {
+    $text = SmsMessage::factory()->orderConfirmation(SmsStatus::Sent)->create();
+    $order = samsWeekendOrder(['confirmation_sms_message_id' => $text->id]);
+    $stranger = Order::factory()->for($order->drop)->create(['confirmation_sms_message_id' => $text->id, 'email' => 'stranger@example.com']);
+
+    $this->get($order->pageUrl())
+        ->assertOk()
+        ->assertDontSee('Your other orders')
+        ->assertDontSee($stranger->access_token);
 });
 
 it('lets the customer text the farm about their order', function (): void {

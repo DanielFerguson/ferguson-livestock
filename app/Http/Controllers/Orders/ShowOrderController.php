@@ -30,11 +30,14 @@ class ShowOrderController extends Controller
     /**
      * The customer's other orders that their order text covered. The text only links this one, so its page links them.
      *
+     * Texts group orders by phone number, which anyone can type at checkout, so only orders with the same email are
+     * linked: someone who ordered with your number and their own email can't reach your order from theirs.
+     *
      * @return Collection<int, Order>
      */
     private function alsoInText(Order $order): Collection
     {
-        if ($order->confirmation_sms_message_id === null) {
+        if ($order->confirmation_sms_message_id === null || $order->email === null) {
             return new Collection;
         }
 
@@ -42,6 +45,7 @@ class ShowOrderController extends Controller
             ->where('confirmation_sms_message_id', $order->confirmation_sms_message_id)
             ->whereKeyNot($order->id)
             ->whereIn('status', OrderStatus::placed())
+            ->whereRaw('lower(email) = ?', [mb_strtolower($order->email)])
             ->orderBy('id')
             ->get();
     }
