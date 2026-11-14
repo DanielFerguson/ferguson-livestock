@@ -701,7 +701,7 @@ declare(strict_types=1);
 use App\Models\SmsMessage;
 use App\Models\User;
 
-beforeEach(fn () => config(['shop.admin_email' => 'daniel@example.com', 'webpush.vapid.public_key' => 'BPublicKey']));
+beforeEach(fn () => config(['shop.admin_email' => 'daniel@example.com', 'webpush.vapid.public_key' => 'BPublicKey', 'webpush.vapid.private_key' => 'PrivateKey']));
 
 it('lets the admin be added to a phone’s home screen as its own app', function (): void {
     $this->get('/admin/login')
@@ -806,7 +806,7 @@ Create `resources/views/filament/admin/push-warning.blade.php`:
     $admin = filament()->auth()->user();
 @endphp
 
-@if ($admin instanceof \App\Models\User && filled(config('webpush.vapid.public_key')) && $admin->pushSubscriptions()->doesntExist())
+@if ($admin instanceof \App\Models\User && filled(config('webpush.vapid.public_key')) && filled(config('webpush.vapid.private_key')) && $admin->pushSubscriptions()->doesntExist())
     <div class="fl-push-warning" role="status">
         No phone gets a notification for new texts, so check
         <a href="{{ \App\Filament\Pages\Conversations::getUrl() }}">Conversations</a> yourself. To turn them on, open
