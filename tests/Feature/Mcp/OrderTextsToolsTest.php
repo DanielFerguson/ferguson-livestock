@@ -83,8 +83,8 @@ it('shows new texts, those waiting for 8am and who’s left out, then sends them
             ['order' => $texted->reference(), 'name' => 'Sam Texted', 'reason' => 'Already texted'],
             ['order' => $stopped->reference(), 'name' => 'Pat Stopped', 'reason' => 'Has opted out of texts'],
         ])
-        ->and(data_get($preview, 'texts_in_total'))->toBe(2 + 2 + 1)
-        ->and(data_get($preview, 'estimated_cost.cents'))->toBe(5 * 8);
+        ->and(data_get($preview, 'texts_in_total'))->toBe(3 + 2 + 1)
+        ->and(data_get($preview, 'estimated_cost.cents'))->toBe(6 * 8);
 
     $this->server->tool(SendOrderTextsTool::class, ['drop_id' => $drop->id, 'confirmation_token' => data_get($preview, 'confirmation_token')])
         ->assertOk()->assertSee('"queued":3');

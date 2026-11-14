@@ -14,6 +14,9 @@ use Illuminate\Support\Arr;
  * The text that tells a customer what they ordered and when it arrives or can be collected. One text covers all of
  * someone's orders that go out the same way, so a customer who checked out twice hears once.
  *
+ * It links the first order's page (see Order::shortLink()), which has the farm's map and lists their other orders the
+ * text covers.
+ *
  * It's about their order, not marketing, so it names the shop but has no opt-out line. It keeps to the GSM
  * alphabet, so each part holds 153 characters rather than 67.
  */
@@ -36,10 +39,10 @@ final readonly class OrderConfirmationText
         $it = $units > 1 ? 'them' : 'it';
 
         $when = $first->delivery_method === DeliveryMethod::Delivery
-            ? "We'll deliver {$it} after 4pm on ".self::deliveryNight($orders).", and we'll text you closer to the time."
+            ? "We'll deliver {$it} after 4pm on ".self::deliveryNight($orders).", and we'll text you closer to the time. Your order: {$first->shortLink()}"
             : 'Pick '.$it.' up from '.config()->string('shop.location.street').', '.config()->string('shop.location.locality').', '
                 .($first->drop->deliveryWeekdays() ?? config()->string('shop.pickup.days')).' between '
-                .str_replace(' to ', ' and ', config()->string('shop.pickup.hours')).'. Map: '.self::mapLink();
+                .str_replace(' to ', ' and ', config()->string('shop.pickup.hours')).". Your order & map: {$first->shortLink()}";
 
         $body = 'Hi'.($name === null ? ' there' : " {$name}").', thanks for your order'.(count($orders) > 1 ? 's' : '')
             ." {$references}: {$items}. {$when} Questions? Just reply here. - ".self::signOff();
@@ -118,14 +121,6 @@ final readonly class OrderConfirmationText
         }
 
         return $orders[0]->drop->deliveryWeekdays() ?? config()->string('shop.pickup.days');
-    }
-
-    /**
-     * fergusonlivestock.com.au/farm, which sends phones to the farm on Google Maps.
-     */
-    private static function mapLink(): string
-    {
-        return (string) preg_replace('#^https?://(www\.)?#', '', route('farm'));
     }
 
     /**

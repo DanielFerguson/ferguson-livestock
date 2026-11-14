@@ -44,7 +44,7 @@ Route::middleware(CacheResponse::class)->group(function (): void {
 // Refunds now live on the delivery page.
 Route::permanentRedirect('/delivery-and-refunds', '/delivery#refunds');
 
-// The short map link in pickup texts. A temporary redirect, so where it points can change.
+// The farm on Google Maps, linked from order pages. A temporary redirect, so where it points can change.
 Route::get('/farm', fn () => redirect()->away(config()->string('shop.location.map_url')))->name('farm');
 
 Route::post('/waitlist', JoinWaitlistController::class)->middleware('throttle:waitlist')->name('waitlist.store');

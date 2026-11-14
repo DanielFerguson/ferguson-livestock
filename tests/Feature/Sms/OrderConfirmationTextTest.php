@@ -38,8 +38,9 @@ it('tells a pickup customer what they ordered, and where and when to collect it'
 
     $text = OrderConfirmationText::for([$order]);
 
-    expect($text->text)->toBe("Ferguson Livestock: Hi Alec, thanks for your order {$order->reference()}: 1 x 10kg Beef Box. Pick it up from 306 Snake Valley-Chepstowe Rd, Snake Valley, Saturday or Sunday between 10am and 4pm. Map: fergusonlivestock.com.au/farm Questions? Just reply here. - Daniel & Tahlia")
-        ->and($text->isGsm())->toBeTrue();
+    expect($text->text)->toBe("Ferguson Livestock: Hi Alec, thanks for your order {$order->reference()}: 1 x 10kg Beef Box. Pick it up from 306 Snake Valley-Chepstowe Rd, Snake Valley, Saturday or Sunday between 10am and 4pm. Your order & map: fergs.au/{$order->access_token} Questions? Just reply here. - Daniel & Tahlia")
+        ->and($text->isGsm())->toBeTrue()
+        ->and($text->segments())->toBe(2);
 });
 
 it('leaves what was given free off the list, since it wasn’t ordered', function (): void {
@@ -58,7 +59,8 @@ it('tells a delivery customer the night they chose, and leaves the delivery fee 
 
     $text = OrderConfirmationText::for([$order->load('items.product')]);
 
-    expect($text->text)->toBe("Ferguson Livestock: Hi Paul, thanks for your order {$order->reference()}: 1 x 10kg Beef Box. We'll deliver it after 4pm on Sunday, and we'll text you closer to the time. Questions? Just reply here. - Daniel & Tahlia");
+    expect($text->text)->toBe("Ferguson Livestock: Hi Paul, thanks for your order {$order->reference()}: 1 x 10kg Beef Box. We'll deliver it after 4pm on Sunday, and we'll text you closer to the time. Your order: fergs.au/{$order->access_token} Questions? Just reply here. - Daniel & Tahlia")
+        ->and($text->segments())->toBe(2);
 });
 
 it('gives both nights to a delivery customer happy with either', function (): void {
@@ -91,6 +93,16 @@ it('greets someone by name only when they gave one', function (string $customer,
     'a name with an apostrophe' => ["D'Arcy Smith", "Hi D'Arcy"],
 ]);
 
-it('sends the map link in pickup texts to the farm on Google Maps', function (): void {
+it('sends the farm’s map link to Google Maps', function (): void {
     $this->get('/farm')->assertRedirect(config()->string('shop.location.map_url'));
+});
+
+it('links the first order’s page when one text covers several, since that page lists the rest', function (): void {
+    $drop = weekendDrop();
+    $first = orderOf($drop, 'Sam Buyer', ['10kg Beef Box' => 1]);
+    $second = orderOf($drop, 'Sam Buyer', ['500g Beef Mince' => 2]);
+
+    expect(OrderConfirmationText::for([$first, $second])->text)
+        ->toContain("Your order & map: fergs.au/{$first->access_token} ")
+        ->not->toContain($second->access_token);
 });
