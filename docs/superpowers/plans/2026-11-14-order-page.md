@@ -2636,13 +2636,16 @@ Ask them to run `php artisan test --compact` (or `composer ci`).
 
 Pushes to `main` reach customers, so ship in this order:
 
-1. Deploy the code with `SHOP_SHORT_DOMAIN` unset. Texts carry the full `fergusonlivestock.com.au/orders/…` link until
-   the domain is ready, so nothing breaks.
+1. Push only when no drop is open and early access is off. The access-token migration makes a new column required,
+   and Laravel Cloud's zero-downtime switch leaves the old release serving for a moment after it runs; with no drop
+   open, no checkout can hit that window.
 2. Register `fergs.au` with an auDA-accredited registrar (needs the ABN). Consider `fergusonlivestock.au` too, so nobody
    can use it for phishing texts.
 3. In Laravel Cloud, add `fergs.au` as a custom domain on the production environment and create the DNS records it
-   shows. The `deploying-to-cloud` skill can help.
-4. Check `https://fergs.au/` redirects to the home page and `https://fergs.au/<a real order's token>` opens its page.
-5. Only then set `SHOP_SHORT_DOMAIN=fergs.au` on production and redeploy: the setting takes effect on the next deploy
-   (config is cached at deploy).
+   shows (in Cloudflare). Wait until it resolves with a certificate.
+4. Set `SHOP_SHORT_DOMAIN=fergs.au` on production. It takes effect on the next deploy (config is cached at deploy), and
+   from then on texts carry `https://fergs.au/…` links, so it needs step 3 done first. Without it, texts carry the full
+   `https://fergusonlivestock.com.au/orders/…` link, which also works.
+5. Push. Then check `https://fergs.au/` redirects to the home page and a real order's `https://fergs.au/<token>` opens
+   its page (the token is on the order in the admin).
 6. Preview the next drop's texts (`prepare-order-texts-tool`) to see the short link in place.
