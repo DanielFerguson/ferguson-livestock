@@ -27,7 +27,8 @@ class RedirectShortDomain
     {
         $shortDomain = config('shop.short_domain');
 
-        if (! is_string($shortDomain) || $shortDomain === '' || $request->getHost() !== $shortDomain) {
+        // Hosts arrive lowercased, so a setting typed as "Fergs.au" still matches.
+        if (! is_string($shortDomain) || $shortDomain === '' || $request->getHost() !== strtolower($shortDomain)) {
             return $next($request);
         }
 
