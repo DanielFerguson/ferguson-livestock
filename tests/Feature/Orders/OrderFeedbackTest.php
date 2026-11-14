@@ -45,6 +45,30 @@ it('replaces their feedback when they leave it again', function (): void {
     Mail::assertQueued(NewFeedbackNotification::class, fn (NewFeedbackNotification $mail): bool => $mail->edited);
 });
 
+it('doesn’t email the farm again when resubmitted feedback changes nothing', function (): void {
+    Mail::fake();
+    $order = samsWeekendOrder();
+    OrderFeedback::factory()->for($order)->create(['rating' => 4, 'comment' => 'Lovely']);
+
+    leaveFeedback($order, ['rating' => 4, 'comment' => 'Lovely'])->assertSessionHas('order-page.feedback');
+
+    Mail::assertNothingQueued();
+});
+
+it('emails the farm about one order’s feedback at most once every ten minutes', function (): void {
+    Mail::fake();
+    $order = samsWeekendOrder();
+
+    leaveFeedback($order, ['rating' => 5]);
+    leaveFeedback($order, ['rating' => 4]);
+    Mail::assertQueued(NewFeedbackNotification::class, 1);
+
+    $this->travel(10)->minutes();
+    leaveFeedback($order, ['rating' => 3]);
+    Mail::assertQueued(NewFeedbackNotification::class, 2);
+    expect($order->feedback()->sole()->rating)->toBe(3);
+});
+
 it('shows the feedback they left, ready to change', function (): void {
     $order = samsWeekendOrder();
     OrderFeedback::factory()->for($order)->create(['rating' => 4, 'comment' => 'Best mince we’ve had.']);
