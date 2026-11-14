@@ -202,6 +202,14 @@ class Order extends Model
         return $this->delivery_day?->format('D j M') ?? 'Either night';
     }
 
+    /**
+     * Whether all of it has been given back. A refund leaves the order's status as it was, so this goes by the amount.
+     */
+    public function isRefundedInFull(): bool
+    {
+        return $this->total > 0 && $this->amount_refunded >= $this->total;
+    }
+
     public function firstName(): ?string
     {
         return $this->customer_name === null ? null : explode(' ', trim($this->customer_name))[0];

@@ -142,6 +142,17 @@ it('tells a pickup customer where and when to collect, with the farm’s map', f
         ->assertSee(route('farm'));
 });
 
+it('tells a customer whose order was refunded in full that there’s nothing to deliver or collect', function (Order $order, string $nothingToDo): void {
+    $this->get($order->pageUrl())
+        ->assertOk()
+        ->assertSee($nothingToDo)
+        ->assertDontSee('We’ll bring it to you')
+        ->assertDontSee('Collect it from');
+})->with([
+    'a delivery' => [fn (): Order => samsWeekendOrder(['amount_refunded' => 17500]), 'This order has been refunded, so there’s nothing to deliver.'],
+    'a pickup' => [fn (): Order => samsWeekendOrder(['amount_refunded' => 17500, 'delivery_method' => DeliveryMethod::Pickup, 'delivery_day' => null, 'shipping_address' => null]), 'This order has been refunded, so there’s nothing to collect.'],
+]);
+
 it('gives a receipt, with what was given free and anything refunded', function (): void {
     $order = samsWeekendOrder(['amount_refunded' => 1500]);
     OrderItem::factory()->for($order)->for(Product::factory()->create(['name' => '500g Beef Mince']))->free()->create(['quantity' => 2]);

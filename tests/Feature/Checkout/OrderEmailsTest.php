@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Checkout\OrderPayments;
 use App\Enums\DeliveryMethod;
+use App\Enums\OrderStatus;
 use App\Mail\NewOrderNotification;
 use App\Mail\OrderConfirmation;
 use App\Models\Order;
@@ -33,7 +34,29 @@ it('confirms the order to the customer, with what they bought and when it arrive
 
     $mail->assertHasSubject("Your Ferguson Livestock order {$order->reference()}")
         ->assertHasReplyTo(config()->string('shop.email'))
-        ->assertSeeInOrderInHtml(['Thanks, Sam!', $order->reference(), '5kg Beef Box', '$160', 'Delivery', '$15', '$175', 'Saturday night, 10 October', '1 Main St', 'Ballarat 3350']);
+        ->assertSeeInOrderInHtml(['Thanks, Sam!', $order->reference(), 'is paid and we’re getting it ready.', '5kg Beef Box', '$160', 'Delivery', '$15', '$175', 'Saturday night, 10 October', '1 Main St', 'Ballarat 3350', 'We’ll be in touch to confirm a time.']);
+});
+
+it('says where the order is up to when the customer asks for it again from their page', function (Order $order, string $opening): void {
+    (new OrderConfirmation($order))
+        ->assertSeeInOrderInHtml(['Thanks, Sam!', $order->reference(), $opening])
+        ->assertDontSeeInHtml('getting it ready');
+})->with([
+    'payment clearing' => [fn (): Order => samsWeekendOrder(['status' => OrderStatus::Processing]), 'is waiting for your bank payment to clear'],
+    'delivered' => [fn (): Order => samsWeekendOrder(['status' => OrderStatus::Fulfilled]), 'Thanks again for buying from us.'],
+    'refunded in full' => [fn (): Order => samsWeekendOrder(['amount_refunded' => 17500]), 'has been refunded in full.'],
+]);
+
+it('doesn’t promise to be in touch about a delivery that’s been made', function (): void {
+    (new OrderConfirmation(samsWeekendOrder(['status' => OrderStatus::Fulfilled])))
+        ->assertSeeInOrderInHtml(['Saturday night, 21 November', '1 Main St'])
+        ->assertDontSeeInHtml('We’ll be in touch to confirm a time.');
+});
+
+it('shows what was refunded, and no delivery for an order refunded in full', function (): void {
+    (new OrderConfirmation(samsWeekendOrder(['amount_refunded' => 17500])))
+        ->assertSeeInOrderInHtml(['Total', '$175', 'Refunded', '−$175'])
+        ->assertDontSeeInHtml('1 Main St');
 });
 
 it('tells a customer who chose either night that it comes one of the drop’s nights', function (): void {

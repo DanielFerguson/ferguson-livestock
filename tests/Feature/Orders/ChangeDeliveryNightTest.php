@@ -103,6 +103,16 @@ it('refuses an order that’s been delivered', function (): void {
     changeNightTo($order, '2026-11-22')->assertSessionHasErrorsIn('night', ['night' => 'It’s too late to change your night here. Text us on 0427 458 706 and we’ll see what we can do.']);
 });
 
+it('refuses an order that’s been refunded in full', function (): void {
+    Mail::fake();
+    $order = samsWeekendOrder(['amount_refunded' => 17500]);
+
+    changeNightTo($order, '2026-11-22')->assertSessionHasErrorsIn('night', ['night' => 'This order has been refunded, so there’s no delivery night to change.']);
+
+    expect($order->refresh()->delivery_day?->toDateString())->toBe('2026-11-21');
+    Mail::assertNothingQueued();
+});
+
 it('can’t change a checkout that never became an order', function (): void {
     changeNightTo(samsWeekendOrder(['status' => OrderStatus::Expired]), '2026-11-22')->assertNotFound();
 });
@@ -147,6 +157,7 @@ it('doesn’t offer to change the night when there’s nothing to change it to',
     'a pickup' => [fn (): Order => samsWeekendOrder(['delivery_method' => DeliveryMethod::Pickup, 'delivery_day' => null, 'shipping_address' => null])],
     'a one-night drop' => [fn (): Order => samsWeekendOrder(nights: ['2026-11-21'])],
     'already delivered' => [fn (): Order => samsWeekendOrder(['status' => OrderStatus::Fulfilled])],
+    'refunded in full' => [fn (): Order => samsWeekendOrder(['amount_refunded' => 17500])],
     'from 12pm the day before' => [function (): Order {
         travelTo(CarbonImmutable::parse('2026-11-20 12:00', 'Australia/Melbourne'));
 

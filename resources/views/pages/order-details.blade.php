@@ -4,8 +4,7 @@
 
     /** @var \App\Models\Order $order */
     $firstName = $order->firstName() ?? 'friend';
-    // A refund leaves the order's status as it was, so a full one is told by the amount.
-    $isRefundedInFull = $order->total > 0 && $order->amount_refunded >= $order->total;
+    $isRefundedInFull = $order->isRefundedInFull();
     $subheading = match (true) {
         $isRefundedInFull => 'Your order has been refunded',
         $order->status === OrderStatus::Processing => 'Your payment is on its way',

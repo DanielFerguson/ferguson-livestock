@@ -37,7 +37,7 @@ final readonly class ChangeDeliveryNight
 
     /**
      * The nights the order can move to now, as the page offers them: dates (Y-m-d), and "either" when the drop has more
-     * than one night. Empty for a pickup, a delivered order, a one-night drop, or once it's too late.
+     * than one night. Empty for a pickup, a delivered or fully refunded order, a one-night drop, or once it's too late.
      *
      * @return list<string>
      */
@@ -45,7 +45,7 @@ final readonly class ChangeDeliveryNight
     {
         $nights = $order->drop->delivery_days;
 
-        if ($order->delivery_method !== DeliveryMethod::Delivery || ! in_array($order->status, self::CHANGEABLE, true) || count($nights) < 2) {
+        if ($order->delivery_method !== DeliveryMethod::Delivery || ! in_array($order->status, self::CHANGEABLE, true) || $order->isRefundedInFull() || count($nights) < 2) {
             return [];
         }
 
@@ -67,6 +67,10 @@ final readonly class ChangeDeliveryNight
     {
         if ($order->delivery_method !== DeliveryMethod::Delivery) {
             throw new CannotChangeOrder('This order is a farm pickup, so there’s no delivery night to change.');
+        }
+
+        if ($order->isRefundedInFull()) {
+            throw new CannotChangeOrder('This order has been refunded, so there’s no delivery night to change.');
         }
 
         if ($night === self::nightOf($order)) {
