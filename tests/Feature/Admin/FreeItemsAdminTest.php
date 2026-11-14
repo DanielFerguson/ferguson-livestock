@@ -26,7 +26,8 @@ it('adds a free item from the order’s page, taking it from the drop’s stock'
         ->callAction('giveFreeItem', ['drop_item_id' => $this->shop->mince->id, 'quantity' => 2])
         ->assertHasNoActionErrors()
         ->assertNotified('Free item added')
-        ->assertSeeText('Free');
+        ->assertActionVisible('takeBackFreeItem')
+        ->assertSeeTextInOrder(['500g Beef Mince', 'Free']);
 
     expect($this->order->refresh()->total)->toBe(16000)
         ->and($this->shop->mince->refresh()->available)->toBe(8);
@@ -46,7 +47,9 @@ it('removes a free item from the order’s page, putting it back on sale', funct
 
     livewire(ViewOrder::class, ['record' => $this->order->id])
         ->callAction('takeBackFreeItem')
-        ->assertNotified('Free item removed');
+        ->assertNotified('Free item removed')
+        ->assertActionHidden('takeBackFreeItem')
+        ->assertDontSeeText('Free');
 
     expect($this->order->items()->where('free', true)->count())->toBe(0)
         ->and($this->shop->mince->refresh()->available)->toBe(10);

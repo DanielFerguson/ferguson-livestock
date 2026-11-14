@@ -87,7 +87,7 @@ final class OrderActions
             ->icon(Heroicon::OutlinedGift)
             ->color('gray')
             ->visible(fn (Order $record): bool => GiveFreeItems::canTakeFreeItems($record))
-            ->modalHeading(fn (Order $record): string => 'Give '.($record->firstName() ?? 'them').' something free')
+            ->modalHeading(fn (Order $record): string => 'Give '.($record->customer_name ?? 'them').' something free')
             ->modalDescription('It comes out of the drop’s stock. What they paid doesn’t change, and they aren’t told.')
             ->schema([
                 Select::make('drop_item_id')
@@ -139,7 +139,7 @@ final class OrderActions
                     }
 
                     $takeBackFreeItem($line);
-                    $record->refresh();
+                    $record->refresh()->load('items.product');
 
                     Notification::make()->title('Free item removed')->body('It’s back on sale.')->success()->send();
                 } catch (CannotChangeOrder $exception) {
