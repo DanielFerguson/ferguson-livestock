@@ -31,7 +31,7 @@ class OrderResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentList;
 
-    protected static ?int $navigationSort = 0;
+    protected static ?int $navigationSort = -1;
 
     public static function getRecordTitle(?Model $record): string
     {
@@ -53,7 +53,7 @@ class OrderResource extends Resource
      */
     public static function getRecordRouteBindingEloquentQuery(): Builder
     {
-        return parent::getRecordRouteBindingEloquentQuery()->with(['drop', 'items.product']);
+        return parent::getRecordRouteBindingEloquentQuery()->with(['drop', 'items.product', 'feedback']);
     }
 
     public static function infolist(Schema $schema): Schema

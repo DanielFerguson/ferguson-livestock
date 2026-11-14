@@ -39,6 +39,12 @@ class OrderInfolist
                             ->label('Refunded')
                             ->formatStateUsing(fn (int $state): string => Money::format($state))
                             ->visible(fn (Order $record): bool => $record->amount_refunded > 0),
+                        TextEntry::make('page')
+                            ->label('Customer page')
+                            ->state(fn (Order $record): string => $record->pageUrl())
+                            ->url(fn (Order $record): string => $record->pageUrl(), shouldOpenInNewTab: true)
+                            ->copyable()
+                            ->columnSpanFull(),
                     ]),
                 Section::make('Customer')
                     ->schema([
@@ -71,6 +77,14 @@ class OrderInfolist
                                 TextEntry::make('quantity')->hiddenLabel()->formatStateUsing(fn (int $state): string => "× {$state}"),
                                 TextEntry::make('line_total')->hiddenLabel()->state(fn (OrderItem $record): string => $record->free ? 'Free' : Money::format($record->lineTotal())),
                             ]),
+                    ]),
+                Section::make('Feedback')
+                    ->columnSpanFull()
+                    ->visible(fn (Order $record): bool => $record->feedback !== null)
+                    ->schema([
+                        TextEntry::make('feedback_stars')->label('Rating')->state(fn (Order $record): ?string => $record->feedback?->stars()),
+                        TextEntry::make('feedback.comment')->label('Comment')->placeholder('No comment'),
+                        TextEntry::make('feedback.updated_at')->label('Left')->dateTime('D j M Y, g:ia', $timezone),
                     ]),
                 Section::make('Stripe')
                     ->collapsed()
