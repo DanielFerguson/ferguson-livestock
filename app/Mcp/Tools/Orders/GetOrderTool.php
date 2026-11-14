@@ -17,7 +17,7 @@ use Laravel\Mcp\Server\Tool;
 use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 
-#[Description('One order by its reference (FL-XXXXXX), public id or numeric id, with the customer, delivery details, items and Stripe ids.')]
+#[Description('One order by its reference (FL-XXXXXX), public id or numeric id, with the customer, delivery details, items, the customer’s order page link, their feedback and Stripe ids.')]
 #[IsReadOnly]
 #[IsIdempotent]
 final class GetOrderTool extends Tool
@@ -29,7 +29,7 @@ final class GetOrderTool extends Tool
         $reference = $arguments->requireString('order');
         $code = ltrim(str_ireplace('FL-', '', $reference), '-');
 
-        $orders = Order::query()->with(['items.product', 'drop'])
+        $orders = Order::query()->with(['items.product', 'drop', 'feedback'])
             ->where(fn ($query) => $query
                 ->when(strlen($code) === 6, fn ($query) => $query->whereRaw('upper(right(public_id, 6)) = ?', [strtoupper($code)]))
                 ->orWhere('public_id', 'ilike', $code)

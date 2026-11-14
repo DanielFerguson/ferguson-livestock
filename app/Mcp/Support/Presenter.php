@@ -124,6 +124,8 @@ final class Presenter
         ];
 
         if ($detailed) {
+            $feedback = $order->loadMissing('feedback')->feedback;
+
             $presented += [
                 'shipping_address' => $order->shipping_address,
                 'created_at' => self::time($order->created_at),
@@ -132,6 +134,12 @@ final class Presenter
                 'refunded_at' => self::time($order->refunded_at),
                 'stripe_checkout_session_id' => $order->stripe_checkout_session_id,
                 'stripe_payment_intent_id' => $order->stripe_payment_intent_id,
+                'page_url' => $order->pageUrl(),
+                'feedback' => $feedback === null ? null : [
+                    'rating' => $feedback->rating,
+                    'comment' => $feedback->comment,
+                    'left_at' => self::time($feedback->updated_at),
+                ],
                 'lines' => $order->items->map(fn (OrderItem $line): array => [
                     'product_id' => $line->product_id,
                     'product' => $line->product->name,

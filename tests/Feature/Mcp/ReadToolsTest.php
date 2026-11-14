@@ -28,6 +28,7 @@ use App\Mcp\Tools\Subscribers\GetSubscriberStatsTool;
 use App\Mcp\Tools\Subscribers\ListSubscribersTool;
 use App\Models\Drop;
 use App\Models\Order;
+use App\Models\OrderFeedback;
 use App\Models\OrderItem;
 use App\Models\SmsBroadcast;
 use App\Models\SmsMessage;
@@ -85,6 +86,16 @@ describe('orders', function (): void {
         $this->server->tool(ListOrdersTool::class, ['status' => 'pending'])->assertOk()->assertDontSee('Jane Smith');
         $this->server->tool(GetOrderTool::class, ['order' => $paid->reference()])->assertOk()->assertSee('Jane Smith')->assertSee('stripe_checkout_session_id');
         $this->server->tool(GetOrderTool::class, ['order' => 'FL-NOSUCH'])->assertHasErrors();
+    });
+
+    it('gives an order’s page link and the feedback left on it', function (): void {
+        $order = Order::factory()->create();
+        OrderFeedback::factory()->for($order)->create(['rating' => 4, 'comment' => 'Great mince']);
+
+        $this->server->tool(GetOrderTool::class, ['order' => $order->reference()])
+            ->assertOk()
+            ->assertSee($order->access_token)
+            ->assertSee('Great mince');
     });
 
     it('builds the delivery run', function (): void {
