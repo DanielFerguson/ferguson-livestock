@@ -1,4 +1,4 @@
-{{-- How the order reaches the customer. Expects $order (with its drop) and $textUsUrl. --}}
+{{-- How the order reaches the customer. Expects $order (with its drop), $textUsUrl and $nightChoices (see ChangeDeliveryNight::choicesFor()). --}}
 @php
     use App\Enums\DeliveryMethod;
 
@@ -16,6 +16,18 @@
                 {{ $address['line1'] ?? '' }}@if (filled($address['line2'] ?? null)), {{ $address['line2'] }}@endif<br>
                 {{ $address['city'] ?? '' }} {{ $address['postal_code'] ?? '' }}
             </address>
+        @endif
+
+        @if (session('order-page.night'))
+            <p class="mt-4 border-l-4 border-sage bg-mint/10 p-4 text-forest" role="status">{{ session('order-page.night') }}</p>
+        @endif
+
+        @if ($errors->getBag('night')->has('night'))
+            <p class="mt-4 border-l-4 border-red-700 bg-red-50 p-4 text-red-900" role="alert">{{ $errors->getBag('night')->first('night') }}</p>
+        @endif
+
+        @if ($nightChoices !== [])
+            @include('pages.order-details._change-night')
         @endif
     @else
         <h2 id="delivery-heading" class="mb-3 font-display text-2xl font-semibold text-forest">Farm pickup</h2>

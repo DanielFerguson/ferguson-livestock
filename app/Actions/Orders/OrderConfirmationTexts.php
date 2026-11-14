@@ -139,6 +139,30 @@ final readonly class OrderConfirmationTexts
     }
 
     /**
+     * Rewrite the order's text if it's still waiting to go, so it gives what the order is now, like a night the
+     * customer has just changed. A text that's sent, or being sent, is left alone.
+     */
+    public function rewriteWaiting(Order $order): void
+    {
+        $message = $order->confirmationText()->with(['orders.items.product', 'orders.drop'])->first();
+
+        if (! $message instanceof SmsMessage || $message->status !== SmsStatus::Queued) {
+            return;
+        }
+
+        $orders = array_values($message->orders->sortBy('id')->all());
+
+        if ($orders === []) {
+            return;
+        }
+
+        SmsMessage::query()
+            ->whereKey($message->id)
+            ->where('status', SmsStatus::Queued)
+            ->update(['body' => OrderConfirmationText::for($orders)->text]);
+    }
+
+    /**
      * Save the text for one person's orders, waiting to go, and link the orders to it. Orders already given a text
      * are left out, so two requests at once can't both save one. Null when there's nothing to text, the number isn't an
      * Australian mobile, or it has opted out.
