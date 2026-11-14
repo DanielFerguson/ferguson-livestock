@@ -52,8 +52,7 @@ self.addEventListener('notificationclick', (event) => {
     event.waitUntil((async () => {
         const [open] = await self.clients.matchAll({ type: 'window' });
 
-        // Navigated before it's focused: navigate() doesn't need the tap's allowance to bring a window forward, and
-        // focus() may use it up.
+        // navigate() doesn't use up the tap's permission to bring a window forward; focus() may, so it goes last.
         if (open) {
             try {
                 const client = (await open.navigate(url)) ?? open;

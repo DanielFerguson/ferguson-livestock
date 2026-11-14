@@ -57,6 +57,6 @@ final readonly class CheckDropBeforeItOpens
 
         $admin = User::admin();
 
-        $admin !== null ? $admin->notify($notification) : Notification::route('mail', $email)->notify($notification);
+        $admin instanceof User ? $admin->notify($notification) : Notification::route('mail', $email)->notify($notification);
     }
 }
