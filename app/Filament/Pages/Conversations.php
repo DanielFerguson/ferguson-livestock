@@ -74,6 +74,7 @@ class Conversations extends Page
         $this->phone = $phone;
         $this->draft = '';
         ConversationList::markRead($phone);
+        $this->updateBadge();
     }
 
     /**
@@ -84,6 +85,8 @@ class Conversations extends Page
         if ($this->phone !== null) {
             ConversationList::markRead($this->phone);
         }
+
+        $this->updateBadge();
     }
 
     public function send(SendReply $reply): void
@@ -117,6 +120,8 @@ class Conversations extends Page
         if ($this->phone !== null) {
             ConversationState::followUp($this->phone);
         }
+
+        $this->updateBadge();
     }
 
     public function clearFollowUp(): void
@@ -124,6 +129,8 @@ class Conversations extends Page
         if ($this->phone !== null) {
             ConversationState::clearFollowUp($this->phone);
         }
+
+        $this->updateBadge();
     }
 
     /**
@@ -135,6 +142,8 @@ class Conversations extends Page
             ConversationState::markDone($this->phone);
             ConversationList::markRead($this->phone);
         }
+
+        $this->updateBadge();
     }
 
     /**
@@ -255,5 +264,13 @@ class Conversations extends Page
         }
 
         return $user;
+    }
+
+    /**
+     * Tell the installed app how many conversations need a look, for the badge on its icon.
+     */
+    private function updateBadge(): void
+    {
+        $this->dispatch('attention-count', count: ConversationList::attentionCount());
     }
 }

@@ -324,3 +324,16 @@ it('offers notifications for new texts once the push keys are set', function ():
     config(['webpush.vapid.public_key' => 'BPublicKey']);
     livewire(Conversations::class)->assertSee('Turn on notifications')->assertDontSee('aren’t set up yet');
 });
+
+it('keeps the app icon’s count in step as conversations are read, flagged and finished', function (): void {
+    $jane = Subscriber::factory()->create();
+    SmsMessage::factory()->for($jane)->reply()->create();
+    SmsMessage::factory()->reply()->create(['subscriber_id' => null, 'from' => '+61499999999']);
+
+    $page = livewire(Conversations::class);
+
+    $page->call('open', $jane->phone)->assertDispatched('attention-count', count: 1);
+    $page->call('followUp')->assertDispatched('attention-count', count: 2);
+    $page->call('done')->assertDispatched('attention-count', count: 1);
+    $page->call('refreshOpen')->assertDispatched('attention-count', count: 1);
+});
