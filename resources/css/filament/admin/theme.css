@@ -46,3 +46,12 @@
     font-family: var(--font-serif);
     font-weight: 600;
 }
+
+/* The warning from resources/views/filament/admin/push-warning.blade.php, while no phone gets pushes for new texts. */
+.fl-push-warning {
+    @apply mb-6 rounded-xl bg-warning-50 px-4 py-3 text-sm text-warning-800 ring-1 ring-warning-200 dark:bg-warning-500/10 dark:text-warning-200 dark:ring-warning-500/20;
+}
+
+.fl-push-warning a {
+    @apply font-semibold underline;
+}
