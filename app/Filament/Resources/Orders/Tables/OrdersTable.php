@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Filament\Resources\Orders\Tables;
 
 use App\Enums\DeliveryMethod;
-use App\Enums\OrderStatus;
 use App\Filament\Resources\Orders\Actions\OrderActions;
 use App\Models\Order;
 use App\Support\Money;
@@ -42,10 +41,6 @@ class OrdersTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                SelectFilter::make('status')
-                    ->multiple()
-                    ->options(OrderStatus::class)
-                    ->default([OrderStatus::Paid->value, OrderStatus::Processing->value, OrderStatus::Fulfilled->value, OrderStatus::CashOwed->value]),
                 SelectFilter::make('drop')->relationship('drop', 'name'),
                 SelectFilter::make('delivery_method')->label('Delivery or pickup')->options(DeliveryMethod::class),
                 SelectFilter::make('delivery_day')

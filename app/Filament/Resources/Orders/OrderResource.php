@@ -43,7 +43,7 @@ class OrderResource extends Resource
      */
     public static function getNavigationBadge(): ?string
     {
-        $toFulfil = Order::query()->whereIn('status', [OrderStatus::Paid, OrderStatus::CashOwed])->count();
+        $toFulfil = Order::query()->whereIn('status', OrderStatus::toFulfil())->count();
 
         return $toFulfil > 0 ? (string) $toFulfil : null;
     }

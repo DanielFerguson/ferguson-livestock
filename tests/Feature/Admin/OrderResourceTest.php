@@ -18,6 +18,7 @@ use App\Models\User;
 use App\Support\DeliveryRun;
 use Filament\Actions\Testing\TestAction;
 use Filament\Forms\Components\Repeater;
+use Illuminate\Support\Arr;
 use Tests\Fixtures\StockedDrop;
 
 use function Pest\Livewire\livewire;
@@ -54,13 +55,36 @@ it('lists paid orders, leaving out checkouts that were abandoned', function (): 
         ->assertSee($paid->reference());
 });
 
+it('shows the orders in each tab', function (string $tab, array $shown): void {
+    $drop = Drop::factory()->open()->create();
+    $orders = [
+        'paid' => Order::factory()->for($drop)->create(),
+        'clearing' => Order::factory()->for($drop)->create(['status' => OrderStatus::Processing]),
+        'fulfilled' => Order::factory()->for($drop)->create(['status' => OrderStatus::Fulfilled, 'fulfilled_at' => now()]),
+        'cash owed' => Order::factory()->for($drop)->cashOwed()->create(),
+        'at checkout' => Order::factory()->for($drop)->pending()->create(),
+        'abandoned' => Order::factory()->for($drop)->pending()->create(['status' => OrderStatus::Expired]),
+        'failed' => Order::factory()->for($drop)->create(['status' => OrderStatus::Failed]),
+    ];
+
+    livewire(ListOrders::class)
+        ->set('activeTab', $tab)
+        ->assertCanSeeTableRecords(array_values(Arr::only($orders, $shown)))
+        ->assertCanNotSeeTableRecords(array_values(Arr::except($orders, $shown)));
+})->with([
+    'all' => ['all', ['paid', 'clearing', 'fulfilled', 'cash owed']],
+    'to fulfil' => ['to-fulfil', ['paid', 'cash owed']],
+    'fulfilled' => ['fulfilled', ['fulfilled']],
+    'cash owed' => ['cash-owed', ['cash owed']],
+    'not paid' => ['not-paid', ['at checkout', 'abandoned', 'failed']],
+]);
+
 it('marks orders fulfilled, leaving any that aren’t paid', function (): void {
     $drop = Drop::factory()->open()->create();
     $paid = paidOrder($drop, 'Ballarat', '3350');
     $clearing = paidOrder($drop, 'Creswick', '3363', ['status' => OrderStatus::Processing]);
 
     livewire(ListOrders::class)
-        ->filterTable('status', [OrderStatus::Paid->value, OrderStatus::Processing->value])
         ->selectTableRecords([$paid, $clearing])
         ->callAction(TestAction::make('markFulfilled')->table()->bulk());
 

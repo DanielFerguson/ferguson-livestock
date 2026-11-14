@@ -22,6 +22,36 @@ enum OrderStatus: string implements HasColor, HasLabel
     /** Recorded by hand for family or friends; stock stays held until the cash is paid or the order is cancelled. */
     case CashOwed = 'cash_owed';
 
+    /**
+     * Real orders: paid for, being paid for, or put aside for cash.
+     *
+     * @return list<self>
+     */
+    public static function placed(): array
+    {
+        return [self::Paid, self::Processing, self::Fulfilled, self::CashOwed];
+    }
+
+    /**
+     * Orders still to pack and deliver: paid ones, and cash ones put aside for friends.
+     *
+     * @return list<self>
+     */
+    public static function toFulfil(): array
+    {
+        return [self::Paid, self::CashOwed];
+    }
+
+    /**
+     * Checkouts that haven't turned into an order, or never will.
+     *
+     * @return list<self>
+     */
+    public static function notPaid(): array
+    {
+        return [self::Pending, self::Expired, self::Failed];
+    }
+
     public function getLabel(): string
     {
         return match ($this) {
