@@ -37,7 +37,7 @@ The package deletes a sign-up when Apple reports it gone, so without a warning, 
 
 ## Installing
 
-- `public/admin.webmanifest`: name and short name "Ferguson Livestock", `id` and `scope` `/admin/`, `start_url`
+- `public/admin.webmanifest`: name and short name "Ferguson Livestock", `id` and `scope` `/admin` (no trailing slash, so the dashboard at `/admin` stays in the app), `start_url`
   `/admin/conversations`, standalone, the existing icons and colours.
 - Linked from the admin's `<head>` through the `HEAD_END` render hook it already uses, with `apple-touch-icon` and
   `apple-mobile-web-app-title`. The shop's `site.webmanifest` and pages don't change.
@@ -51,7 +51,7 @@ a subscription when the push service reports it gone. VAPID keys come from `VAPI
 ## Pieces
 
 - `laravel-notification-channels/webpush` ^13 (supports Laravel 13).
-- `public/admin-sw.js`, a service worker scoped to `/admin/`. On `push` it shows the notification and sets the
+- `public/admin-sw.js`, a service worker scoped to `/admin`. On `push` it shows the notification and sets the
   badge. On `notificationclick` it focuses an open admin window and takes it to the conversation, or opens one.
 - `App\Notifications\AdminPush`: queued, sent through `WebPushChannel`. `AdminPush::forText()` builds one for a
   new text and `AdminPush::test()` the test push. The link is relative, so a tap stays inside the installed app.
