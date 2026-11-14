@@ -21,6 +21,10 @@ use Illuminate\Support\Facades\DB;
  * The text is marked as sending before it goes, so a retry, the morning's copy of this job or the owner pressing
  * "Send now" never sends it twice. The sync queue never sends it (see WaitsUntilDue), so a machine without a worker
  * can't text anyone.
+ *
+ * Claiming it waits for the text's row rather than skipping it while it's locked: a delivery night change rewrites a
+ * waiting text, and a claim that skipped it then would leave it waiting for ever. Once the lock is free the claim
+ * checks again that it's still waiting, so two copies of this job still can't both send it.
  */
 class SendOrderConfirmationText implements ShouldQueue
 {
@@ -51,7 +55,7 @@ class SendOrderConfirmationText implements ShouldQueue
                 ->whereKey($this->messageId)
                 ->where('is_order_confirmation', true)
                 ->where('status', SmsStatus::Queued)
-                ->lock('for update skip locked')
+                ->lockForUpdate()
                 ->first();
 
             $message?->update(['status' => SmsStatus::Sending]);
