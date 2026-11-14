@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Enums\DeliveryMethod;
 use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
 use App\Enums\SmsStatus;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -34,6 +35,7 @@ it('thanks them in words that fit where the order is up to', function (array $at
     'payment clearing' => [['status' => OrderStatus::Processing], 'Your payment is on its way'],
     'delivered' => [['status' => OrderStatus::Fulfilled], 'Your order has been delivered'],
     'collected' => [['status' => OrderStatus::Fulfilled, 'delivery_method' => DeliveryMethod::Pickup, 'delivery_day' => null, 'shipping_address' => null], 'You’ve collected your order'],
+    'refunded in full' => [['amount_refunded' => 17500], 'Your order has been refunded'],
 ]);
 
 it('keeps the page out of search results, caches and Meta’s pixel', function (): void {
@@ -148,6 +150,15 @@ it('gives a receipt, with what was given free and anything refunded', function (
         ->assertOk()
         ->assertSeeInOrder(['Receipt', $order->reference(), '5kg Beef Box', '$160', 'Delivery', '$15', '2 × 500g Beef Mince', 'Free', 'Total', '$175', 'Refunded', '−$15']);
 });
+
+it('says on the receipt how the order was paid', function (array $attributes, string $payment): void {
+    $this->get(samsWeekendOrder($attributes)->pageUrl())->assertOk()->assertSeeInOrder(['Receipt', $payment, 'Total']);
+})->with([
+    'online' => [[], 'Paid online'],
+    'by bank, still clearing' => [['status' => OrderStatus::Processing], 'Bank payment, clearing'],
+    'cash still owed, with no email or payment yet' => [['status' => OrderStatus::CashOwed, 'payment_method' => PaymentMethod::Cash, 'email' => null, 'paid_at' => null], 'Cash, still to pay'],
+    'cash received' => [['payment_method' => PaymentMethod::Cash, 'email' => null], 'Paid in cash'],
+]);
 
 it('shows what the customer typed as plain text', function (): void {
     $order = samsWeekendOrder([

@@ -1,4 +1,4 @@
-{{-- What the order cost. Expects $order with items.product. Prints on its own; the rest of the page hides. --}}
+{{-- What the order cost. Expects $order with items.product. Prints with the letter above it; the forms and cards below hide. --}}
 @php
     use App\Enums\OrderStatus;
     use App\Enums\PaymentMethod;

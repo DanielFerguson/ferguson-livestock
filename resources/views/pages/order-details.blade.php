@@ -4,7 +4,10 @@
 
     /** @var \App\Models\Order $order */
     $firstName = $order->firstName() ?? 'friend';
+    // A refund leaves the order's status as it was, so a full one is told by the amount.
+    $isRefundedInFull = $order->total > 0 && $order->amount_refunded >= $order->total;
     $subheading = match (true) {
+        $isRefundedInFull => 'Your order has been refunded',
         $order->status === OrderStatus::Processing => 'Your payment is on its way',
         $order->status === OrderStatus::Fulfilled && $order->delivery_method === DeliveryMethod::Delivery => 'Your order has been delivered',
         $order->status === OrderStatus::Fulfilled => 'You’ve collected your order',
@@ -25,7 +28,9 @@
 >
     <div class="bg-cream-dark px-6 py-16 print:bg-white print:py-0">
         <x-confirmation-letter :heading="'Thanks, '.$firstName.'!'" :subheading="$subheading">
-            @if ($order->status === OrderStatus::Processing)
+            @if ($isRefundedInFull)
+                <p>We’ve refunded this order in full. It can take a few business days to reach your account. If anything doesn’t look right, text us.</p>
+            @elseif ($order->status === OrderStatus::Processing)
                 <p>Your bank payment usually takes a few business days to clear. We’re holding your order in the meantime.</p>
             @elseif ($order->status === OrderStatus::Fulfilled)
                 <p>Thank you for supporting our small family farm. We hope you enjoy every bit of it, and we’d love to hear how it went at the bottom of this page.</p>
