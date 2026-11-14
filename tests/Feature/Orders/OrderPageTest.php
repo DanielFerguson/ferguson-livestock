@@ -29,13 +29,13 @@ it('shows the order to whoever has its link, thanking them by name', function ()
         ->assertSeeInOrder(['Thanks, Sam!', 'We’re getting your order ready', 'Thank you for supporting our small family farm']);
 });
 
-it('thanks them in words that fit where the order is up to', function (array $attributes, string $subheading): void {
-    $this->get(samsWeekendOrder($attributes)->pageUrl())->assertOk()->assertSee($subheading);
+it('thanks them in words that fit where the order is up to', function (Order $order, string $subheading): void {
+    $this->get($order->pageUrl())->assertOk()->assertSee($subheading);
 })->with([
-    'payment clearing' => [['status' => OrderStatus::Processing], 'Your payment is on its way'],
-    'delivered' => [['status' => OrderStatus::Fulfilled], 'Your order has been delivered'],
-    'collected' => [['status' => OrderStatus::Fulfilled, 'delivery_method' => DeliveryMethod::Pickup, 'delivery_day' => null, 'shipping_address' => null], 'You’ve collected your order'],
-    'refunded in full' => [['amount_refunded' => 17500], 'Your order has been refunded'],
+    'payment clearing' => [fn (): Order => samsWeekendOrder(['status' => OrderStatus::Processing]), 'Your payment is on its way'],
+    'delivered' => [fn (): Order => samsWeekendOrder(['status' => OrderStatus::Fulfilled]), 'Your order has been delivered'],
+    'collected' => [fn (): Order => samsWeekendOrder(['status' => OrderStatus::Fulfilled, 'delivery_method' => DeliveryMethod::Pickup, 'delivery_day' => null, 'shipping_address' => null]), 'You’ve collected your order'],
+    'refunded in full' => [fn (): Order => samsWeekendOrder(['amount_refunded' => 17500]), 'Your order has been refunded'],
 ]);
 
 it('keeps the page out of search results, caches and Meta’s pixel', function (): void {
@@ -151,13 +151,13 @@ it('gives a receipt, with what was given free and anything refunded', function (
         ->assertSeeInOrder(['Receipt', $order->reference(), '5kg Beef Box', '$160', 'Delivery', '$15', '2 × 500g Beef Mince', 'Free', 'Total', '$175', 'Refunded', '−$15']);
 });
 
-it('says on the receipt how the order was paid', function (array $attributes, string $payment): void {
-    $this->get(samsWeekendOrder($attributes)->pageUrl())->assertOk()->assertSeeInOrder(['Receipt', $payment, 'Total']);
+it('says on the receipt how the order was paid', function (Order $order, string $payment): void {
+    $this->get($order->pageUrl())->assertOk()->assertSeeInOrder(['Receipt', $payment, 'Total']);
 })->with([
-    'online' => [[], 'Paid online'],
-    'by bank, still clearing' => [['status' => OrderStatus::Processing], 'Bank payment, clearing'],
-    'cash still owed, with no email or payment yet' => [['status' => OrderStatus::CashOwed, 'payment_method' => PaymentMethod::Cash, 'email' => null, 'paid_at' => null], 'Cash, still to pay'],
-    'cash received' => [['payment_method' => PaymentMethod::Cash, 'email' => null], 'Paid in cash'],
+    'online' => [fn (): Order => samsWeekendOrder(), 'Paid online'],
+    'by bank, still clearing' => [fn (): Order => samsWeekendOrder(['status' => OrderStatus::Processing]), 'Bank payment, clearing'],
+    'cash still owed, with no email or payment yet' => [fn (): Order => samsWeekendOrder(['status' => OrderStatus::CashOwed, 'payment_method' => PaymentMethod::Cash, 'email' => null, 'paid_at' => null]), 'Cash, still to pay'],
+    'cash received' => [fn (): Order => samsWeekendOrder(['payment_method' => PaymentMethod::Cash, 'email' => null]), 'Paid in cash'],
 ]);
 
 it('shows what the customer typed as plain text', function (): void {

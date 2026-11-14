@@ -12,17 +12,21 @@ use App\Models\SmsMessage;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Testing\TestResponse;
+use Symfony\Component\HttpFoundation\Response;
 
+use function Pest\Laravel\post;
 use function Pest\Laravel\travelTo;
 
 beforeEach(fn () => travelTo(CarbonImmutable::parse('2026-11-18 09:00', 'Australia/Melbourne')));
 
 /**
  * Ask to move the order to this night from its page.
+ *
+ * @return TestResponse<Response>
  */
 function changeNightTo(Order $order, ?string $night): TestResponse
 {
-    return test()->post(route('orders.night', ['customerOrder' => $order->access_token]), $night === null ? [] : ['night' => $night]);
+    return post(route('orders.night', ['customerOrder' => $order->access_token]), $night === null ? [] : ['night' => $night]);
 }
 
 it('moves a delivery to another of the drop’s nights, and tells the farm', function (): void {
@@ -137,8 +141,8 @@ it('offers the drop’s other nights on the order page until changes close', fun
         ->assertSeeInOrder(['Need a different night?', 'Saturday night, 21 November', 'Sunday night, 22 November', 'Either night suits me', 'Change night']);
 });
 
-it('doesn’t offer to change the night when there’s nothing to change it to', function (Closure $makeOrder): void {
-    $this->get($makeOrder()->pageUrl())->assertOk()->assertDontSee('Need a different night?');
+it('doesn’t offer to change the night when there’s nothing to change it to', function (Order $order): void {
+    $this->get($order->pageUrl())->assertOk()->assertDontSee('Need a different night?');
 })->with([
     'a pickup' => [fn (): Order => samsWeekendOrder(['delivery_method' => DeliveryMethod::Pickup, 'delivery_day' => null, 'shipping_address' => null])],
     'a one-night drop' => [fn (): Order => samsWeekendOrder(nights: ['2026-11-21'])],
