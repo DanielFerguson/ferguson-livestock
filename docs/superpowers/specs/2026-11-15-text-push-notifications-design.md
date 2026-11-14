@@ -1,0 +1,73 @@
+# Push notifications for incoming texts
+
+Texts to the shop's number only show up in the admin's Conversations page, so the owner has to keep checking it.
+They want the admin on their iPhone's home screen and a push notification the moment someone texts.
+
+## Approach
+
+Make the admin an installable web app and send a Web Push for each incoming text. iOS has supported this since
+16.4 for web apps added to the Home Screen. Rejected: a native iOS app (Apple developer fee, Xcode builds, and
+TestFlight builds that expire every 90 days, all for one phone; its only real gain is replying from the lock
+screen) and forwarding each text by SMS or email (duplicate texts or buried emails, and no home screen app).
+
+## Rules
+
+- Every new incoming text pushes, once. Twilio's resends of the same text (same `MessageSid`) don't push again.
+- STOP and START texts (`OptOutKeywords`, `OptInKeywords`) don't push. They need no reply and still show in
+  Conversations.
+- Pushes go to the admin account (`shop.admin_email`), to every device that has turned notifications on under it.
+  No admin account: log a warning and skip, like the pre-flight alerts.
+- The title is the subscriber's name, or the number when the sender isn't a subscriber. The body is the text.
+  Tapping it opens `/admin/conversations?phone=<number>`.
+- The icon badge shows `ConversationList::attentionCount()`, the same count as the sidebar badge. It's set when a
+  push arrives and refreshed when an admin page loads or a conversation is opened.
+- No quiet hours here: the phone's Focus and Do Not Disturb settings decide.
+- The push is queued, so Twilio still gets its answer straight away. A push that fails for good triggers the
+  existing failed-job email.
+
+## Installing
+
+- `public/admin.webmanifest`: name and short name "Ferguson Livestock", `id` and `scope` `/admin/`, `start_url`
+  `/admin/conversations`, standalone, the existing icons and colours.
+- Linked from the admin's `<head>` through the `HEAD_END` render hook it already uses, with `apple-touch-icon` and
+  `apple-mobile-web-app-title`. The shop's `site.webmanifest` and pages don't change.
+
+## Data
+
+The package's `push_subscriptions` table, morphed to `User`, which uses `HasPushSubscriptions`. The package removes
+a subscription when the push service reports it gone. VAPID keys come from `VAPID_PUBLIC_KEY` and
+`VAPID_PRIVATE_KEY`, with the site URL as the subject.
+
+## Pieces
+
+- `laravel-notification-channels/webpush` ^13 (supports Laravel 13).
+- `public/admin-sw.js`, a service worker scoped to `/admin/`. On `push` it shows the notification and sets the
+  badge. On `notificationclick` it focuses an open admin window and takes it to the conversation, or opens one.
+- `App\Notifications\NewTextReceived`: queued, sent through `WebPushChannel`, built from the `SmsMessage`.
+- `TwilioInboundController`: after storing a text, if it was just created and isn't STOP or START, notify the admin.
+  The admin lookup is shared with `CheckDropBeforeItOpens`.
+- Conversations page "Notifications" control: Livewire methods to save the phone's subscription, remove it, and
+  send a test push to the admin. A small script asks permission and subscribes with the public VAPID key. Outside
+  the installed app it says to add it to the Home Screen first. When permission was denied it explains how to turn
+  it on in Settings.
+- Badge sync: the admin passes the attention count to the page on load, and again after a conversation is opened
+  or the open one refreshes. The script calls `navigator.setAppBadge()`, or `clearAppBadge()` at zero.
+
+## Rollout
+
+1. Generate the VAPID keys once and set them on Laravel Cloud before deploying.
+2. Deploy. The migration adds `push_subscriptions`.
+3. On the phone: open the admin in Safari, then Share → Add to Home Screen. Open the icon, log in with "remember
+   me" ticked, turn notifications on and send a test.
+
+## Testing
+
+Feature tests:
+- A new text notifies the admin once, with the name, the text and the conversation link.
+- A sender who isn't a subscriber is titled by their number.
+- A resent text doesn't notify again.
+- STOP and START texts don't notify.
+- No admin account means no push.
+- The Conversations page saves and removes a subscription for the logged-in admin and sends a test push.
+
+The service worker and the phone side are checked by hand on the owner's phone.
