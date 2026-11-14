@@ -16,6 +16,10 @@ We’ll be in touch to confirm a time. Everything arrives vacuum-sealed in insul
 **Farm pickup** from {{ config('shop.location.locality') }}, {{ $order->loadMissing('drop')->drop->pickupTimes() }}.
 @endif
 
+<x-mail::button :url="$order->pageUrl()">
+View your order
+</x-mail::button>
+
 Questions? Reply to this email or call {{ config('shop.phone.display') }}.
 
 With gratitude,<br>

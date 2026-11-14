@@ -91,3 +91,11 @@ it('retries a failed order email a few times before giving up', function (): voi
     expect([$confirmation->tries, $notification->tries])->toBe([5, 5])
         ->and([$confirmation->backoff, $notification->backoff])->toBe([[10, 30, 120, 600], [10, 30, 120, 600]]);
 });
+
+it('links the customer to their order page', function (): void {
+    $order = paidDelivery();
+
+    (new OrderConfirmation($order))
+        ->assertSeeInHtml('View your order')
+        ->assertSeeInHtml($order->pageUrl());
+});
