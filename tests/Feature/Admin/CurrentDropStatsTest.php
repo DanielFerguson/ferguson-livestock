@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Actions\Orders\GiveFreeItems;
 use App\Checkout\OrderPayments;
 use App\Enums\DeliveryMethod;
+use App\Enums\OrderStatus;
 use App\Filament\Widgets\CurrentDropStats;
 use App\Models\User;
 use App\Payments\CheckoutSession;
@@ -31,6 +33,20 @@ it('shows what’s sold, at checkout and left of each item in the current drop',
         ->assertTableColumnStateSet('at_checkout', 3, $shop->mince)
         ->assertTableColumnStateSet('left', 5, $shop->mince)
         ->assertTableColumnStateSet('revenue', '$24', $shop->mince);
+});
+
+it('counts free items as given away, not sold', function (): void {
+    config(['shop.admin_email' => 'daniel@example.com']);
+    $this->actingAs(User::factory()->withAppAuthentication()->create(['email' => 'daniel@example.com']));
+    $shop = StockedDrop::create(boxes: 5, mince: 10);
+    $order = app(StockLedger::class)->setAside($shop->drop, [$shop->mince->id => 1], ['status' => OrderStatus::Paid, 'delivery_method' => DeliveryMethod::Pickup]);
+    app(GiveFreeItems::class)($order, [$shop->mince->id => 2]);
+
+    livewire(CurrentDropStats::class)
+        ->assertTableColumnStateSet('sold', 1, $shop->mince)
+        ->assertTableColumnStateSet('given_away', 2, $shop->mince)
+        ->assertTableColumnStateSet('left', 7, $shop->mince)
+        ->assertTableColumnStateSet('revenue', '$12', $shop->mince);
 });
 
 it('points to creating a drop when there is no current drop', function (): void {

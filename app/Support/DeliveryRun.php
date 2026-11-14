@@ -53,13 +53,14 @@ final readonly class DeliveryRun
     }
 
     /**
-     * "1 × 5kg Beef Box, 2 × 500g Beef Mince". The delivery fee isn't something to pack, so it's left out.
+     * "1 × 5kg Beef Box, 2 × 500g Beef Mince, 1 × Sausage Pack (6) (free)". The delivery fee isn't something to pack,
+     * so it's left out.
      */
     public static function items(Order $order): string
     {
         return $order->items
             ->reject(fn (OrderItem $item): bool => $item->product->type === ProductType::Delivery)
-            ->map(fn (OrderItem $item): string => "{$item->quantity} × {$item->product->name}")
+            ->map(fn (OrderItem $item): string => "{$item->quantity} × {$item->product->name}".($item->free ? ' (free)' : ''))
             ->implode(', ');
     }
 

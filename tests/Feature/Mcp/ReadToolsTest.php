@@ -95,6 +95,15 @@ describe('orders', function (): void {
         $this->server->tool(GetDeliveryRunTool::class, ['drop_id' => $stocked->drop->id])->assertOk()->assertSee('Jane Smith')->assertSee('1 × 5kg Beef Box');
         $this->server->tool(GetDeliveryRunTool::class, ['drop_id' => $stocked->drop->id, 'format' => 'csv'])->assertOk()->assertSee('order,name,phone');
     });
+
+    it('marks what was given free on the delivery run, since it’s still packed', function (): void {
+        $stocked = StockedDrop::create();
+        $order = Order::factory()->for($stocked->drop)->create(['customer_name' => 'Jane Smith']);
+        OrderItem::factory()->for($order)->create(['drop_item_id' => $stocked->box->id, 'quantity' => 1]);
+        OrderItem::factory()->for($order)->free()->create(['drop_item_id' => $stocked->mince->id, 'quantity' => 2]);
+
+        $this->server->tool(GetDeliveryRunTool::class, ['drop_id' => $stocked->drop->id])->assertOk()->assertSee('1 × 5kg Beef Box, 2 × 500g Beef Mince (free)');
+    });
 });
 
 describe('subscribers', function (): void {

@@ -36,6 +36,7 @@ class CurrentDropStats extends TableWidget
             ->columns([
                 TextColumn::make('product.name')->label('Item'),
                 TextColumn::make('sold')->state(fn (DropItem $record): int => DropSales::forItem($record)['sold']),
+                TextColumn::make('given_away')->label('Given away')->state(fn (DropItem $record): int => DropSales::forItem($record)['given_away']),
                 TextColumn::make('at_checkout')->label('At checkout')->state(fn (DropItem $record): int => DropSales::forItem($record)['at_checkout']),
                 TextColumn::make('left')->state(fn (DropItem $record): ?int => DropSales::forItem($record)['left'])->placeholder('—'),
                 TextColumn::make('revenue')->state(fn (DropItem $record): string => Money::format(DropSales::forItem($record)['revenue'])),

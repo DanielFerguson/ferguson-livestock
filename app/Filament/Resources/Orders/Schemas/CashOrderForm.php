@@ -8,6 +8,7 @@ use App\Enums\DeliveryMethod;
 use App\Enums\ProductType;
 use App\Models\Drop;
 use App\Models\DropItem;
+use App\Stock\DropSales;
 use App\Support\Money;
 use Carbon\CarbonImmutable;
 use Filament\Forms\Components\Repeater;
@@ -175,23 +176,8 @@ class CashOrderForm
         return $drop->items
             ->reject(fn (DropItem $item): bool => $item->product->type === ProductType::Delivery)
             ->sortBy(fn (DropItem $item): int => $item->product->sort)
-            ->mapWithKeys(fn (DropItem $item): array => [$item->id => implode(' · ', [$item->product->name, Money::format($item->price), self::left($drop, $item).' left'])])
+            ->mapWithKeys(fn (DropItem $item): array => [$item->id => implode(' · ', [$item->product->name, Money::format($item->price), DropSales::left($drop, $item).' left'])])
             ->all();
-    }
-
-    /**
-     * How many more of an item can be had: its own stock, or for a bundle, how many its component's stock makes.
-     */
-    private static function left(Drop $drop, DropItem $item): int
-    {
-        if ($item->hasOwnStock()) {
-            return (int) $item->available;
-        }
-
-        $bundle = $item->product->bundle;
-        $component = $bundle === null ? null : $drop->items->firstWhere('product_id', $bundle->component_product_id);
-
-        return $component instanceof DropItem && $bundle !== null ? intdiv((int) $component->available, max(1, $bundle->units)) : 0;
     }
 
     /**

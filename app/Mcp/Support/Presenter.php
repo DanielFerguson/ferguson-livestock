@@ -133,10 +133,12 @@ final class Presenter
                 'stripe_checkout_session_id' => $order->stripe_checkout_session_id,
                 'stripe_payment_intent_id' => $order->stripe_payment_intent_id,
                 'lines' => $order->items->map(fn (OrderItem $line): array => [
+                    'product_id' => $line->product_id,
                     'product' => $line->product->name,
                     'quantity' => $line->quantity,
                     'unit_price' => self::money($line->unit_price),
                     'line_total' => self::money($line->lineTotal()),
+                    'free' => $line->free,
                 ])->values()->all(),
             ];
         }
