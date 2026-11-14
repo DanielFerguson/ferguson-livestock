@@ -42,6 +42,15 @@ it('tells a pickup customer what they ordered, and where and when to collect it'
         ->and($text->isGsm())->toBeTrue();
 });
 
+it('leaves what was given free off the list, since it wasn’t ordered', function (): void {
+    $order = orderOf(weekendDrop(), 'Alec D Carson', ['10kg Beef Box' => 1]);
+    OrderItem::factory()->for($order)->for(Product::factory()->create(['name' => '500g Beef Mince']))->free()->create(['quantity' => 2]);
+
+    expect(OrderConfirmationText::for([$order->load('items.product')])->text)
+        ->toContain("thanks for your order {$order->reference()}: 1 x 10kg Beef Box. Pick it up from")
+        ->not->toContain('Mince');
+});
+
 it('tells a delivery customer the night they chose, and leaves the delivery fee off the list', function (): void {
     $drop = weekendDrop();
     $order = orderOf($drop, 'Paul Clarke', ['10kg Beef Box' => 1], ['delivery_method' => 'delivery', 'delivery_day' => '2026-11-15']);

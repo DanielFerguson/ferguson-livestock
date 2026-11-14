@@ -67,8 +67,8 @@ final readonly class OrderConfirmationText
     }
 
     /**
-     * "1 x 10kg Beef Box, 2 x 500g Beef Mince", with the same product across orders added up and the delivery fee
-     * left out, and how many units that is.
+     * "1 x 10kg Beef Box, 2 x 500g Beef Mince", with the same product across orders added up, and how many units that
+     * is. It's what they ordered, so the delivery fee and anything given free are left out.
      *
      * @param  non-empty-list<Order>  $orders
      * @return array{string, int}
@@ -81,7 +81,7 @@ final readonly class OrderConfirmationText
         foreach ($orders as $order) {
             foreach ($order->items as $item) {
                 /** @var OrderItem $item */
-                if ($item->product->type === ProductType::Delivery) {
+                if ($item->product->type === ProductType::Delivery || $item->free) {
                     continue;
                 }
 
