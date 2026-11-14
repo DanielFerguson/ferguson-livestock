@@ -58,9 +58,9 @@
                 <span x-show="state === 'off'" x-cloak>This phone doesn’t get notifications for new texts.</span>
                 <span x-show="state === 'on'" x-cloak>This phone gets a notification for each new text.</span>
                 <span x-show="state === 'failed'" x-cloak>That didn’t work. Try again in a moment.</span>
-                <x-filament::button size="sm" icon="heroicon-o-bell" x-show="state === 'off' || state === 'failed'" x-cloak x-on:click="turnOn">Turn on notifications</x-filament::button>
-                <x-filament::button size="sm" color="gray" x-show="state === 'on'" x-cloak x-on:click="sendTest">Send a test</x-filament::button>
-                <x-filament::button size="sm" color="gray" x-show="state === 'on'" x-cloak x-on:click="turnOff">Turn off</x-filament::button>
+                <x-filament::button size="sm" icon="heroicon-o-bell" x-show="state === 'off' || state === 'failed'" x-cloak x-on:click="turnOn" wire:target="savePushSubscription">Turn on notifications</x-filament::button>
+                <x-filament::button size="sm" color="gray" x-show="state === 'on'" x-cloak x-on:click="sendTest" wire:target="sendTestPush">Send a test</x-filament::button>
+                <x-filament::button size="sm" color="gray" x-show="state === 'on'" x-cloak x-on:click="turnOff" wire:target="removePushSubscription">Turn off</x-filament::button>
             </div>
         @endif
     </div>

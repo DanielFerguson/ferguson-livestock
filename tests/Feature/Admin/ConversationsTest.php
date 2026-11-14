@@ -272,34 +272,43 @@ it('doesn’t say someone who opted out needs a reply', function (): void {
  *
  * @return array{endpoint: string, keys: array{p256dh: string, auth: string}, contentEncoding: string}
  */
-function phonePushSignUp(string $endpoint = 'https://web.push.apple.com/QGuHRmBXgM'): array
-{
+function phonePushSignUp(
+    string $endpoint = 'https://web.push.apple.com/QGuHRmBXgM',
+    string $p256dh = 'BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA_0QTpQtUbVlUls0VJXg7A8u-Ts1XbjhazAkj7I99e8QcYP7DkM',
+    string $auth = 'tBHItJI5svbpez7KI4CCXg',
+): array {
     return [
         'endpoint' => $endpoint,
-        'keys' => ['p256dh' => 'BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA_0QTpQtUbVlUls0VJXg7A8u-Ts1XbjhazAkj7I99e8QcYP7DkM', 'auth' => 'tBHItJI5svbpez7KI4CCXg'],
+        'keys' => ['p256dh' => $p256dh, 'auth' => $auth],
         'contentEncoding' => 'aes128gcm',
     ];
 }
 
-it('signs this phone up for pushes, once however often it’s saved', function (): void {
+it('signs this phone up for pushes once, however often it’s saved, with its latest keys', function (): void {
     livewire(Conversations::class)
         ->call('savePushSubscription', phonePushSignUp())
-        ->call('savePushSubscription', phonePushSignUp())
-        ->assertHasNoErrors();
+        ->assertReturned(fn (mixed $returned): bool => $returned === true)
+        ->call('savePushSubscription', phonePushSignUp(auth: 'k3PbVq9Zx0RmT7yLwN2cHg'))
+        ->assertReturned(fn (mixed $returned): bool => $returned === true);
 
     expect(PushSubscription::query()->sole())
         ->endpoint->toBe('https://web.push.apple.com/QGuHRmBXgM')
-        ->auth_token->toBe('tBHItJI5svbpez7KI4CCXg')
+        ->auth_token->toBe('k3PbVq9Zx0RmT7yLwN2cHg')
         ->subscribable_id->toBe(auth()->id());
 });
 
-it('refuses a push address that isn’t a secure web address', function (string $endpoint): void {
+it('refuses a push sign-up with a bad address or keys', function (array $signUp): void {
     livewire(Conversations::class)
-        ->call('savePushSubscription', phonePushSignUp($endpoint))
-        ->assertHasErrors('endpoint');
+        ->call('savePushSubscription', $signUp)
+        ->assertReturned(fn (mixed $returned): bool => $returned === false);
 
     expect(PushSubscription::query()->count())->toBe(0);
-})->with(['http://web.push.apple.com/QGuHRmBXgM', 'not a web address']);
+})->with([
+    'an address that isn’t secure' => [phonePushSignUp(endpoint: 'http://web.push.apple.com/QGuHRmBXgM')],
+    'not a web address' => [phonePushSignUp(endpoint: 'not a web address')],
+    'a junk encryption key' => [phonePushSignUp(p256dh: 'BKey')],
+    'a junk secret' => [phonePushSignUp(auth: 'not-a-secret')],
+]);
 
 it('stops pushing to this phone when notifications are turned off', function (): void {
     livewire(Conversations::class)
@@ -309,7 +318,7 @@ it('stops pushing to this phone when notifications are turned off', function ():
     expect(PushSubscription::query()->count())->toBe(0);
 });
 
-it('sends a test push to the admin’s phones straight away', function (): void {
+it('sends a test push to the admin’s phones', function (): void {
     Notification::fake();
 
     livewire(Conversations::class)->call('sendTestPush')->assertNotified('Test sent');
@@ -318,10 +327,13 @@ it('sends a test push to the admin’s phones straight away', function (): void 
 });
 
 it('offers notifications for new texts once the push keys are set', function (): void {
-    config(['webpush.vapid.public_key' => null]);
+    config(['webpush.vapid.public_key' => null, 'webpush.vapid.private_key' => null]);
     livewire(Conversations::class)->assertSee('aren’t set up yet')->assertDontSee('Turn on notifications');
 
     config(['webpush.vapid.public_key' => 'BPublicKey']);
+    livewire(Conversations::class)->assertSee('aren’t set up yet')->assertDontSee('Turn on notifications');
+
+    config(['webpush.vapid.private_key' => 'PrivateKey']);
     livewire(Conversations::class)->assertSee('Turn on notifications')->assertDontSee('aren’t set up yet');
 });
 
@@ -333,6 +345,8 @@ it('keeps the app icon’s count in step as conversations are read, flagged and 
     $page = livewire(Conversations::class);
 
     $page->call('open', $jane->phone)->assertDispatched('attention-count', count: 1);
+    $page->call('followUp')->assertDispatched('attention-count', count: 2);
+    $page->call('clearFollowUp')->assertDispatched('attention-count', count: 1);
     $page->call('followUp')->assertDispatched('attention-count', count: 2);
     $page->call('done')->assertDispatched('attention-count', count: 1);
     $page->call('refreshOpen')->assertDispatched('attention-count', count: 1);

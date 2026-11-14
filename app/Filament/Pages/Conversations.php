@@ -23,8 +23,10 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Livewire\Attributes\Renderless;
 use Livewire\Attributes\Url;
 use Minishlink\WebPush\ContentEncoding;
 use NotificationChannels\WebPush\PushSubscription;
@@ -147,41 +149,64 @@ class Conversations extends Page
     }
 
     /**
-     * The key a phone signs up for pushes with. Null until the site's push keys are set.
+     * The key a phone signs up for pushes with. Null until both of the site's push keys are set: with only the public
+     * one, phones could sign up but every push to them would be refused.
      */
     public function pushPublicKey(): ?string
     {
-        $key = config('webpush.vapid.public_key');
+        $publicKey = config('webpush.vapid.public_key');
+        $privateKey = config('webpush.vapid.private_key');
 
-        return is_string($key) && $key !== '' ? $key : null;
+        return is_string($publicKey) && $publicKey !== '' && is_string($privateKey) && $privateKey !== '' ? $publicKey : null;
     }
 
     /**
      * Sign this phone up for a push with each new text. The browser hands over where to send them and the keys to
      * encrypt them with. Saving the same phone again refreshes its keys.
      *
+     * The keys must be the shape a browser makes (a P-256 public key and a 16-byte secret, base64url): pushes are
+     * encrypted together before any is sent, so one malformed sign-up would stop every phone getting them. A refused
+     * sign-up is logged and returns false.
+     *
      * @param  array<mixed>  $subscription
      */
+    #[Renderless]
     public function savePushSubscription(array $subscription): bool
     {
-        /** @var array{endpoint: string, keys: array{p256dh: string, auth: string}, contentEncoding: string} $valid */
-        $valid = Validator::make($subscription, [
+        $validator = Validator::make($subscription, [
             'endpoint' => ['required', 'string', 'url:https', 'max:'.PushSubscription::ENDPOINT_MAX_LENGTH],
-            'keys.p256dh' => ['required', 'string', 'max:255'],
-            'keys.auth' => ['required', 'string', 'max:255'],
+            'keys.p256dh' => ['required', 'string', 'regex:/^B[A-Za-z0-9_-]{86}=?\z/'],
+            'keys.auth' => ['required', 'string', 'regex:/^[A-Za-z0-9_-]{22}(==)?\z/'],
             'contentEncoding' => ['required', Rule::enum(ContentEncoding::class)],
-        ])->validate();
+        ]);
+
+        if ($validator->fails()) {
+            $endpoint = $subscription['endpoint'] ?? null;
+            $host = is_string($endpoint) ? parse_url($endpoint, PHP_URL_HOST) : null;
+
+            Log::warning('A phone’s push sign-up was refused.', [
+                'host' => is_string($host) ? $host : null,
+                'errors' => $validator->errors()->all(),
+            ]);
+
+            return false;
+        }
+
+        /** @var array{endpoint: string, keys: array{p256dh: string, auth: string}, contentEncoding: string} $valid */
+        $valid = $validator->validated();
 
         $this->admin()->updatePushSubscription($valid['endpoint'], $valid['keys']['p256dh'], $valid['keys']['auth'], $valid['contentEncoding']);
 
         return true;
     }
 
+    #[Renderless]
     public function removePushSubscription(string $endpoint): void
     {
         $this->admin()->deletePushSubscription($endpoint);
     }
 
+    #[Renderless]
     public function sendTestPush(): void
     {
         $this->admin()->notifyNow(AdminPush::test());
