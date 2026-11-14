@@ -190,6 +190,20 @@ class Order extends Model
     }
 
     /**
+     * The email address with most of its name hidden, for the order page: "s•••@gmail.com". Null without one.
+     */
+    public function emailHint(): ?string
+    {
+        if ($this->email === null || ! str_contains($this->email, '@')) {
+            return null;
+        }
+
+        [$name, $domain] = explode('@', $this->email, 2);
+
+        return mb_substr($name, 0, 1).'•••@'.$domain;
+    }
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array

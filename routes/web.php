@@ -9,6 +9,7 @@ use App\Http\Controllers\EarlyAccessStockController;
 use App\Http\Controllers\JoinWaitlistController;
 use App\Http\Controllers\OrderPageController;
 use App\Http\Controllers\Orders\ChangeDeliveryNightController;
+use App\Http\Controllers\Orders\EmailOrderController;
 use App\Http\Controllers\Orders\ShowOrderController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Middleware\PreventIndexing;
@@ -66,6 +67,7 @@ Route::middleware(['throttle:early-access', PreventIndexing::class])->group(func
 Route::middleware(['throttle:order-page', PreventIndexing::class])->prefix('orders/{customerOrder}')->group(function (): void {
     Route::get('/', ShowOrderController::class)->middleware('cache.headers:private;no_store')->name('orders.show');
     Route::post('/night', ChangeDeliveryNightController::class)->name('orders.night');
+    Route::post('/email', EmailOrderController::class)->name('orders.email');
 });
 
 // Stripe sends customers back here. Neither page is cached: both depend on the order. Both can ask Stripe

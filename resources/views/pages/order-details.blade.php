@@ -39,6 +39,7 @@
 
             <x-slot:actions>
                 <div class="space-y-8 print:hidden">
+                    @include('pages.order-details._email')
                     @include('pages.order-details._questions')
                 </div>
             </x-slot:actions>
