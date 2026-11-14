@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Str;
+
 /*
 |--------------------------------------------------------------------------
 | Shop facts
@@ -22,8 +24,9 @@ return [
     'url' => env('SHOP_URL', 'https://fergusonlivestock.com.au'),
 
     // A short domain that sends order texts' links on to the order page, so texts stay short: "fergs.au". Leave it
-    // empty to text the order page's full address instead. Set it only once the domain serves this app.
-    'short_domain' => env('SHOP_SHORT_DOMAIN'),
+    // empty to text the order page's full address instead. Set it only once the domain serves this app. It's tidied to
+    // a bare lowercase host, so "https://Fergs.au/" works too.
+    'short_domain' => Str::of((string) env('SHOP_SHORT_DOMAIN'))->trim()->lower()->replaceMatches('#^https?://#', '')->trim('/')->value() ?: null,
 
     // Drop times are entered and shown in this timezone and stored in UTC.
     'timezone' => 'Australia/Melbourne',

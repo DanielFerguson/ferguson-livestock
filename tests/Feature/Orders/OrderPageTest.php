@@ -107,6 +107,47 @@ describe('short links', function (): void {
         'the health check' => '/up',
     ]);
 
+    it('sends a link on whatever the capitals in the setting', function (): void {
+        config(['shop.short_domain' => 'Fergs.au']);
+        $order = samsWeekendOrder();
+
+        $this->get("https://fergs.au/{$order->access_token}")
+            ->assertRedirect("https://fergusonlivestock.com.au/orders/{$order->access_token}");
+    });
+
+    it('reads the short domain however it’s typed in the setting', function (string $setting, ?string $shortDomain): void {
+        $server = $_SERVER;
+        $_SERVER['SHOP_SHORT_DOMAIN'] = $setting;
+
+        try {
+            /** @var array{short_domain: string|null} $config */
+            $config = require config_path('shop.php');
+        } finally {
+            $_SERVER = $server;
+        }
+
+        expect($config['short_domain'])->toBe($shortDomain);
+    })->with([
+        'with capitals' => ['Fergs.au', 'fergs.au'],
+        'as a link' => ['https://fergs.au/', 'fergs.au'],
+        'with spaces' => [' fergs.au ', 'fergs.au'],
+        'left empty' => ['', null],
+    ]);
+
+    it('leaves the main site alone when the setting names it by mistake', function (): void {
+        config(['shop.short_domain' => 'fergusonlivestock.com.au']);
+
+        $this->get('https://fergusonlivestock.com.au/')->assertOk();
+    });
+
+    it('sends a link on without a doubled slash when the main site’s address ends in one', function (): void {
+        config(['shop.url' => 'https://fergusonlivestock.com.au/']);
+        $order = samsWeekendOrder();
+
+        $this->get("https://fergs.au/{$order->access_token}")
+            ->assertRedirect("https://fergusonlivestock.com.au/orders/{$order->access_token}");
+    });
+
     it('sends a form posted to the short domain to the main site too', function (): void {
         $this->post('https://fergs.au/waitlist', ['first_name' => 'Sam'])->assertRedirect('https://fergusonlivestock.com.au');
     });

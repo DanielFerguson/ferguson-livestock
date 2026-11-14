@@ -15,8 +15,8 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * Global middleware rather than a domain route group, so it catches every request on the short domain before routing:
  * any method and any route (the health check, the API, the admin panel and packages' routes too), whatever order
- * they're registered in. It reads the config on each request, so setting or changing SHOP_SHORT_DOMAIN doesn't depend
- * on rebuilding the route cache. The redirect looks nothing up, so it isn't throttled; the order page is.
+ * they're registered in. Config is cached at deploy, so setting or changing SHOP_SHORT_DOMAIN takes effect on the next
+ * deploy. The redirect looks nothing up, so it isn't throttled; the order page is.
  */
 class RedirectShortDomain
 {
@@ -25,19 +25,33 @@ class RedirectShortDomain
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $shortDomain = config('shop.short_domain');
+        $mainSite = rtrim(config()->string('shop.url'), '/');
 
-        // Hosts arrive lowercased, so a setting typed as "Fergs.au" still matches.
-        if (! is_string($shortDomain) || $shortDomain === '' || $request->getHost() !== strtolower($shortDomain)) {
+        if (! $this->isOnShortDomain($request, $mainSite)) {
             return $next($request);
         }
 
         $token = trim($request->getPathInfo(), '/');
 
         if (preg_match('/^'.Order::ACCESS_TOKEN_PATTERN.'$/', $token) === 1) {
-            return redirect()->away(config()->string('shop.url').route('orders.show', ['customerOrder' => $token], absolute: false));
+            return redirect()->away($mainSite.route('orders.show', ['customerOrder' => $token], absolute: false));
         }
 
-        return redirect()->away(config()->string('shop.url'));
+        return redirect()->away($mainSite);
+    }
+
+    /**
+     * Whether the request came in on the short domain. Hosts arrive lowercased, so a setting typed as "Fergs.au" still
+     * matches. A setting that names the main site's own host by mistake is ignored, or every page of the site would
+     * send people round in a loop back to its home page.
+     */
+    private function isOnShortDomain(Request $request, string $mainSite): bool
+    {
+        $shortDomain = config('shop.short_domain');
+
+        return is_string($shortDomain)
+            && $shortDomain !== ''
+            && $request->getHost() === strtolower($shortDomain)
+            && $request->getHost() !== strtolower((string) parse_url($mainSite, PHP_URL_HOST));
     }
 }

@@ -17,7 +17,7 @@ use Laravel\Mcp\Server\Tool;
 use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 
-#[Description('One order by its reference (FL-XXXXXX), public id or numeric id, with the customer, delivery details, items, the customer’s order page link, their feedback and Stripe ids.')]
+#[Description('One order by its reference (FL-XXXXXX), public id or numeric id, with the customer, delivery details, items, the customer’s order page link, their feedback and Stripe ids. The page_url is the only key to the order, so give it only to that order’s customer (such as in a reply to them), never in a broadcast or to anyone else.')]
 #[IsReadOnly]
 #[IsIdempotent]
 final class GetOrderTool extends Tool

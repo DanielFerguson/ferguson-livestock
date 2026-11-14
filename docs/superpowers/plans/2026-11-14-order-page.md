@@ -2643,6 +2643,6 @@ Pushes to `main` reach customers, so ship in this order:
 3. In Laravel Cloud, add `fergs.au` as a custom domain on the production environment and create the DNS records it
    shows. The `deploying-to-cloud` skill can help.
 4. Check `https://fergs.au/` redirects to the home page and `https://fergs.au/<a real order's token>` opens its page.
-5. Only then set `SHOP_SHORT_DOMAIN=fergs.au` on production and redeploy, so the short-domain routes are registered
-   (routes are cached at deploy).
+5. Only then set `SHOP_SHORT_DOMAIN=fergs.au` on production and redeploy: the setting takes effect on the next deploy
+   (config is cached at deploy).
 6. Preview the next drop's texts (`prepare-order-texts-tool`) to see the short link in place.
