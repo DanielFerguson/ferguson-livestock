@@ -37,7 +37,7 @@ final readonly class ChangeDeliveryNight
     private const array CHANGEABLE = [OrderStatus::Paid, OrderStatus::Processing, OrderStatus::CashOwed];
 
     /**
-     * How many changes an order takes in an hour. Only changes that go through count.
+     * How many changes an order takes in an hour. A request refused for any other reason doesn't count.
      */
     private const int CHANGES_PER_HOUR = 5;
 
@@ -93,9 +93,8 @@ final readonly class ChangeDeliveryNight
             throw new CannotChangeOrder('It’s too late to change your night here. Text us on '.config()->string('shop.phone.display').' and we’ll see what we can do.');
         }
 
-        $changes = "order-night:{$order->id}";
-
-        if (RateLimiter::tooManyAttempts($changes, self::CHANGES_PER_HOUR)) {
+        // Counted as it's taken, in one atomic step, so requests sent at once can't all slip under the cap.
+        if (RateLimiter::hit("order-night:{$order->id}", decaySeconds: 3600) > self::CHANGES_PER_HOUR) {
             throw new CannotChangeOrder('You’ve changed your night a few times now. Text us on '.config()->string('shop.phone.display').' if it needs to change again.');
         }
 
@@ -107,8 +106,6 @@ final readonly class ChangeDeliveryNight
             $this->texts->rewriteWaiting($order);
             Mail::to(config()->string('shop.email'))->queue(new DeliveryNightChanged($order, $previousNight, (string) $order->deliveryNight()));
         });
-
-        RateLimiter::hit($changes, decaySeconds: 3600);
 
         return $order;
     }
