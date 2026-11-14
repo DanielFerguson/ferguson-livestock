@@ -4,7 +4,8 @@
 @endphp
 
 @if ($admin instanceof \App\Models\User && filled(config('webpush.vapid.public_key')) && filled(config('webpush.vapid.private_key')) && $admin->pushSubscriptions()->doesntExist())
-    <div class="fl-push-warning" role="status">
+    {{-- Signing up doesn't reload the page, so the push script says when it's done and the banner goes then. --}}
+    <div class="fl-push-warning" role="status" x-data x-on:push-subscribed.window="$el.remove()">
         No phone gets a notification for new texts, so check
         <a href="{{ \App\Filament\Pages\Conversations::getUrl() }}">Conversations</a> yourself. To turn them on, open
         Ferguson Livestock from your phone’s home screen and tap Turn on notifications in Conversations.

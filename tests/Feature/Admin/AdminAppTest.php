@@ -43,9 +43,12 @@ it('warns on every admin page while no phone gets pushes for new texts', functio
     $this->actingAs($admin)->get('/admin')->assertDontSee('No phone gets a notification for new texts');
 });
 
-it('doesn’t warn before the push keys are set', function (): void {
-    config(['webpush.vapid.public_key' => null]);
+it('doesn’t warn before the push keys are set', function (string $missingKey): void {
+    config([$missingKey => null]);
     $admin = User::factory()->withAppAuthentication()->create(['email' => 'daniel@example.com']);
 
     $this->actingAs($admin)->get('/admin')->assertDontSee('No phone gets a notification for new texts');
-});
+})->with([
+    'without the public key' => 'webpush.vapid.public_key',
+    'without the private key' => 'webpush.vapid.private_key',
+]);

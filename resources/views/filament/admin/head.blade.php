@@ -2,7 +2,7 @@
 <link rel="manifest" href="/admin.webmanifest">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-title" content="Ferguson Livestock">
-@auth
+@if (filament()->auth()->check())
     <meta name="admin-attention-count" content="{{ \App\Sms\ConversationList::attentionCount() }}">
-@endauth
+@endif
 @vite('resources/js/admin-push.js')

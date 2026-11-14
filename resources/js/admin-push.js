@@ -67,19 +67,39 @@ document.addEventListener('alpine:init', () => {
                 return;
             }
 
+            let subscription;
+
             try {
-                const subscription = await (await worker).pushManager.getSubscription();
-
-                if (subscription === null) {
-                    this.state = 'off';
-
-                    return;
-                }
-
-                // Saved again on every visit, so the site always has this phone's latest address.
-                this.state = (await this.$wire.savePushSubscription(describe(subscription))) === true ? 'on' : 'failed';
+                subscription = await (await worker).pushManager.getSubscription();
             } catch {
                 this.state = 'unsupported';
+
+                return;
+            }
+
+            if (subscription === null) {
+                this.state = 'off';
+
+                return;
+            }
+
+            // Saved again on every visit, so the site always has this phone's latest address.
+            await this.saveSubscription(subscription);
+        },
+
+        /**
+         * Hands this phone's sign-up to the site. Once it's on, the page hears so and drops the warning banner, which
+         * otherwise stays until the next full page load.
+         */
+        async saveSubscription(subscription) {
+            try {
+                this.state = (await this.$wire.savePushSubscription(describe(subscription))) === true ? 'on' : 'failed';
+            } catch {
+                this.state = 'failed';
+            }
+
+            if (this.state === 'on') {
+                window.dispatchEvent(new CustomEvent('push-subscribed'));
             }
         },
 
@@ -95,13 +115,17 @@ document.addEventListener('alpine:init', () => {
                 return;
             }
 
-            try {
-                const subscription = await (await worker).pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(publicKey) });
+            let subscription;
 
-                this.state = (await this.$wire.savePushSubscription(describe(subscription))) === true ? 'on' : 'failed';
+            try {
+                subscription = await (await worker).pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(publicKey) });
             } catch {
                 this.state = 'failed';
+
+                return;
             }
+
+            await this.saveSubscription(subscription);
         },
 
         async turnOff() {
