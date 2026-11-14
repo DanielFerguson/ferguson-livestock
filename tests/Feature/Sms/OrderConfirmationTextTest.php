@@ -4,105 +4,98 @@ declare(strict_types=1);
 
 use App\Models\Drop;
 use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\Product;
 use App\Sms\OrderConfirmationText;
 use Illuminate\Support\Facades\URL;
 
 beforeEach(fn () => URL::useOrigin('https://fergusonlivestock.com.au'));
 
 /**
- * A paid order for these products (name => quantity), loaded as the text needs it.
+ * A paid pickup order, loaded as the text needs it.
  *
- * @param  array<string, int>  $items
  * @param  array<string, mixed>  $attributes
  */
-function orderOf(Drop $drop, string $customer, array $items, array $attributes = []): Order
+function orderOf(Drop $drop, string $customer, array $attributes = []): Order
 {
-    $order = Order::factory()->for($drop)->pickup()->create(['customer_name' => $customer, 'phone' => '+61412345678', ...$attributes]);
-
-    foreach ($items as $name => $quantity) {
-        OrderItem::factory()->for($order)->for(Product::factory()->create(['name' => $name]))->create(['quantity' => $quantity]);
-    }
-
-    return $order->load(['items.product', 'drop']);
+    return Order::factory()->for($drop)->pickup()->create(['customer_name' => $customer, 'phone' => '+61412345678', ...$attributes])->load('drop');
 }
 
-function weekendDrop(): Drop
+/**
+ * @param  list<string>  $nights
+ */
+function weekendDrop(array $nights = ['2026-11-14', '2026-11-15']): Drop
 {
-    return Drop::factory()->open()->create(['delivery_days' => ['2026-11-14', '2026-11-15']]);
+    return Drop::factory()->open()->create(['delivery_days' => $nights]);
 }
 
-it('tells a pickup customer what they ordered, and where and when to collect it', function (): void {
-    $order = orderOf(weekendDrop(), 'Alec D Carson', ['10kg Beef Box' => 1]);
+it('tells a pickup customer when to collect their order in one text, and links the address and map', function (): void {
+    $order = orderOf(weekendDrop(), 'Alec D Carson');
 
     $text = OrderConfirmationText::for([$order]);
 
-    expect($text->text)->toBe("Ferguson Livestock: Hi Alec, thanks for your order {$order->reference()}: 1 x 10kg Beef Box. Pick it up from 306 Snake Valley-Chepstowe Rd, Snake Valley, Saturday or Sunday between 10am and 4pm. Your order & map: https://fergs.au/{$order->access_token} Questions? Just reply here. - Daniel & Tahlia")
+    expect($text->text)->toBe("Ferguson Livestock: Thanks Alec! Pick up order {$order->reference()} Saturday or Sunday, 10am to 4pm. Address & map: https://fergs.au/{$order->access_token}")
         ->and($text->isGsm())->toBeTrue()
-        ->and($text->segments())->toBe(2);
+        ->and($text->segments())->toBe(1);
 });
 
-it('leaves what was given free off the list, since it wasn’t ordered', function (): void {
-    $order = orderOf(weekendDrop(), 'Alec D Carson', ['10kg Beef Box' => 1]);
-    OrderItem::factory()->for($order)->for(Product::factory()->create(['name' => '500g Beef Mince']))->free()->create(['quantity' => 2]);
+it('tells a delivery customer the night they chose in one text', function (): void {
+    $order = orderOf(weekendDrop(), 'Paul Clarke', ['delivery_method' => 'delivery', 'delivery_day' => '2026-11-15']);
 
-    expect(OrderConfirmationText::for([$order->load('items.product')])->text)
-        ->toContain("thanks for your order {$order->reference()}: 1 x 10kg Beef Box. Pick it up from")
-        ->not->toContain('Mince');
-});
+    $text = OrderConfirmationText::for([$order]);
 
-it('tells a delivery customer the night they chose, and leaves the delivery fee off the list', function (): void {
-    $drop = weekendDrop();
-    $order = orderOf($drop, 'Paul Clarke', ['10kg Beef Box' => 1], ['delivery_method' => 'delivery', 'delivery_day' => '2026-11-15']);
-    OrderItem::factory()->for($order)->for(Product::factory()->delivery()->create(['name' => 'Delivery']))->create();
-
-    $text = OrderConfirmationText::for([$order->load('items.product')]);
-
-    expect($text->text)->toBe("Ferguson Livestock: Hi Paul, thanks for your order {$order->reference()}: 1 x 10kg Beef Box. We'll deliver it after 4pm on Sunday, and we'll text you closer to the time. Your order: https://fergs.au/{$order->access_token} Questions? Just reply here. - Daniel & Tahlia")
-        ->and($text->segments())->toBe(2);
+    expect($text->text)->toBe("Ferguson Livestock: Thanks Paul! We'll deliver order {$order->reference()} on Sunday after 4pm. Details: https://fergs.au/{$order->access_token}")
+        ->and($text->segments())->toBe(1);
 });
 
 it('gives both nights to a delivery customer happy with either', function (): void {
-    $order = orderOf(weekendDrop(), 'K Rogan', ['10kg Beef Mince Pack · save $60' => 1], ['delivery_method' => 'delivery', 'delivery_day' => null]);
+    $order = orderOf(weekendDrop(), 'K Rogan', ['delivery_method' => 'delivery', 'delivery_day' => null]);
 
     expect(OrderConfirmationText::for([$order])->text)
-        ->toContain('Hi there, thanks for your order')
-        ->toContain(': 1 x 10kg Beef Mince Pack. We\'ll deliver it after 4pm on Saturday or Sunday,');
+        ->toContain("Thanks! We'll deliver order {$order->reference()} on Saturday or Sunday after 4pm.");
 });
 
-it('covers all of someone’s orders in one plain text, greeting them by their name', function (): void {
+it('covers all of someone’s orders in one text, and links the first order’s page, since that page lists the rest', function (): void {
     $drop = weekendDrop();
-    $first = orderOf($drop, 'MR ELVIS GABOYO', ['140–150g Oyster Blade Steak' => 2]);
-    $second = orderOf($drop, 'MR ELVIS GABOYO', ['10kg Beef Box' => 1, 'BBQ Sausage Pack (5 × 6) · save $10' => 1]);
+    $first = orderOf($drop, 'MR ELVIS GABOYO');
+    $second = orderOf($drop, 'MR ELVIS GABOYO');
 
     $text = OrderConfirmationText::for([$first, $second]);
 
-    expect($text->text)->toStartWith("Ferguson Livestock: Hi Elvis, thanks for your orders {$first->reference()} and {$second->reference()}: 2 x 140-150g Oyster Blade Steak, 1 x 10kg Beef Box, 1 x BBQ Sausage Pack (5 x 6). Pick them up from")
-        ->and($text->isGsm())->toBeTrue();
+    expect($text->text)->toBe("Ferguson Livestock: Thanks Elvis! Pick up your 2 orders Saturday or Sunday, 10am to 4pm. Address & map: https://fergs.au/{$first->access_token}")
+        ->and($text->segments())->toBe(1);
 });
 
-it('greets someone by name only when they gave one', function (string $customer, string $greeting): void {
-    expect(OrderConfirmationText::for([orderOf(weekendDrop(), $customer, ['10kg Beef Box' => 1])])->text)->toStartWith("Ferguson Livestock: {$greeting}, thanks");
+it('thanks someone by name only when they gave one', function (string $customer, string $thanks): void {
+    expect(OrderConfirmationText::for([orderOf(weekendDrop(), $customer)])->text)->toStartWith("Ferguson Livestock: {$thanks} Pick up");
 })->with([
-    'a title and an initial' => ['Mrs D Hogenhout', 'Hi there'],
-    'an initial' => ['C Perrin', 'Hi there'],
-    'a title and a name' => ['Miss Shannon Douglas ', 'Hi Shannon'],
-    'capitals and a double space' => ['JUSTIN  BROWN', 'Hi Justin'],
-    'a link instead of a name' => ['bit.ly/claim-prize Smith', 'Hi there'],
-    'a name with an apostrophe' => ["D'Arcy Smith", "Hi D'Arcy"],
+    'a title and an initial' => ['Mrs D Hogenhout', 'Thanks!'],
+    'an initial' => ['C Perrin', 'Thanks!'],
+    'a title and a name' => ['Miss Shannon Douglas ', 'Thanks Shannon!'],
+    'capitals and a double space' => ['JUSTIN  BROWN', 'Thanks Justin!'],
+    'a link instead of a name' => ['bit.ly/claim-prize Smith', 'Thanks!'],
+    'a name with an apostrophe' => ["D'Arcy Smith", "Thanks D'Arcy!"],
+]);
+
+it('fits the longest name it uses in one text on a two-night drop', function (string $method): void {
+    $text = OrderConfirmationText::for([orderOf(weekendDrop(), 'Bartholomew-Wilfreda Smith', ['delivery_method' => $method, 'delivery_day' => null])]);
+
+    expect($text->text)->toContain('Thanks Bartholomew-Wilfreda!')
+        ->and($text->segments())->toBe(1);
+})->with([
+    'pickup' => ['pickup'],
+    'delivery on either night' => ['delivery'],
+]);
+
+it('drops a name that would take the text past one', function (string $customer, Drop $drop): void {
+    $text = OrderConfirmationText::for([orderOf($drop, $customer)]);
+
+    expect($text->text)->toStartWith('Ferguson Livestock: Thanks! Pick up')
+        ->and($text->isGsm())->toBeTrue()
+        ->and($text->segments())->toBe(1);
+})->with([
+    'a long name on a three-night drop' => fn (): array => ['Bartholomew-Wilfreda Smith', weekendDrop(['2026-11-13', '2026-11-14', '2026-11-15'])],
+    'a name outside the GSM alphabet' => fn (): array => ['Zoë Smith', weekendDrop()],
 ]);
 
 it('sends the farm’s map link to Google Maps', function (): void {
     $this->get('/farm')->assertRedirect(config()->string('shop.location.map_url'));
-});
-
-it('links the first order’s page when one text covers several, since that page lists the rest', function (): void {
-    $drop = weekendDrop();
-    $first = orderOf($drop, 'Sam Buyer', ['10kg Beef Box' => 1]);
-    $second = orderOf($drop, 'Sam Buyer', ['500g Beef Mince' => 2]);
-
-    expect(OrderConfirmationText::for([$first, $second])->text)
-        ->toContain("Your order & map: https://fergs.au/{$first->access_token} ")
-        ->not->toContain($second->access_token);
 });

@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
- * The texts that tell customers what they ordered and when it's ready (see OrderConfirmationText).
+ * The texts that tell customers their order is in and when it's ready (see OrderConfirmationText).
  *
  * A text is saved as soon as it's due, waiting to go, so the admin can see it before it's sent: an order paid in quiet
  * hours waits there until 8am. Each order is linked to its text when the text is saved, so nobody is texted twice.
@@ -31,7 +31,7 @@ final readonly class OrderConfirmationTexts
      */
     public function forPaidOrder(Order $order): ?SmsMessage
     {
-        $message = $this->queue([$order->loadMissing(['items.product', 'drop'])]);
+        $message = $this->queue([$order->loadMissing('drop')]);
 
         if ($message instanceof SmsMessage) {
             SendOrderConfirmationText::dispatch($message->id)->afterCommit();
@@ -49,7 +49,7 @@ final readonly class OrderConfirmationTexts
     public function preview(Drop $drop): array
     {
         $orders = Order::query()
-            ->with(['items.product', 'drop', 'confirmationText'])
+            ->with(['drop', 'confirmationText'])
             ->whereBelongsTo($drop)
             ->whereIn('status', [OrderStatus::Paid, OrderStatus::CashOwed, OrderStatus::Fulfilled])
             ->orderBy('id')
@@ -109,7 +109,7 @@ final readonly class OrderConfirmationTexts
         $messageIds = array_column($preview['waiting'], 'message_id');
 
         foreach ($preview['texts'] as $text) {
-            $orders = Order::query()->with(['items.product', 'drop'])->whereKey($text['order_ids'])->orderBy('id')->get()->all();
+            $orders = Order::query()->with('drop')->whereKey($text['order_ids'])->orderBy('id')->get()->all();
             $message = $orders === [] ? null : $this->queue(array_values($orders));
 
             if ($message instanceof SmsMessage) {
@@ -144,7 +144,7 @@ final readonly class OrderConfirmationTexts
      */
     public function rewriteWaiting(Order $order): void
     {
-        $message = $order->confirmationText()->with(['orders.items.product', 'orders.drop'])->first();
+        $message = $order->confirmationText()->with('orders.drop')->first();
 
         if (! $message instanceof SmsMessage || $message->status !== SmsStatus::Queued) {
             return;
@@ -167,7 +167,7 @@ final readonly class OrderConfirmationTexts
      * are left out, so two requests at once can't both save one. Null when there's nothing to text, the number isn't an
      * Australian mobile, or it has opted out.
      *
-     * @param  non-empty-list<Order>  $orders  one person's, all going out the same way, with items.product and drop loaded
+     * @param  non-empty-list<Order>  $orders  one person's, all going out the same way, with drop loaded
      */
     private function queue(array $orders): ?SmsMessage
     {

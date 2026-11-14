@@ -5,53 +5,54 @@ declare(strict_types=1);
 namespace App\Sms;
 
 use App\Enums\DeliveryMethod;
-use App\Enums\ProductType;
 use App\Models\Order;
-use App\Models\OrderItem;
-use Illuminate\Support\Arr;
 
 /**
- * The text that tells a customer what they ordered and when it arrives or can be collected. One text covers all of
+ * The text that tells a customer their order is in and when it arrives or can be collected. One text covers all of
  * someone's orders that go out the same way, so a customer who checked out twice hears once.
  *
- * It links the first order's page (see Order::shortLink()), which has the farm's map and lists their other orders the
- * text covers.
+ * It's kept to one text (160 characters): the link to the first order's page (see Order::shortLink()) carries the
+ * rest, from what they ordered to the farm's address and map and the other orders the text covers. A name too long
+ * to fit, or one outside the GSM alphabet that would split the text, gives way to a plain "Thanks!".
  *
- * It's about their order, not marketing, so it names the shop but has no opt-out line. It keeps to the GSM
- * alphabet, so each part holds 153 characters rather than 67.
+ * It's about their order, not marketing, so it names the shop but has no opt-out line.
  */
 final readonly class OrderConfirmationText
 {
     /**
-     * Words people put before their name at checkout that don't belong in "Hi …".
+     * Words people put before their name at checkout that don't belong in "Thanks …".
      */
     private const array TITLES = ['mr', 'mrs', 'ms', 'miss', 'mx', 'dr'];
 
     /**
-     * @param  non-empty-list<Order>  $orders  one person's, all pickups or all deliveries, with items.product and drop loaded
+     * @param  non-empty-list<Order>  $orders  one person's, all pickups or all deliveries, with drop loaded
      */
     public static function for(array $orders): SmsText
     {
-        $first = $orders[0];
-        $name = self::firstName($first);
-        $references = Arr::join(array_map(fn (Order $order): string => $order->reference(), $orders), ', ', ' and ');
-        [$items, $units] = self::items($orders);
-        $it = $units > 1 ? 'them' : 'it';
+        $name = self::firstName($orders[0]);
+        $text = self::compose($orders, $name);
 
-        $when = $first->delivery_method === DeliveryMethod::Delivery
-            ? "We'll deliver {$it} after 4pm on ".self::deliveryNight($orders).", and we'll text you closer to the time. Your order: {$first->shortLink()}"
-            : 'Pick '.$it.' up from '.config()->string('shop.location.street').', '.config()->string('shop.location.locality').', '
-                .($first->drop->deliveryWeekdays() ?? config()->string('shop.pickup.days')).' between '
-                .str_replace(' to ', ' and ', config()->string('shop.pickup.hours')).". Your order & map: {$first->shortLink()}";
-
-        $body = 'Hi'.($name === null ? ' there' : " {$name}").', thanks for your order'.(count($orders) > 1 ? 's' : '')
-            ." {$references}: {$items}. {$when} Questions? Just reply here. - ".self::signOff();
-
-        return new SmsText(SmsText::SENDER.SmsText::tidy($body));
+        return $name !== null && $text->segments() > 1 ? self::compose($orders, null) : $text;
     }
 
     /**
-     * The name to greet them by: "Hi Sam", skipping titles and initials ("Mrs D Hogenhout" has none to use), and
+     * @param  non-empty-list<Order>  $orders
+     */
+    private static function compose(array $orders, ?string $name): SmsText
+    {
+        $first = $orders[0];
+        $what = count($orders) > 1 ? 'your '.count($orders).' orders' : "order {$first->reference()}";
+
+        $when = $first->delivery_method === DeliveryMethod::Delivery
+            ? "We'll deliver {$what} on ".self::deliveryNight($orders).' after 4pm. Details:'
+            : "Pick up {$what} ".($first->drop->deliveryWeekdays() ?? config()->string('shop.pickup.days')).', '
+                .config()->string('shop.pickup.hours').'. Address & map:';
+
+        return new SmsText(SmsText::SENDER.SmsText::tidy('Thanks'.($name === null ? '' : " {$name}")."! {$when} {$first->shortLink()}"));
+    }
+
+    /**
+     * The name to thank them by: "Thanks Sam", skipping titles and initials ("Mrs D Hogenhout" has none to use), and
      * tamed if it was typed in capitals.
      */
     private static function firstName(Order $order): ?string
@@ -70,44 +71,6 @@ final readonly class OrderConfirmationText
     }
 
     /**
-     * "1 x 10kg Beef Box, 2 x 500g Beef Mince", with the same product across orders added up, and how many units that
-     * is. It's what they ordered, so the delivery fee and anything given free are left out.
-     *
-     * @param  non-empty-list<Order>  $orders
-     * @return array{string, int}
-     */
-    private static function items(array $orders): array
-    {
-        $quantities = [];
-        $names = [];
-
-        foreach ($orders as $order) {
-            foreach ($order->items as $item) {
-                /** @var OrderItem $item */
-                if ($item->product->type === ProductType::Delivery || $item->free) {
-                    continue;
-                }
-
-                $quantities[$item->product_id] = ($quantities[$item->product_id] ?? 0) + $item->quantity;
-                $names[$item->product_id] = self::plainName($item->product->name);
-            }
-        }
-
-        $lines = array_map(fn (int $productId): string => "{$quantities[$productId]} x {$names[$productId]}", array_keys($quantities));
-
-        return [implode(', ', $lines), array_sum($quantities)];
-    }
-
-    /**
-     * A product's name without the shop's labels that don't belong in a text, like " · save $20", and with "×"
-     * written as "x".
-     */
-    private static function plainName(string $name): string
-    {
-        return trim(str_replace('×', 'x', (string) preg_replace('/\s*·.*$/u', '', $name)));
-    }
-
-    /**
      * "Sunday" when every order is for that night, or the drop's nights when they said either suits.
      *
      * @param  non-empty-list<Order>  $orders
@@ -121,16 +84,5 @@ final readonly class OrderConfirmationText
         }
 
         return $orders[0]->drop->deliveryWeekdays() ?? config()->string('shop.pickup.days');
-    }
-
-    /**
-     * "Daniel & Tahlia".
-     */
-    private static function signOff(): string
-    {
-        /** @var list<string> $owners */
-        $owners = config()->array('shop.owners');
-
-        return implode(' & ', array_map(fn (string $owner): string => explode(' ', $owner)[0], $owners));
     }
 }

@@ -21,7 +21,7 @@ use Laravel\Mcp\Server\Tool;
 use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 
-#[Description('Step 1 of texting a drop\'s customers their order confirmation now: what they ordered, and the pickup times and farm address, or their delivery night. Shows, without sending: new texts for orders not yet texted (one per person, covering all their orders), texts already saved and waiting for 8am (paid in quiet hours), whose orders are left out and why (already collected, already texted, no mobile, opted out), and the cost. Paid orders are texted automatically, so this is for orders that haven\'t been, or to send the waiting ones early. Returns a confirmation_token for send-order-texts. Show the owner the texts and wait for their yes.')]
+#[Description('Step 1 of texting a drop\'s customers their order confirmation now: one text each with the pickup times or their delivery night, and a link to their order\'s page (what they ordered, the farm\'s address and map). Shows, without sending: new texts for orders not yet texted (one per person, covering all their orders), texts already saved and waiting for 8am (paid in quiet hours), whose orders are left out and why (already collected, already texted, no mobile, opted out), and the cost. Paid orders are texted automatically, so this is for orders that haven\'t been, or to send the waiting ones early. Returns a confirmation_token for send-order-texts. Show the owner the texts and wait for their yes.')]
 #[IsReadOnly]
 #[IsIdempotent]
 final class PrepareOrderTextsTool extends Tool

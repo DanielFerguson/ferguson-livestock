@@ -191,7 +191,7 @@ it('rewrites the order text if it’s still waiting for the morning', function (
 
     app(ChangeDeliveryNight::class)($order->load('drop'), '2026-11-22');
 
-    expect($text->refresh()->body)->toContain("We'll deliver it after 4pm on Sunday");
+    expect($text->refresh()->body)->toContain("We'll deliver order {$order->reference()} on Sunday after 4pm");
 });
 
 it('leaves an order text that’s already gone alone', function (): void {

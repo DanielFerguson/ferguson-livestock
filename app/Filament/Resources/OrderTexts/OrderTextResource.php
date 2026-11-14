@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
 /**
- * The texts telling customers what they ordered and when it's ready: those waiting for 8am, and those sent.
+ * The texts telling customers their order is in and when it's ready: those waiting for 8am, and those sent.
  */
 class OrderTextResource extends Resource
 {

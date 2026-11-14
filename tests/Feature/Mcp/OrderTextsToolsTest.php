@@ -75,7 +75,7 @@ it('shows new texts, those waiting for 8am and who’s left out, then sends them
 
     expect(data_get($preview, 'people'))->toBe(3)
         ->and(data_get($preview, 'texts.*.orders'))->toBe([[$first->reference(), $second->reference()], [$alec->reference()]])
-        ->and(data_get($preview, 'texts.0.text'))->toStartWith('Ferguson Livestock: Hi Elvis, thanks for your orders')
+        ->and(data_get($preview, 'texts.0.text'))->toStartWith('Ferguson Livestock: Thanks Elvis! Pick up your 2 orders')
         ->and(data_get($preview, 'waiting_for_8am.*.name'))->toBe(['Wendy Waiting'])
         ->and(data_get($preview, 'skipped'))->toBe([
             ['order' => $collected->reference(), 'name' => 'Robert Ferguson', 'reason' => 'Already collected or delivered'],
@@ -83,8 +83,8 @@ it('shows new texts, those waiting for 8am and who’s left out, then sends them
             ['order' => $texted->reference(), 'name' => 'Sam Texted', 'reason' => 'Already texted'],
             ['order' => $stopped->reference(), 'name' => 'Pat Stopped', 'reason' => 'Has opted out of texts'],
         ])
-        ->and(data_get($preview, 'texts_in_total'))->toBe(3 + 2 + 1)
-        ->and(data_get($preview, 'estimated_cost.cents'))->toBe(6 * 8);
+        ->and(data_get($preview, 'texts_in_total'))->toBe(1 + 1 + 1)
+        ->and(data_get($preview, 'estimated_cost.cents'))->toBe(3 * 8);
 
     $this->server->tool(SendOrderTextsTool::class, ['drop_id' => $drop->id, 'confirmation_token' => data_get($preview, 'confirmation_token')])
         ->assertOk()->assertSee('"queued":3');

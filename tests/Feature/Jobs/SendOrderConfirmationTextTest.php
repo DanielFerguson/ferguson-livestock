@@ -41,7 +41,7 @@ it('saves the text for a paid order, waiting to go, and links the order to it', 
         ->status->toBe(SmsStatus::Queued)
         ->is_order_confirmation->toBeTrue()
         ->to->toBe('+61412345678')
-        ->body->toStartWith('Ferguson Livestock: Hi Sam, thanks for your order');
+        ->body->toStartWith('Ferguson Livestock: Thanks Sam! Pick up order');
     expect($message->orders()->sole()->confirmation_sms_message_id)->toBe($message->id);
     Queue::assertPushed(SendOrderConfirmationText::class, fn (SendOrderConfirmationText $job): bool => $job->messageId === $message->id && ! $job->evenInQuietHours);
 });
