@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 /**
  * A customer's order in a drop. Its stock is held from the moment it's created until it's paid, or released
@@ -23,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *
  * @property int $id
  * @property string $public_id
+ * @property string $access_token
  * @property int $drop_id
  * @property OrderStatus $status
  * @property PaymentMethod $payment_method
@@ -70,6 +72,21 @@ class Order extends Model
     protected $attributes = [
         'payment_method' => 'stripe',
     ];
+
+    /**
+     * How long the secret in an order page's link is: about 95 random bits, hopeless to guess.
+     */
+    public const int ACCESS_TOKEN_LENGTH = 16;
+
+    /**
+     * Every order gets the secret for its page link as it's created.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (Order $order): void {
+            $order->access_token ??= Str::random(self::ACCESS_TOKEN_LENGTH);
+        });
+    }
 
     /**
      * Only the public ID is a ULID; the primary key stays an auto-incrementing integer.

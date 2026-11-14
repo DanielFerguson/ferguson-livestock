@@ -3,6 +3,10 @@
 declare(strict_types=1);
 
 use App\Jobs\SendMetaEvent;
+use App\Models\Drop;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Product;
 use App\Support\Turnstile;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -89,4 +93,28 @@ function queuedMetaEvent(): array
     expect($events)->toHaveCount(1);
 
     return $events[0];
+}
+
+/**
+ * Sam's paid delivery of a 5kg box on the Saturday of a weekend drop (21 and 22 November 2026), to Ballarat.
+ *
+ * @param  array<string, mixed>  $attributes
+ * @param  list<string>  $nights  the drop's delivery days
+ */
+function samsWeekendOrder(array $attributes = [], array $nights = ['2026-11-21', '2026-11-22']): Order
+{
+    $drop = Drop::factory()->open()->create(['delivery_days' => $nights]);
+    $order = Order::factory()->for($drop)->create([
+        'customer_name' => 'Sam Buyer',
+        'email' => 'sam@example.com',
+        'delivery_day' => '2026-11-21',
+        'shipping_address' => ['line1' => '1 Main St', 'line2' => null, 'city' => 'Ballarat', 'state' => 'VIC', 'postal_code' => '3350', 'country' => 'AU'],
+        'total' => 17500,
+        ...$attributes,
+    ]);
+
+    OrderItem::factory()->for($order)->for(Product::factory()->box(5)->create(['name' => '5kg Beef Box']))->create(['quantity' => 1, 'unit_price' => 16000]);
+    OrderItem::factory()->for($order)->for(Product::factory()->delivery()->create(['name' => 'Delivery']))->create(['quantity' => 1, 'unit_price' => 1500]);
+
+    return $order;
 }
