@@ -30,15 +30,16 @@ so it works on any phone without JavaScript. Rejected: a Livewire component; the
 - `shop.short_domain` (`SHOP_SHORT_DOMAIN`, e.g. `fergs.au`). When set, a `Route::domain()` group sends
   `fergs.au/{token}` to the order page with a 302 and `fergs.au/` to the homepage. When empty, links use the main
   domain.
-- `Order::pageUrl()` is the full link; `Order::shortLink()` is the one texts use, without the scheme
-  (`fergs.au/7Kp2Qx9mZr4TbW3n`, or `fergusonlivestock.com.au/orders/…` with no short domain).
+- `Order::pageUrl()` is the full link; `Order::shortLink()` is the one texts use, with the scheme
+  (`https://fergs.au/7Kp2Qx9mZr4TbW3n`, or the full page address with no short domain). Phones open a link without a
+  scheme over plain http, which would send the secret in the clear before the redirect to https.
 - Setup outside the code: register `fergs.au` (needs the ABN), add it as a custom domain on the production
   environment in Laravel Cloud, and set `SHOP_SHORT_DOMAIN`.
 
 ## Text and email
 
-- Pickup texts: `Map: fergusonlivestock.com.au/farm` becomes `Your order & map: fergs.au/…`.
-- Delivery texts: `Your order: fergs.au/…` goes before "Questions?".
+- Pickup texts: `Map: fergusonlivestock.com.au/farm` becomes `Your order & map: https://fergs.au/…`.
+- Delivery texts: `Your order: https://fergs.au/…` goes before "Questions?".
 - A text covering several orders links the first; that order's page lists the others under "Also in this text"
   (orders sharing its `confirmation_sms_message_id`), each linked.
 - A typical order's text stays at two parts (about 282 characters for a pickup).

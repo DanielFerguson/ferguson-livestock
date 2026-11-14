@@ -141,16 +141,17 @@ class Order extends Model
     }
 
     /**
-     * The page's address as order texts give it, without the scheme: "fergs.au/7Kp2Qx9mZr4TbW3n" on the short
-     * domain, or the full address when there isn't one.
+     * The page's link as order texts give it: "https://fergs.au/7Kp2Qx9mZr4TbW3n" on the short domain, or the page's
+     * full address when there isn't one. The scheme stays in: phones open a link without one over plain http, which
+     * would send the secret in the clear before the redirect to https.
      */
     public function shortLink(): string
     {
         $shortDomain = config('shop.short_domain');
 
         return is_string($shortDomain) && $shortDomain !== ''
-            ? "{$shortDomain}/{$this->access_token}"
-            : (string) preg_replace('#^https?://(www\.)?#', '', $this->pageUrl());
+            ? "https://{$shortDomain}/{$this->access_token}"
+            : $this->pageUrl();
     }
 
     /**

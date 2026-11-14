@@ -38,7 +38,7 @@ it('tells a pickup customer what they ordered, and where and when to collect it'
 
     $text = OrderConfirmationText::for([$order]);
 
-    expect($text->text)->toBe("Ferguson Livestock: Hi Alec, thanks for your order {$order->reference()}: 1 x 10kg Beef Box. Pick it up from 306 Snake Valley-Chepstowe Rd, Snake Valley, Saturday or Sunday between 10am and 4pm. Your order & map: fergs.au/{$order->access_token} Questions? Just reply here. - Daniel & Tahlia")
+    expect($text->text)->toBe("Ferguson Livestock: Hi Alec, thanks for your order {$order->reference()}: 1 x 10kg Beef Box. Pick it up from 306 Snake Valley-Chepstowe Rd, Snake Valley, Saturday or Sunday between 10am and 4pm. Your order & map: https://fergs.au/{$order->access_token} Questions? Just reply here. - Daniel & Tahlia")
         ->and($text->isGsm())->toBeTrue()
         ->and($text->segments())->toBe(2);
 });
@@ -59,7 +59,7 @@ it('tells a delivery customer the night they chose, and leaves the delivery fee 
 
     $text = OrderConfirmationText::for([$order->load('items.product')]);
 
-    expect($text->text)->toBe("Ferguson Livestock: Hi Paul, thanks for your order {$order->reference()}: 1 x 10kg Beef Box. We'll deliver it after 4pm on Sunday, and we'll text you closer to the time. Your order: fergs.au/{$order->access_token} Questions? Just reply here. - Daniel & Tahlia")
+    expect($text->text)->toBe("Ferguson Livestock: Hi Paul, thanks for your order {$order->reference()}: 1 x 10kg Beef Box. We'll deliver it after 4pm on Sunday, and we'll text you closer to the time. Your order: https://fergs.au/{$order->access_token} Questions? Just reply here. - Daniel & Tahlia")
         ->and($text->segments())->toBe(2);
 });
 
@@ -103,6 +103,6 @@ it('links the first order’s page when one text covers several, since that page
     $second = orderOf($drop, 'Sam Buyer', ['500g Beef Mince' => 2]);
 
     expect(OrderConfirmationText::for([$first, $second])->text)
-        ->toContain("Your order & map: fergs.au/{$first->access_token} ")
+        ->toContain("Your order & map: https://fergs.au/{$first->access_token} ")
         ->not->toContain($second->access_token);
 });

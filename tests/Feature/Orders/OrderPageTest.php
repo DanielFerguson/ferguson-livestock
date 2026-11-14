@@ -70,14 +70,15 @@ describe('short links', function (): void {
     it('gives texts the short link', function (): void {
         $order = samsWeekendOrder();
 
-        expect($order->shortLink())->toBe("fergs.au/{$order->access_token}");
+        expect($order->shortLink())->toBe("https://fergs.au/{$order->access_token}");
     });
 
     it('gives texts the page’s full address when there’s no short domain', function (): void {
         config(['shop.short_domain' => null]);
         URL::useOrigin('https://fergusonlivestock.com.au');
+        URL::forceHttps();
         $order = samsWeekendOrder();
 
-        expect($order->shortLink())->toBe("fergusonlivestock.com.au/orders/{$order->access_token}");
+        expect($order->shortLink())->toBe("https://fergusonlivestock.com.au/orders/{$order->access_token}");
     });
 });
