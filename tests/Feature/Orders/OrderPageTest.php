@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Enums\DeliveryMethod;
 use App\Enums\OrderStatus;
 use App\Models\Order;
+use Illuminate\Support\Facades\URL;
 
 it('gives each order its own unguessable secret for its page link', function (): void {
     [$first, $second] = Order::factory()->count(2)->create()->all();
@@ -53,3 +54,30 @@ it('is a 404 for a checkout that never became an order', function (OrderStatus $
 
     $this->get($order->pageUrl())->assertNotFound();
 })->with([OrderStatus::Pending, OrderStatus::Expired, OrderStatus::Failed]);
+
+describe('short links', function (): void {
+    it('sends a link on the short domain to the order page', function (): void {
+        $order = samsWeekendOrder();
+
+        $this->get("https://fergs.au/{$order->access_token}")
+            ->assertRedirect("https://fergusonlivestock.com.au/orders/{$order->access_token}");
+    });
+
+    it('sends anything else on the short domain to the main site', function (string $path): void {
+        $this->get("https://fergs.au{$path}")->assertRedirect('https://fergusonlivestock.com.au');
+    })->with(['the bare domain' => '/', 'a page' => '/order', 'a too-short link' => '/abc123']);
+
+    it('gives texts the short link', function (): void {
+        $order = samsWeekendOrder();
+
+        expect($order->shortLink())->toBe("fergs.au/{$order->access_token}");
+    });
+
+    it('gives texts the page’s full address when there’s no short domain', function (): void {
+        config(['shop.short_domain' => null]);
+        URL::useOrigin('https://fergusonlivestock.com.au');
+        $order = samsWeekendOrder();
+
+        expect($order->shortLink())->toBe("fergusonlivestock.com.au/orders/{$order->access_token}");
+    });
+});

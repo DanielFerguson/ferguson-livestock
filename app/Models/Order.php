@@ -141,6 +141,19 @@ class Order extends Model
     }
 
     /**
+     * The page's address as order texts give it, without the scheme: "fergs.au/7Kp2Qx9mZr4TbW3n" on the short
+     * domain, or the full address when there isn't one.
+     */
+    public function shortLink(): string
+    {
+        $shortDomain = config('shop.short_domain');
+
+        return is_string($shortDomain) && $shortDomain !== ''
+            ? "{$shortDomain}/{$this->access_token}"
+            : (string) preg_replace('#^https?://(www\.)?#', '', $this->pageUrl());
+    }
+
+    /**
      * The night a delivery goes out, as customers read it: "Saturday night, 14 November", or "Saturday or Sunday
      * night" when they said either night suits. Null for a pickup.
      */

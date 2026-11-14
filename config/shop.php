@@ -21,6 +21,10 @@ return [
     // The main address has no www: Laravel Cloud redirects www to it.
     'url' => env('SHOP_URL', 'https://fergusonlivestock.com.au'),
 
+    // A short domain that sends order texts' links on to the order page, so texts stay short: "fergs.au". Leave it
+    // empty to text the order page's full address instead. Set it only once the domain serves this app.
+    'short_domain' => env('SHOP_SHORT_DOMAIN'),
+
     // Drop times are entered and shown in this timezone and stored in UTC.
     'timezone' => 'Australia/Melbourne',
 
