@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Query\Expression;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -26,7 +27,10 @@ return new class extends Migration
         }
 
         Schema::table('orders', function (Blueprint $table): void {
-            $table->string('access_token', 16)->nullable(false)->change();
+            // The database gives one too, so an order the previous release saves while this one deploys still gets a
+            // secret rather than failing its checkout. Its 64 random bits are fewer than the model's, but still far
+            // beyond guessing at the page's 30 tries a minute.
+            $table->string('access_token', 16)->default(new Expression('substr(md5(gen_random_uuid()::text), 1, 16)'))->nullable(false)->change();
             $table->unique('access_token');
         });
     }

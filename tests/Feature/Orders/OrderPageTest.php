@@ -10,8 +10,10 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\SmsMessage;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Str;
 
 it('gives each order its own unguessable secret for its page link', function (): void {
     [$first, $second] = Order::factory()->count(2)->create()->all();
@@ -19,6 +21,12 @@ it('gives each order its own unguessable secret for its page link', function ():
     expect($first->access_token)->toMatch('/^[A-Za-z0-9]{16}$/')
         ->and($second->access_token)->toMatch('/^[A-Za-z0-9]{16}$/')
         ->and($first->access_token)->not->toBe($second->access_token);
+});
+
+it('gives an order saved without a secret one from the database, as the previous release saves them during a deploy', function (): void {
+    DB::table('orders')->insert([...Arr::except(Order::factory()->make()->getAttributes(), 'access_token'), 'public_id' => (string) Str::ulid()]);
+
+    expect(Order::query()->sole()->access_token)->toMatch('/^[A-Za-z0-9]{16}$/');
 });
 
 it('shows the order to whoever has its link, thanking them by name', function (): void {
