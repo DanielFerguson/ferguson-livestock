@@ -25,6 +25,15 @@ screen) and forwarding each text by SMS or email (duplicate texts or buried emai
 - The push is queued, so Twilio still gets its answer straight away. A push that fails for good triggers the
   existing failed-job email.
 
+## When pushes stop
+
+A phone's sign-up can lapse without the owner noticing: the app comes off the home screen, or there's a new phone.
+The package deletes a sign-up when Apple reports it gone, so without a warning, texts would just stop arriving.
+
+- Every admin page shows a banner while no phone is signed up (once the push keys are set).
+- When Apple reports the last sign-up gone, the admin is emailed once (`PushesStopped`). Turning notifications off on
+  purpose doesn't send it.
+
 ## Installing
 
 - `public/admin.webmanifest`: name and short name "Ferguson Livestock", `id` and `scope` `/admin/`, `start_url`
