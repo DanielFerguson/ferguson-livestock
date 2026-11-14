@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\SmsMessage;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 
 it('gives each order its own unguessable secret for its page link', function (): void {
@@ -68,6 +69,18 @@ it('is a plain 404 for a wrong link', function (): void {
     $this->get('/orders/'.str_repeat('a', Order::ACCESS_TOKEN_LENGTH))->assertNotFound();
 });
 
+it('is a 404, without looking anything up, for a link that isn’t the shape of one', function (string $token): void {
+    DB::enableQueryLog();
+
+    $this->get("/orders/{$token}")->assertNotFound();
+    $this->post("/orders/{$token}/night", ['night' => '2026-11-22'])->assertNotFound();
+
+    expect(DB::getQueryLog())->toBeEmpty();
+})->with([
+    'too long' => [str_repeat('a', Order::ACCESS_TOKEN_LENGTH + 1)],
+    'not just letters and numbers' => [str_repeat('a', Order::ACCESS_TOKEN_LENGTH - 1).'-'],
+]);
+
 it('is a 404 for a checkout that never became an order', function (OrderStatus $status): void {
     $order = Order::factory()->pending()->create(['status' => $status]);
 
@@ -75,16 +88,26 @@ it('is a 404 for a checkout that never became an order', function (OrderStatus $
 })->with([OrderStatus::Pending, OrderStatus::Expired, OrderStatus::Failed]);
 
 describe('short links', function (): void {
-    it('sends a link on the short domain to the order page', function (): void {
+    it('sends a link on the short domain to the order page', function (string $trailingSlash): void {
         $order = samsWeekendOrder();
 
-        $this->get("https://fergs.au/{$order->access_token}")
+        $this->get("https://fergs.au/{$order->access_token}{$trailingSlash}")
             ->assertRedirect("https://fergusonlivestock.com.au/orders/{$order->access_token}");
-    });
+    })->with(['as texted' => '', 'with a trailing slash' => '/']);
 
     it('sends anything else on the short domain to the main site', function (string $path): void {
         $this->get("https://fergs.au{$path}")->assertRedirect('https://fergusonlivestock.com.au');
-    })->with(['the bare domain' => '/', 'a page' => '/order', 'a too-short link' => '/abc123']);
+    })->with([
+        'the bare domain' => '/',
+        'a page' => '/order',
+        'a too-short link' => '/abc123',
+        'the admin' => '/admin',
+        'the health check' => '/up',
+    ]);
+
+    it('sends a form posted to the short domain to the main site too', function (): void {
+        $this->post('https://fergs.au/waitlist', ['first_name' => 'Sam'])->assertRedirect('https://fergusonlivestock.com.au');
+    });
 
     it('gives texts the short link', function (): void {
         $order = samsWeekendOrder();

@@ -27,9 +27,12 @@ so it works on any phone without JavaScript. Rejected: a Livewire component; the
   Not response-cached; sends `Cache-Control: private, no-store`. No Meta pixel, not in the sitemap. The site's
   `strict-origin-when-cross-origin` referrer policy keeps the token off other sites. An unknown token, or an Expired
   or Failed order, is a 404.
-- `shop.short_domain` (`SHOP_SHORT_DOMAIN`, e.g. `fergs.au`). When set, a `Route::domain()` group sends
-  `fergs.au/{token}` to the order page with a 302 and `fergs.au/` to the homepage. When empty, links use the main
-  domain.
+- `shop.short_domain` (`SHOP_SHORT_DOMAIN`, e.g. `fergs.au`). When set, the global `RedirectShortDomain` middleware
+  sends `fergs.au/{token}` to the order page with a 302 and everything else on `fergs.au` (any path, any method) to
+  the homepage, before routing, so no route of the main site answers on it. It isn't throttled, since it looks nothing
+  up. When empty, links use the main domain.
+- The token's shape is `Order::ACCESS_TOKEN_PATTERN`, used by the middleware and as the `customerOrder` route pattern,
+  so a malformed link is a 404 without a lookup.
 - `Order::pageUrl()` is the full link; `Order::shortLink()` is the one texts use, with the scheme
   (`https://fergs.au/7Kp2Qx9mZr4TbW3n`, or the full page address with no short domain). Phones open a link without a
   scheme over plain http, which would send the secret in the clear before the redirect to https.

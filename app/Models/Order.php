@@ -81,6 +81,12 @@ class Order extends Model
     public const int ACCESS_TOKEN_LENGTH = 16;
 
     /**
+     * What that secret looks like, as a regular expression without delimiters. The order page's routes and the short
+     * domain's links only take a token of this shape, so anything else is turned away without a lookup.
+     */
+    public const string ACCESS_TOKEN_PATTERN = '[A-Za-z0-9]{'.self::ACCESS_TOKEN_LENGTH.'}';
+
+    /**
      * Every order gets the secret for its page link as it's created.
      */
     protected static function booted(): void

@@ -14,20 +14,8 @@ use App\Http\Controllers\Orders\LeaveFeedbackController;
 use App\Http\Controllers\Orders\ShowOrderController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Middleware\PreventIndexing;
-use App\Models\Order;
 use Illuminate\Support\Facades\Route;
 use Spatie\ResponseCache\Middlewares\CacheResponse;
-
-// The short domain in order texts. Its links go on to the order page on the main site, and anything else goes to the
-// main site's home page. Registered first, so the main site's routes never answer on it.
-if (filled(config('shop.short_domain'))) {
-    Route::domain(config()->string('shop.short_domain'))->middleware('throttle:order-page')->group(function (): void {
-        Route::get('/{token}', fn (string $token) => redirect()->away(config()->string('shop.url').route('orders.show', ['customerOrder' => $token], absolute: false)))
-            ->where('token', '[A-Za-z0-9]{'.Order::ACCESS_TOKEN_LENGTH.'}')
-            ->name('short-link');
-        Route::get('/{path?}', fn () => redirect()->away(config()->string('shop.url')))->where('path', '.*');
-    });
-}
 
 // Marketing pages look the same for everyone, so they're served from the response cache.
 // Their catalogue and FAQ data comes from view composers in AppServiceProvider.

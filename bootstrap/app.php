@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Middleware\PreventIndexingOutsideProduction;
+use App\Http\Middleware\RedirectShortDomain;
 use App\Http\Middleware\RememberAdCampaign;
 use App\Http\Middleware\RememberMetaAdClick;
 use App\Http\Middleware\RemoveTrailingSlash;
@@ -35,8 +36,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // cookie encryption (so cached pages get them too). Encrypting them would make Laravel throw them away.
         $middleware->encryptCookies(except: [MetaVisitor::BROWSER_COOKIE, MetaVisitor::CLICK_COOKIE, AdCampaign::COOKIE]);
 
-        // RemoveTrailingSlash comes after the proxy headers are read, so its redirect keeps the visitor on https.
-        $middleware->append([SecurityHeaders::class, PreventIndexingOutsideProduction::class, RemoveTrailingSlash::class, RememberMetaAdClick::class, RememberAdCampaign::class]);
+        // These come after the proxy headers are read, so RedirectShortDomain sees the short domain and
+        // RemoveTrailingSlash's redirect keeps the visitor on https. The short domain goes first, so a short link with a
+        // trailing slash goes straight to the order page instead of back through the short domain.
+        $middleware->append([SecurityHeaders::class, PreventIndexingOutsideProduction::class, RedirectShortDomain::class, RemoveTrailingSlash::class, RememberMetaAdClick::class, RememberAdCampaign::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

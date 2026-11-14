@@ -111,8 +111,9 @@ class AppServiceProvider extends ServiceProvider
         // Guessing a 16-character link is hopeless, and a customer opens their page a handful of times.
         RateLimiter::for('order-page', fn (Request $request) => Limit::perMinute(30)->by((string) $request->ip()));
 
-        // Customers' order pages find their order by the secret in the link. A checkout that never became an order has
-        // no page, so it's a 404 like a wrong link.
+        // Customers' order pages find their order by the secret in the link. A link that isn't the shape of one is a 404
+        // without a lookup, and a checkout that never became an order has no page, so it's a 404 like a wrong link.
+        Route::pattern('customerOrder', Order::ACCESS_TOKEN_PATTERN);
         Route::bind('customerOrder', fn (string $token): Order => Order::query()
             ->where('access_token', $token)
             ->whereIn('status', OrderStatus::placed())
