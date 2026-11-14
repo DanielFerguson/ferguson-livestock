@@ -1155,16 +1155,20 @@ it('stays quiet while another phone still gets pushes', function (): void {
     Notification::assertNothingSent();
 });
 
-it('stays quiet when a push fails for another reason, since the phone is still signed up', function (): void {
+it('reports a push that fails for another reason as an error, without the lapsed-phone email', function (): void {
     Notification::fake();
+    Exceptions::fake();
     $admin = User::factory()->create(['email' => 'daniel@example.com']);
     $phone = $admin->updatePushSubscription('https://web.push.apple.com/old-phone', 'BKey', 'authSecret', 'aes128gcm');
 
-    event(failedPush($phone, 500));
+    event(failedPush($phone, 403));
 
+    Exceptions::assertReported(fn (RuntimeException $exception): bool => str_contains($exception->getMessage(), '403') && str_contains($exception->getMessage(), 'Apple said no'));
     Notification::assertNothingSent();
 });
 ```
+
+Add `use Illuminate\Support\Facades\Exceptions;` to the test's imports.
 
 **Step 2: Run them to make sure they fail**
 
@@ -1227,17 +1231,24 @@ namespace App\Listeners;
 use App\Models\User;
 use App\Notifications\PushesStopped;
 use NotificationChannels\WebPush\Events\NotificationFailed;
+use RuntimeException;
 
 /**
- * Emails the admin when Apple says the last phone signed up for pushes isn't any more. The push package has already
- * deleted the sign-up, so this fires once per lapse. Turning notifications off on purpose doesn't count: that never
- * reaches Apple.
+ * Makes sure a push that doesn't arrive never goes unnoticed. The push package swallows every failure into this event.
+ *
+ * When Apple says the last phone signed up isn't any more, the admin is emailed. The package has already deleted the
+ * sign-up, so that's once per lapse, and turning notifications off on purpose never reaches Apple. Any other failure
+ * (wrong push keys, Apple having trouble) is reported as an error, so it shows up in Nightwatch.
  */
 class WarnWhenPushesStop
 {
     public function handle(NotificationFailed $event): void
     {
         if (! $event->report->isSubscriptionExpired()) {
+            $status = $event->report->getResponse()?->getStatusCode() ?? 'no response';
+
+            report(new RuntimeException("A push to the admin’s phone failed ({$status}): {$event->report->getReason()}"));
+
             return;
         }
 

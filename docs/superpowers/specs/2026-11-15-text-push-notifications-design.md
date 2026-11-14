@@ -22,8 +22,9 @@ screen) and forwarding each text by SMS or email (duplicate texts or buried emai
 - The icon badge shows `ConversationList::attentionCount()`, the same count as the sidebar badge. It's set when a
   push arrives and refreshed when an admin page loads or a conversation is opened.
 - No quiet hours here: the phone's Focus and Do Not Disturb settings decide.
-- The push is queued, so Twilio still gets its answer straight away. A push that fails for good triggers the
-  existing failed-job email.
+- The push is queued, so Twilio still gets its answer straight away. The push package swallows failed pushes, so
+  `WarnWhenPushesStop` reports any failure other than a lapsed phone as an error (it shows up in Nightwatch). The
+  body is cut to 250 characters so a long text still fits in a push.
 
 ## When pushes stop
 
