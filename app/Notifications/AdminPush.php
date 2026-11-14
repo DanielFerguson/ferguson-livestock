@@ -11,6 +11,7 @@ use App\Support\AustralianMobile;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Str;
 use NotificationChannels\WebPush\WebPushChannel;
 use NotificationChannels\WebPush\WebPushMessage;
 
@@ -32,7 +33,7 @@ class AdminPush extends Notification implements ShouldQueue
     {
         return new self(
             title: $text->subscriber->first_name ?? AustralianMobile::readable($text->contact_phone),
-            body: $text->body,
+            body: Str::limit($text->body, 250),
             url: Conversations::getUrl(['phone' => $text->contact_phone], isAbsolute: false),
         );
     }

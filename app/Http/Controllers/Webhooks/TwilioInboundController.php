@@ -44,7 +44,9 @@ class TwilioInboundController extends Controller
         } elseif (OptInKeywords::matches($body)) {
             $subscriber?->optBackIn();
         } elseif ($text->wasRecentlyCreated) {
-            User::admin()?->notify(AdminPush::forText($text));
+            // The text is already kept, so a push that can't be queued is reported rather than handed back to Twilio
+            // as an error.
+            rescue(fn () => User::admin()?->notify(AdminPush::forText($text)));
         }
 
         // An empty TwiML response: no automatic reply. Twilio answers STOP itself.

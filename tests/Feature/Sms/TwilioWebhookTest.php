@@ -8,7 +8,9 @@ use App\Models\SmsMessage;
 use App\Models\Subscriber;
 use App\Models\User;
 use App\Notifications\AdminPush;
+use Illuminate\Notifications\SendQueuedNotifications;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Testing\TestResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Twilio\Security\RequestValidator;
@@ -167,7 +169,7 @@ it('stores a reply once when Twilio sends it again', function (): void {
 });
 
 it('pushes a new text to the admin’s phone', function (): void {
-    Notification::fake();
+    Queue::fake();
     config(['shop.admin_email' => 'daniel@example.com']);
     $admin = User::factory()->create(['email' => 'daniel@example.com']);
     $jess = Subscriber::factory()->create(['first_name' => 'Jess']);
@@ -175,7 +177,25 @@ it('pushes a new text to the admin’s phone', function (): void {
     postFromTwilio('webhooks.twilio.inbound', ['MessageSid' => 'SMreply1', 'From' => $jess->phone, 'To' => '+61400000000', 'Body' => 'Can I swap to Thursday pickup?'])
         ->assertOk();
 
-    Notification::assertSentTo($admin, AdminPush::class, fn (AdminPush $push): bool => $push->title === 'Jess' && $push->body === 'Can I swap to Thursday pickup?');
+    Queue::assertPushed(SendQueuedNotifications::class, function (SendQueuedNotifications $job) use ($admin): bool {
+        $notifiable = $job->notifiables->first();
+
+        return $job->notification instanceof AdminPush
+            && $job->notification->title === 'Jess'
+            && $job->notification->body === 'Can I swap to Thursday pickup?'
+            && $notifiable instanceof User
+            && $notifiable->is($admin);
+    });
+});
+
+it('finds the admin whatever the case of their email', function (): void {
+    Notification::fake();
+    config(['shop.admin_email' => 'Daniel@Example.com']);
+    $admin = User::factory()->create(['email' => 'daniel@example.com']);
+
+    postFromTwilio('webhooks.twilio.inbound', ['MessageSid' => 'SMreply1', 'From' => '+61499999999', 'To' => '+61400000000', 'Body' => 'Hello'])->assertOk();
+
+    Notification::assertSentTo($admin, AdminPush::class);
 });
 
 it('pushes a text once when Twilio sends it again', function (): void {

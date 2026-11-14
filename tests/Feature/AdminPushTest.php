@@ -24,3 +24,9 @@ it('names someone who isn’t on the wait list by their number', function (): vo
 
     expect(AdminPush::forText($text)->toWebPush(new User)->toArray())->toMatchArray(['title' => '0412 000 111']);
 });
+
+it('cuts a long text short enough to fit in a push', function (): void {
+    $text = SmsMessage::factory()->reply(str_repeat('🐄', 400))->create(['subscriber_id' => null, 'from' => '+61412000111']);
+
+    expect(strlen(json_encode(AdminPush::forText($text)->toWebPush(new User)->toArray(), JSON_THROW_ON_ERROR)))->toBeLessThan(4000);
+});

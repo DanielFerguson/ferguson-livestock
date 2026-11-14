@@ -20,7 +20,7 @@ return [
 
     'model' => PushSubscription::class,
 
-    'table_name' => env('WEBPUSH_DB_TABLE', 'push_subscriptions'),
+    'table_name' => 'push_subscriptions',
 
     /*
      * Null is the app's own database. The package's default falls back to "mysql" when DB_CONNECTION isn't set.
