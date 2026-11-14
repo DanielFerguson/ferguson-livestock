@@ -6,7 +6,7 @@
     $transactional = request()->routeIs('order', 'order-confirmed', 'thank-you');
 @endphp
 
-<header class="sticky top-0 z-50 border-b border-forest/10 bg-cream">
+<header class="sticky top-0 z-50 border-b border-forest/10 bg-cream print:hidden">
     <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <a href="{{ route('home') }}" class="flex min-w-0 items-center gap-3 text-forest no-underline" aria-label="{{ config('shop.name') }} home">
             <x-picture name="logo" alt="" sizes="44px" eager class="h-11 w-11 shrink-0 rounded-full object-cover" />

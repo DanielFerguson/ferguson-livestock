@@ -10,6 +10,9 @@
         $order->status === OrderStatus::Fulfilled => 'You’ve collected your order',
         default => 'We’re getting your order ready',
     };
+
+    // Opens their messages app with a text to the farm already started, on iPhones and Android phones alike.
+    $textUsUrl = 'sms:'.config('shop.phone.international').'?&body='.rawurlencode("Hi, about my order {$order->reference()}: ");
 @endphp
 
 {{-- The secret in this page's address is the key to the order, so the page stays away from Meta and search engines. --}}
@@ -29,6 +32,16 @@
             @else
                 <p>Thank you for supporting our small family farm! We’re packing everything fresh and vacuum-sealing it, ready for you.</p>
             @endif
+
+            @include('pages.order-details._fulfilment')
+            @include('pages.order-details._receipt')
+            @include('pages.order-details._also-in-text')
+
+            <x-slot:actions>
+                <div class="space-y-8 print:hidden">
+                    @include('pages.order-details._questions')
+                </div>
+            </x-slot:actions>
         </x-confirmation-letter>
     </div>
 </x-layouts.app>

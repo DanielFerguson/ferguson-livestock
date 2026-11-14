@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 use App\Enums\DeliveryMethod;
 use App\Enums\OrderStatus;
+use App\Enums\SmsStatus;
 use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Product;
+use App\Models\SmsMessage;
 use Illuminate\Support\Facades\URL;
 
 it('gives each order its own unguessable secret for its page link', function (): void {
@@ -81,4 +85,63 @@ describe('short links', function (): void {
 
         expect($order->shortLink())->toBe("https://fergusonlivestock.com.au/orders/{$order->access_token}");
     });
+});
+
+it('tells a delivery customer their night and address', function (): void {
+    $this->get(samsWeekendOrder()->pageUrl())
+        ->assertOk()
+        ->assertSeeInOrder(['Delivery', 'Saturday night, 21 November', '1 Main St', 'Ballarat 3350']);
+});
+
+it('tells a pickup customer where and when to collect, with the farm’s map', function (): void {
+    $order = samsWeekendOrder(['delivery_method' => DeliveryMethod::Pickup, 'delivery_day' => null, 'shipping_address' => null]);
+
+    $this->get($order->pageUrl())
+        ->assertOk()
+        ->assertSeeInOrder(['Farm pickup', '306 Snake Valley-Chepstowe Rd, Snake Valley, Saturday or Sunday, 10am to 4pm', 'Open in Google Maps'])
+        ->assertSee(route('farm'));
+});
+
+it('gives a receipt, with what was given free and anything refunded', function (): void {
+    $order = samsWeekendOrder(['amount_refunded' => 1500]);
+    OrderItem::factory()->for($order)->for(Product::factory()->create(['name' => '500g Beef Mince']))->free()->create(['quantity' => 2]);
+
+    $this->get($order->pageUrl())
+        ->assertOk()
+        ->assertSeeInOrder(['Receipt', $order->reference(), '5kg Beef Box', '$160', 'Delivery', '$15', '2 × 500g Beef Mince', 'Free', 'Total', '$175', 'Refunded', '−$15']);
+});
+
+it('shows what the customer typed as plain text', function (): void {
+    $order = samsWeekendOrder([
+        'customer_name' => '<script>alert(1)</script>',
+        'shipping_address' => ['line1' => '<b>1 Main St</b>', 'line2' => null, 'city' => 'Ballarat', 'state' => 'VIC', 'postal_code' => '3350', 'country' => 'AU'],
+    ]);
+
+    $this->get($order->pageUrl())
+        ->assertOk()
+        ->assertDontSee('<script>alert(1)</script>', false)
+        ->assertDontSee('<b>1 Main St</b>', false)
+        ->assertSee('&lt;script&gt;', false);
+});
+
+it('links the customer’s other orders that the same text covered', function (): void {
+    $text = SmsMessage::factory()->orderConfirmation(SmsStatus::Sent)->create();
+    $order = samsWeekendOrder(['confirmation_sms_message_id' => $text->id]);
+    $sameText = Order::factory()->for($order->drop)->create(['confirmation_sms_message_id' => $text->id]);
+    $otherText = Order::factory()->for($order->drop)->create(['confirmation_sms_message_id' => SmsMessage::factory()->orderConfirmation()->create()->id]);
+
+    $this->get($order->pageUrl())
+        ->assertOk()
+        ->assertSeeInOrder(['Your other orders', $sameText->reference()])
+        ->assertSee($sameText->access_token)
+        ->assertDontSee($otherText->reference());
+});
+
+it('lets the customer text the farm about their order', function (): void {
+    $order = samsWeekendOrder();
+
+    $this->get($order->pageUrl())
+        ->assertOk()
+        ->assertSee('sms:+61427458706?&body='.rawurlencode("Hi, about my order {$order->reference()}: "))
+        ->assertSee('tel:+61427458706');
 });

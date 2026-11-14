@@ -8,7 +8,7 @@
     $linkClasses = 'text-sm text-cream/80 no-underline transition-colors hover:text-mint-light';
 @endphp
 
-<footer class="bg-forest py-14 text-cream">
+<footer class="bg-forest py-14 text-cream print:hidden">
     <div class="mx-auto max-w-6xl px-6">
         <div class="mb-12 grid gap-10 md:grid-cols-2 lg:grid-cols-[1.4fr_0.8fr_0.8fr_1.1fr]">
             <div>
