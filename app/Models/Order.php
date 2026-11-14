@@ -133,6 +133,14 @@ class Order extends Model
     }
 
     /**
+     * The customer's own page for this order. The secret in it is the only key, so it only ever goes to the customer.
+     */
+    public function pageUrl(): string
+    {
+        return route('orders.show', ['customerOrder' => $this->access_token]);
+    }
+
+    /**
      * The night a delivery goes out, as customers read it: "Saturday night, 14 November", or "Saturday or Sunday
      * night" when they said either night suits. Null for a pickup.
      */

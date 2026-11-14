@@ -8,6 +8,7 @@ use App\Http\Controllers\EarlyAccessController;
 use App\Http\Controllers\EarlyAccessStockController;
 use App\Http\Controllers\JoinWaitlistController;
 use App\Http\Controllers\OrderPageController;
+use App\Http\Controllers\Orders\ShowOrderController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Middleware\PreventIndexing;
 use Illuminate\Support\Facades\Route;
@@ -44,6 +45,13 @@ Route::get('/order', OrderPageController::class)->name('order');
 Route::middleware(['throttle:early-access', PreventIndexing::class])->group(function (): void {
     Route::get('/early/{token}', EarlyAccessController::class)->name('early-access');
     Route::get('/early/{token}/stock', EarlyAccessStockController::class)->name('early-access.stock');
+});
+
+// A customer's own order page, linked from their order text and email. The secret in its address is the only key, so
+// it's kept out of search results and caches, and throttled so guessing is pointless. See the customerOrder binding in
+// AppServiceProvider.
+Route::middleware(['throttle:order-page', PreventIndexing::class])->prefix('orders/{customerOrder}')->group(function (): void {
+    Route::get('/', ShowOrderController::class)->middleware('cache.headers:private;no_store')->name('orders.show');
 });
 
 // Stripe sends customers back here. Neither page is cached: both depend on the order. Both can ask Stripe

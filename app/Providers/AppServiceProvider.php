@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Enums\OrderStatus;
 use App\Http\Requests\JoinWaitlistRequest;
+use App\Models\Order;
 use App\Payments\PaymentGateway;
 use App\Payments\StripePaymentGateway;
 use App\Payments\StripeWebhookEvents;
@@ -25,6 +27,7 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Vite;
@@ -104,6 +107,16 @@ class AppServiceProvider extends ServiceProvider
         // Keyed on the token so one client can't starve another, and on the address when there isn't one.
         RateLimiter::for('mcp', fn (Request $request) => Limit::perMinute(120)
             ->by($request->bearerToken() !== null ? hash('sha256', $request->bearerToken()) : (string) $request->ip()));
+
+        // Guessing a 16-character link is hopeless, and a customer opens their page a handful of times.
+        RateLimiter::for('order-page', fn (Request $request) => Limit::perMinute(30)->by((string) $request->ip()));
+
+        // Customers' order pages find their order by the secret in the link. A checkout that never became an order has
+        // no page, so it's a 404 like a wrong link.
+        Route::bind('customerOrder', fn (string $token): Order => Order::query()
+            ->where('access_token', $token)
+            ->whereIn('status', OrderStatus::placed())
+            ->firstOrFail());
     }
 
     /**
