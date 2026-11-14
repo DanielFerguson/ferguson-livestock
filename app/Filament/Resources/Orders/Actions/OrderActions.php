@@ -4,16 +4,24 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Orders\Actions;
 
+use App\Actions\Orders\GiveFreeItems;
+use App\Actions\Orders\TakeBackFreeItem;
 use App\Checkout\OrderPayments;
 use App\Enums\OrderStatus;
+use App\Enums\ProductType;
+use App\Exceptions\CannotChangeOrder;
 use App\Filament\Resources\Orders\OrderResource;
 use App\Models\Drop;
+use App\Models\DropItem;
 use App\Models\Order;
+use App\Models\OrderItem;
+use App\Stock\DropSales;
 use App\Support\DeliveryRun;
 use App\Support\Money;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Database\Eloquent\Collection;
@@ -72,6 +80,76 @@ final class OrderActions
             });
     }
 
+    public static function giveFreeItem(): Action
+    {
+        return Action::make('giveFreeItem')
+            ->label('Add free item')
+            ->icon(Heroicon::OutlinedGift)
+            ->color('gray')
+            ->visible(fn (Order $record): bool => GiveFreeItems::canTakeFreeItems($record))
+            ->modalHeading(fn (Order $record): string => 'Give '.($record->firstName() ?? 'them').' something free')
+            ->modalDescription('It comes out of the drop’s stock. What they paid doesn’t change, and they aren’t told.')
+            ->schema([
+                Select::make('drop_item_id')
+                    ->label('Item')
+                    ->options(fn (Order $record): array => self::freeItemOptions($record))
+                    ->required(),
+                TextInput::make('quantity')->integer()->minValue(1)->default(1)->required(),
+            ])
+            ->modalSubmitActionLabel('Add to order')
+            ->action(function (array $data, Order $record, GiveFreeItems $giveFreeItems, Action $action): void {
+                $dropItemId = is_numeric($data['drop_item_id'] ?? null) ? (int) $data['drop_item_id'] : 0;
+                $quantity = is_numeric($data['quantity'] ?? null) ? (int) $data['quantity'] : 0;
+
+                try {
+                    $giveFreeItems($record, [$dropItemId => $quantity]);
+
+                    Notification::make()->title('Free item added')->body('It’s come out of the drop’s stock.')->success()->send();
+                } catch (CannotChangeOrder $exception) {
+                    Notification::make()->title('Not added')->body($exception->getMessage())->danger()->send();
+
+                    $action->halt();
+                }
+            });
+    }
+
+    public static function takeBackFreeItem(): Action
+    {
+        return Action::make('takeBackFreeItem')
+            ->label('Remove free item')
+            ->icon(Heroicon::OutlinedArrowUturnLeft)
+            ->color('gray')
+            ->visible(fn (Order $record): bool => $record->released_at === null && self::freeLines($record) !== [])
+            ->modalHeading('Remove a free item?')
+            ->modalDescription('It goes back on sale on the website.')
+            ->schema([
+                Select::make('order_item_id')
+                    ->label('Item')
+                    ->options(fn (Order $record): array => self::freeLines($record))
+                    ->default(fn (Order $record): ?int => count(self::freeLines($record)) === 1 ? array_key_first(self::freeLines($record)) : null)
+                    ->required(),
+            ])
+            ->modalSubmitActionLabel('Remove')
+            ->action(function (array $data, Order $record, TakeBackFreeItem $takeBackFreeItem, Action $action): void {
+                $line = $record->items()->whereKey(is_numeric($data['order_item_id'] ?? null) ? (int) $data['order_item_id'] : 0)->first();
+
+                try {
+                    if (! $line instanceof OrderItem) {
+                        throw new CannotChangeOrder('That item isn’t on this order.');
+                    }
+
+                    $takeBackFreeItem($line);
+                    $record->refresh();
+
+                    Notification::make()->title('Free item removed')->body('It’s back on sale.')->success()->send();
+                } catch (CannotChangeOrder $exception) {
+                    Notification::make()->title('Not removed')->body($exception->getMessage())->danger()->send();
+
+                    $action->halt();
+                }
+            });
+    }
+
     public static function markSelectedFulfilled(): BulkAction
     {
         return BulkAction::make('markFulfilled')
@@ -113,6 +191,35 @@ final class OrderActions
             ->schema([self::dropSelect()])
             ->modalSubmitActionLabel('Open')
             ->action(fn (array $data): RedirectResponse => redirect()->to(OrderResource::getUrl('delivery-run', ['drop' => $data['drop']])));
+    }
+
+    /**
+     * What the order's drop sells, with what's left: "Sausage Pack (6) · 12 left".
+     *
+     * @return array<int, string>
+     */
+    private static function freeItemOptions(Order $order): array
+    {
+        $drop = $order->drop()->with('items.product.bundle')->firstOrFail();
+
+        return $drop->items
+            ->reject(fn (DropItem $item): bool => $item->product->type === ProductType::Delivery)
+            ->sortBy(fn (DropItem $item): int => $item->product->sort)
+            ->mapWithKeys(fn (DropItem $item): array => [$item->id => "{$item->product->name} · ".DropSales::left($drop, $item).' left'])
+            ->all();
+    }
+
+    /**
+     * The order's free items: "2 × Sausage Pack (6)".
+     *
+     * @return array<int, string>
+     */
+    private static function freeLines(Order $order): array
+    {
+        return $order->loadMissing('items.product')->items
+            ->filter(fn (OrderItem $line): bool => $line->free)
+            ->mapWithKeys(fn (OrderItem $line): array => [$line->id => "{$line->quantity} × {$line->product->name}"])
+            ->all();
     }
 
     private static function dropSelect(): Select

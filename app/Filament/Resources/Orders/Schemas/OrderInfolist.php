@@ -69,7 +69,7 @@ class OrderInfolist
                             ->schema([
                                 TextEntry::make('product.name')->hiddenLabel(),
                                 TextEntry::make('quantity')->hiddenLabel()->formatStateUsing(fn (int $state): string => "× {$state}"),
-                                TextEntry::make('line_total')->hiddenLabel()->state(fn (OrderItem $record): string => Money::format($record->lineTotal())),
+                                TextEntry::make('line_total')->hiddenLabel()->state(fn (OrderItem $record): string => $record->free ? 'Free' : Money::format($record->lineTotal())),
                             ]),
                     ]),
                 Section::make('Stripe')
