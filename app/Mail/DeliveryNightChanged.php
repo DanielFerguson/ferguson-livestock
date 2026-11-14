@@ -14,6 +14,9 @@ use Illuminate\Queue\SerializesModels;
 
 /**
  * Tells the farm a customer moved their delivery to another night from their order page, in case the run is planned.
+ *
+ * It carries both nights as they were at the change: the order is read afresh when the email goes, and by then the
+ * customer may have moved it again.
  */
 class DeliveryNightChanged extends Mailable implements ShouldQueue
 {
@@ -31,15 +34,16 @@ class DeliveryNightChanged extends Mailable implements ShouldQueue
 
     /**
      * @param  string  $previousNight  as customers read it: "Saturday night, 21 November"
+     * @param  string  $newNight  as customers read it: "Sunday night, 22 November"
      */
-    public function __construct(public Order $order, public string $previousNight)
+    public function __construct(public Order $order, public string $previousNight, public string $newNight)
     {
         $this->afterCommit();
     }
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: "{$this->order->reference()} moved to {$this->order->deliveryNight()}");
+        return new Envelope(subject: "{$this->order->reference()} moved to {$this->newNight}");
     }
 
     public function content(): Content
