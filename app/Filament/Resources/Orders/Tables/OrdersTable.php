@@ -10,6 +10,7 @@ use App\Filament\Resources\Orders\Actions\OrderActions;
 use App\Filament\Resources\Orders\Pages\ListOrders;
 use App\Models\Order;
 use App\Support\Money;
+use Filament\Actions\ActionGroup;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -35,6 +36,7 @@ class OrdersTable
                     ->label('Customer')
                     ->placeholder('—')
                     ->searchable(['customer_name', 'email', 'phone'])
+                    ->wrap()
                     ->description(fn (Order $record, ListOrders $livewire): ?string => self::customerNote($record, $livewire->customerOrderCount($record))),
                 TextColumn::make('delivery')
                     ->state(fn (Order $record): string => $record->deliverySummary())
@@ -54,12 +56,15 @@ class OrdersTable
                         ->mapWithKeys(fn (Order $order): array => [(string) $order->delivery_day?->toDateString() => (string) $order->delivery_day?->format('D j M Y')])
                         ->all()),
             ])
+            // Behind one menu button, so the table fits a phone with the customer's note in full.
             ->recordActions([
-                // A row offers it for its own order. The order's page also offers it on one already collected while
-                // another of the customer's is waiting.
-                OrderActions::markFulfilled()->visible(fn (Order $record): bool => in_array($record->status, OrderStatus::toFulfil(), true)),
-                OrderActions::markCashReceived(),
-                OrderActions::cancelCashOrder(),
+                ActionGroup::make([
+                    // A row offers it for its own order. The order's page also offers it on one already collected
+                    // while another of the customer's is waiting.
+                    OrderActions::markFulfilled()->visible(fn (Order $record): bool => in_array($record->status, OrderStatus::toFulfil(), true)),
+                    OrderActions::markCashReceived(),
+                    OrderActions::cancelCashOrder(),
+                ]),
             ])
             ->toolbarActions([
                 OrderActions::markSelectedFulfilled(),
