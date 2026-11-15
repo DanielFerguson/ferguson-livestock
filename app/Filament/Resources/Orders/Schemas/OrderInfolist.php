@@ -33,6 +33,7 @@ class OrderInfolist
             ->columns(2)
             ->components([
                 Section::make(fn (Order $record): string => self::itemsHeading($record, CustomerOrders::onDrop($record->drop_id)->of($record)))
+                    ->key('customer-orders')
                     ->columnSpanFull()
                     ->schema([
                         ViewEntry::make('customer_orders')
@@ -124,18 +125,18 @@ class OrderInfolist
 
     /**
      * The customer's orders on the drop, this one first, each with what to pack for it. The delivery fee isn't
-     * packed, so it's left out.
+     * packed, so it's left out. An order that wasn't placed comes back as the page's own record, which Livewire
+     * restores without its items after the first request, so they're loaded here.
      *
-     * @return array<int, array{reference: string, status: OrderStatus, note: string|null, opened: bool, items: array<int, array{line: string, free: bool}>}>
+     * @return array<int, array{reference: string, status: OrderStatus, note: string|null, items: array<int, array{line: string, free: bool}>}>
      */
     private static function customerOrders(Order $record): array
     {
-        return CustomerOrders::onDrop($record->drop_id, ['items.product'])->of($record)
+        return CustomerOrders::onDrop($record->drop_id, ['items.product'])->of($record->loadMissing('items.product'))
             ->map(fn (Order $order): array => [
                 'reference' => $order->reference(),
                 'status' => $order->status,
                 'note' => self::orderNote($order, $record),
-                'opened' => $order->is($record),
                 'items' => $order->items
                     ->reject(fn (OrderItem $item): bool => $item->product->type === ProductType::Delivery)
                     ->map(fn (OrderItem $item): array => ['line' => "{$item->quantity} × {$item->product->name}", 'free' => $item->free])
@@ -146,12 +147,13 @@ class OrderInfolist
     }
 
     /**
-     * What else to know about one of the customer's orders, beside its status: the cash to collect, the day it was
-     * handed over, and how it goes out when that's not how the opened order does.
+     * What else to know about one of the customer's orders, beside its status: that it's the one opened, the cash to
+     * collect, the day it was handed over, and how it goes out when that's not how the opened order does.
      */
     private static function orderNote(Order $order, Order $opened): ?string
     {
         $note = array_filter([
+            $order->is($opened) ? 'This one' : null,
             $order->status === OrderStatus::CashOwed ? 'Collect '.Money::format($order->total).' cash' : null,
             $order->status === OrderStatus::Fulfilled ? $order->fulfilledDay() : null,
             $order->deliverySummary() !== $opened->deliverySummary() ? $order->deliverySummary() : null,

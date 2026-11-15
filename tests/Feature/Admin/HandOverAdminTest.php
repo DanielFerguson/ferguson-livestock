@@ -176,6 +176,7 @@ it('lists everything the customer has on the drop on each of their orders, this 
     $drop = Drop::factory()->open()->create(['delivery_days' => ['2026-11-14']]);
     $box = Order::factory()->for($drop)->create(['customer_name' => 'Mikele Linke', 'delivery_day' => '2026-11-14']);
     OrderItem::factory()->for($box)->for(Product::factory()->create(['name' => '10kg Beef Box']))->create();
+    OrderItem::factory()->for($box)->for(Product::factory()->delivery()->create(['name' => 'Home Delivery Fee']))->create();
     $mince = Order::factory()->for($drop)->pickup()->cashOwed()->create(['customer_name' => 'Mikele Linke', 'total' => 11000]);
     OrderItem::factory()->for($mince)->for(Product::factory()->create(['name' => '5kg Beef Mince Pack']))->create();
 
@@ -185,5 +186,6 @@ it('lists everything the customer has on the drop on each of their orders, this 
             'Everything for Mikele · 2 orders',
             $mince->reference(), 'This one', 'Collect $110 cash', '5kg Beef Mince Pack',
             $box->reference(), 'Delivery, Sat 14 Nov', '10kg Beef Box',
-        ]);
+        ])
+        ->assertDontSeeText('Home Delivery Fee');
 });

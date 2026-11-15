@@ -288,10 +288,11 @@ it('marks a cash order paid when the cash comes in', function (): void {
 
 it('cancels a cash order from its page, putting its stock back on sale', function (): void {
     $shop = StockedDrop::create(boxes: 5);
-    $owed = app(RecordCashOrder::class)(drop: $shop->drop, quantities: [$shop->box->id => 1], deliveryMethod: DeliveryMethod::Pickup, deliveryDay: null, customerName: 'Sam', phone: null, address: null, paid: false);
+    $owed = app(RecordCashOrder::class)(drop: $shop->drop, quantities: [$shop->box->id => 1, $shop->mince->id => 2], deliveryMethod: DeliveryMethod::Pickup, deliveryDay: null, customerName: 'Sam', phone: null, address: null, paid: false);
 
     livewire(ViewOrder::class, ['record' => $owed->id])->callAction('cancelCashOrder');
 
     expect($owed->refresh()->status)->toBe(OrderStatus::Expired)
-        ->and($shop->box->refresh()->available)->toBe(5);
+        ->and($shop->box->refresh()->available)->toBe(5)
+        ->and($shop->mince->refresh()->available)->toBe(10);
 });
