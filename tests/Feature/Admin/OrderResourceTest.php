@@ -73,11 +73,42 @@ it('shows the orders in each tab', function (string $tab, array $shown): void {
         ->assertCanNotSeeTableRecords(array_values(Arr::except($orders, $shown)));
 })->with([
     'all' => ['all', ['paid', 'clearing', 'fulfilled', 'cash owed']],
-    'to fulfil' => ['to-fulfil', ['paid', 'cash owed']],
     'fulfilled' => ['fulfilled', ['fulfilled']],
     'cash owed' => ['cash-owed', ['cash owed']],
     'not paid' => ['not-paid', ['at checkout', 'abandoned', 'failed']],
 ]);
+
+it('splits the orders still to hand over into pickups and deliveries', function (string $tab, array $shown): void {
+    $drop = Drop::factory()->open()->create();
+    $orders = [
+        'pickup' => Order::factory()->for($drop)->pickup()->create(),
+        'cash pickup' => Order::factory()->for($drop)->pickup()->cashOwed()->create(),
+        'fulfilled pickup' => Order::factory()->for($drop)->pickup()->create(['status' => OrderStatus::Fulfilled, 'fulfilled_at' => now()]),
+        'delivery' => Order::factory()->for($drop)->create(),
+        'cash delivery' => Order::factory()->for($drop)->cashOwed()->create(),
+        'clearing delivery' => Order::factory()->for($drop)->create(['status' => OrderStatus::Processing]),
+    ];
+
+    livewire(ListOrders::class)
+        ->set('activeTab', $tab)
+        ->assertCanSeeTableRecords(array_values(Arr::only($orders, $shown)))
+        ->assertCanNotSeeTableRecords(array_values(Arr::except($orders, $shown)));
+})->with([
+    'to pick up' => ['to-pick-up', ['pickup', 'cash pickup']],
+    'to deliver' => ['to-deliver', ['delivery', 'cash delivery']],
+]);
+
+it('lists the deliveries still to go out in delivery-run order', function (): void {
+    $drop = Drop::factory()->open()->create(['delivery_days' => ['2026-11-14', '2026-11-15']]);
+    $sundayBallarat = paidOrder($drop, 'Ballarat', '3350', ['delivery_day' => '2026-11-15']);
+    $saturdayCreswick = paidOrder($drop, 'Creswick', '3363', ['delivery_day' => '2026-11-14']);
+    $eitherNight = paidOrder($drop, 'Ballarat', '3350', ['delivery_day' => null]);
+    $saturdayBallarat = paidOrder($drop, 'Ballarat', '3350', ['delivery_day' => '2026-11-14']);
+
+    livewire(ListOrders::class)
+        ->set('activeTab', 'to-deliver')
+        ->assertCanSeeTableRecords([$saturdayBallarat, $saturdayCreswick, $sundayBallarat, $eitherNight], inOrder: true);
+});
 
 it('marks orders fulfilled, leaving any that aren’t paid', function (): void {
     $drop = Drop::factory()->open()->create();

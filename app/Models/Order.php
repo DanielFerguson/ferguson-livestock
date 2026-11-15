@@ -203,6 +203,16 @@ class Order extends Model
     }
 
     /**
+     * How the order goes out, as the farm's lists put it: "Farm pickup", or "Delivery, Sat 14 Nov".
+     */
+    public function deliverySummary(): string
+    {
+        $night = $this->deliveryNightShort();
+
+        return $night === null ? 'Farm pickup' : "Delivery, {$night}";
+    }
+
+    /**
      * Whether all of it has been given back. A refund leaves the order's status as it was, so this goes by the amount.
      */
     public function isRefundedInFull(): bool
