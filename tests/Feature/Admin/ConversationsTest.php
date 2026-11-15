@@ -351,15 +351,18 @@ it('says when no phone is signed up for the test push', function (): void {
     Http::assertNothingSent();
 });
 
-it('offers notifications for new texts once the push keys are set', function (): void {
+it('offers notifications for new texts from a menu by the heading once the push keys are set', function (): void {
+    // The menu comes from a panel render hook, which only a full page load renders.
     config(['webpush.vapid.public_key' => null, 'webpush.vapid.private_key' => null]);
-    livewire(Conversations::class)->assertSee('aren’t set up yet')->assertDontSee('Turn on notifications');
+    $this->get(Conversations::getUrl())->assertSee('aren’t set up yet')->assertDontSee('Turn on notifications');
 
     config(['webpush.vapid.public_key' => 'BPublicKey']);
-    livewire(Conversations::class)->assertSee('aren’t set up yet')->assertDontSee('Turn on notifications');
+    $this->get(Conversations::getUrl())->assertSee('aren’t set up yet')->assertDontSee('Turn on notifications');
 
     config(['webpush.vapid.private_key' => 'PrivateKey']);
-    livewire(Conversations::class)->assertSee('Turn on notifications')->assertDontSee('aren’t set up yet');
+    $this->get(Conversations::getUrl())
+        ->assertSeeInOrder(['fi-header-heading', 'Conversations', 'fl-push-menu', 'Notifications', 'Turn on notifications'], false)
+        ->assertDontSee('aren’t set up yet');
 });
 
 it('keeps the app icon’s count in step as conversations are read, flagged and finished', function (): void {

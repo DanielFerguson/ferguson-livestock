@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Conversations;
 use App\Http\Middleware\PreventIndexing;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\FontProviders\LocalFontProvider;
@@ -92,6 +93,7 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook(PanelsRenderHook::HEAD_END, fn () => Vite::fonts(['source-sans', 'cormorant']))
             ->renderHook(PanelsRenderHook::HEAD_END, fn (): Factory|View => view('filament.admin.head'))
             ->renderHook(PanelsRenderHook::CONTENT_START, fn (): Factory|View => view('filament.admin.push-warning'))
+            ->renderHook(PanelsRenderHook::PAGE_HEADER_ACTIONS_AFTER, fn (): Factory|View => view('filament.admin.push-menu'), scopes: Conversations::class)
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->sidebarCollapsibleOnDesktop()
             ->sidebarWidth('16rem')

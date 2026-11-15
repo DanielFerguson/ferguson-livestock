@@ -6,64 +6,73 @@
     $conversations = $this->conversations();
     $optedOut = $this->hasOptedOut();
     $timezone = config('shop.timezone');
-    $pushKey = $this->pushPublicKey();
 @endphp
 
 <x-filament-panels::page>
-    {{-- Plain CSS: Filament's stylesheet only has the classes its own components use. --}}
+    {{--
+        Plain CSS: Filament's stylesheet only has the classes its own components use. The colours are variables, so
+        dark mode (Filament puts .dark on <html>) only swaps them, using the panel's own sage and green-tinted greys.
+    --}}
     <style>
+        .chat {
+            --chat-surface: white;
+            --chat-line: rgb(0 0 0 / 0.1);
+            --chat-line-soft: rgb(0 0 0 / 0.06);
+            --chat-field-line: rgb(0 0 0 / 0.15);
+            --chat-hover: rgb(0 0 0 / 0.04);
+            --chat-muted: rgb(107 114 128);
+            --chat-out-muted: rgb(107 114 128);
+            --chat-in: rgb(0 0 0 / 0.06);
+            --chat-out: rgb(209 224 212);
+            --chat-tag: rgb(0 0 0 / 0.08);
+            --chat-tag-text: rgb(75 85 99);
+            --chat-warn: rgb(180 83 9);
+        }
+        .dark .chat {
+            --chat-surface: var(--gray-900);
+            --chat-line: rgb(255 255 255 / 0.1);
+            --chat-line-soft: rgb(255 255 255 / 0.06);
+            --chat-field-line: rgb(255 255 255 / 0.15);
+            --chat-hover: rgb(255 255 255 / 0.05);
+            --chat-muted: var(--gray-400);
+            --chat-out-muted: var(--gray-300);
+            --chat-in: rgb(255 255 255 / 0.08);
+            --chat-out: var(--primary-800);
+            --chat-tag: rgb(255 255 255 / 0.1);
+            --chat-tag-text: var(--gray-300);
+            --chat-warn: rgb(251 191 36);
+        }
         .chat { display: grid; grid-template-columns: minmax(0, 20rem) minmax(0, 1fr); gap: 1rem; align-items: start; }
-        .chat-list, .chat-thread { border: 1px solid rgb(0 0 0 / 0.1); border-radius: 0.75rem; background: white; }
-        .chat-list-search { display: flex; gap: 0.5rem; padding: 0.75rem; border-bottom: 1px solid rgb(0 0 0 / 0.08); }
+        .chat-list, .chat-thread { border: 1px solid var(--chat-line); border-radius: 0.75rem; background: var(--chat-surface); }
+        .chat-list-search { display: flex; gap: 0.5rem; padding: 0.75rem; border-bottom: 1px solid var(--chat-line); }
         .chat-search-box { flex: 1 1 auto; min-width: 0; }
         .chat-filter-box { flex: none; width: 9.5rem; }
-        .chat-flag { flex: none; color: rgb(180 83 9); font-size: 0.75rem; font-weight: 400; }
+        .chat-flag { flex: none; color: var(--chat-warn); font-size: 0.75rem; font-weight: 400; }
         .chat-head-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; }
         .chat-head-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-        .chat-person { display: block; width: 100%; text-align: left; padding: 0.75rem 1rem; border: 0; border-bottom: 1px solid rgb(0 0 0 / 0.06); background: transparent; cursor: pointer; }
-        .chat-person:hover, .chat-person-open { background: rgb(0 0 0 / 0.04); }
+        .chat-person { display: block; width: 100%; text-align: left; padding: 0.75rem 1rem; border: 0; border-bottom: 1px solid var(--chat-line-soft); background: transparent; color: inherit; cursor: pointer; }
+        .chat-person:hover, .chat-person-open { background: var(--chat-hover); }
         .chat-person-top { display: flex; justify-content: space-between; gap: 0.5rem; font-weight: 600; }
-        .chat-person-last { display: block; margin-top: 0.125rem; color: rgb(107 114 128); font-size: 0.875rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .chat-tag { flex: none; padding: 0 0.5rem; border-radius: 9999px; background: rgb(0 0 0 / 0.08); color: rgb(75 85 99); font-size: 0.75rem; font-weight: 400; line-height: 1.25rem; }
+        .chat-person-last { display: block; margin-top: 0.125rem; color: var(--chat-muted); font-size: 0.875rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .chat-tag { flex: none; padding: 0 0.5rem; border-radius: 9999px; background: var(--chat-tag); color: var(--chat-tag-text); font-size: 0.75rem; font-weight: 400; line-height: 1.25rem; }
         .chat-dot { flex: none; min-width: 1.25rem; padding: 0 0.375rem; border-radius: 9999px; background: rgb(217 119 6); color: white; font-size: 0.75rem; line-height: 1.25rem; text-align: center; }
-        .chat-empty { padding: 1.5rem 1rem; color: rgb(107 114 128); }
-        .chat-head { padding: 0.875rem 1rem; border-bottom: 1px solid rgb(0 0 0 / 0.08); font-weight: 600; }
-        .chat-head small { display: block; font-weight: 400; color: rgb(107 114 128); }
+        .chat-empty { padding: 1.5rem 1rem; color: var(--chat-muted); }
+        .chat-head { padding: 0.875rem 1rem; border-bottom: 1px solid var(--chat-line); font-weight: 600; }
+        .chat-head small { display: block; font-weight: 400; color: var(--chat-muted); }
         .chat-messages { display: flex; flex-direction: column; gap: 0.625rem; max-height: min(36rem, 60vh); min-height: 8rem; overflow-y: auto; padding: 1rem; }
         .chat-bubble { max-width: 80%; padding: 0.5rem 0.75rem; border-radius: 0.75rem; text-align: left; overflow-wrap: anywhere; }
         .chat-text { display: block; white-space: pre-wrap; }
-        .chat-in { align-self: flex-start; background: rgb(0 0 0 / 0.06); }
-        .chat-out { align-self: flex-end; background: rgb(209 224 212); }
-        .chat-meta { margin-top: 0.25rem; color: rgb(107 114 128); font-size: 0.75rem; }
-        .chat-note { margin-top: 0.25rem; color: rgb(180 83 9); font-size: 0.75rem; }
-        .chat-compose { padding: 0.75rem 1rem 1rem; border-top: 1px solid rgb(0 0 0 / 0.08); }
-        .chat-compose textarea { width: 100%; border: 1px solid rgb(0 0 0 / 0.15); border-radius: 0.5rem; padding: 0.5rem 0.75rem; }
+        .chat-in { align-self: flex-start; background: var(--chat-in); }
+        .chat-out { align-self: flex-end; background: var(--chat-out); }
+        .chat-meta { margin-top: 0.25rem; color: var(--chat-muted); font-size: 0.75rem; }
+        .chat-out .chat-meta { color: var(--chat-out-muted); }
+        .chat-note { margin-top: 0.25rem; color: var(--chat-warn); font-size: 0.75rem; }
+        .chat-compose { padding: 0.75rem 1rem 1rem; border-top: 1px solid var(--chat-line); }
+        .chat-compose textarea { width: 100%; border: 1px solid var(--chat-field-line); border-radius: 0.5rem; padding: 0.5rem 0.75rem; background: transparent; color: inherit; }
         .chat-compose-bar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-top: 0.5rem; }
-        .chat-hint { color: rgb(107 114 128); font-size: 0.875rem; }
-        .chat-push { margin-bottom: 1rem; color: rgb(107 114 128); font-size: 0.875rem; }
-        .chat-push-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; }
-        .chat-push [x-cloak] { display: none !important; }
+        .chat-hint { color: var(--chat-muted); font-size: 0.875rem; }
         @media (max-width: 768px) { .chat { grid-template-columns: minmax(0, 1fr); } }
     </style>
-
-    {{-- Each phone signs itself up, so what it shows depends on the phone: resources/js/admin-push.js runs it. --}}
-    <div class="chat-push" wire:ignore>
-        @if ($pushKey === null)
-            <span>Notifications for new texts aren’t set up yet: the site needs VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY.</span>
-        @else
-            <div class="chat-push-row" x-data="pushNotifications(@js($pushKey))">
-                <span x-show="state === 'checking' || state === 'busy'">One moment…</span>
-                <span x-show="state === 'unsupported'" x-cloak>To get a notification for each new text, open this page in Safari on your iPhone, tap Share, then Add to Home Screen, and use Ferguson Livestock from your home screen.</span>
-                <span x-show="state === 'denied'" x-cloak>Notifications are blocked on this phone. Turn them on in Settings → Notifications → Ferguson Livestock.</span>
-                <span x-show="state === 'off'" x-cloak>This phone doesn’t get notifications for new texts.</span>
-                <span x-show="state === 'on'" x-cloak>This phone gets a notification for each new text.</span>
-                <span x-show="state === 'failed'" x-cloak>That didn’t work. Try again in a moment.</span>
-                <x-filament::button size="sm" icon="heroicon-o-bell" x-show="state === 'off' || state === 'failed'" x-cloak x-on:click="turnOn" wire:target="savePushSubscription">Turn on notifications</x-filament::button>
-                <x-filament::button size="sm" color="gray" x-show="state === 'on'" x-cloak x-on:click="sendTest" wire:target="sendTestPush">Send a test</x-filament::button>
-                <x-filament::button size="sm" color="gray" x-show="state === 'on'" x-cloak x-on:click="turnOff" wire:target="removePushSubscription">Turn off</x-filament::button>
-            </div>
-        @endif
-    </div>
 
     <div class="chat" wire:poll.10s="refreshOpen">
         <div class="chat-list">

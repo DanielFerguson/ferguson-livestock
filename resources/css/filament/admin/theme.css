@@ -55,3 +55,19 @@
 .fl-push-warning a {
     @apply font-semibold underline;
 }
+
+/*
+ * The Notifications menu from resources/views/filament/admin/push-menu.blade.php, beside the Conversations heading.
+ * Filament stacks a page's heading over its actions on a phone; with only this small button, they share a line.
+ */
+.fi-header:has(.fl-push-menu) {
+    @apply flex-row items-center justify-between gap-3;
+}
+
+.fl-push-menu [x-cloak] {
+    display: none !important;
+}
+
+.fl-push-menu-status {
+    @apply px-3 py-2.5 text-sm text-gray-600 dark:text-gray-300;
+}

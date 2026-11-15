@@ -153,7 +153,7 @@ class Conversations extends Page
     /**
      * The key a phone signs up for pushes with. Null until both of the site's push keys are set.
      */
-    public function pushPublicKey(): ?string
+    public static function pushPublicKey(): ?string
     {
         return AdminPush::isSetUp() ? config()->string('webpush.vapid.public_key') : null;
     }
