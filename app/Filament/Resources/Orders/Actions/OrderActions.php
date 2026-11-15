@@ -37,10 +37,11 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 final class OrderActions
 {
     /**
-     * Hands over everything the customer has on the order's drop. A paid order on its own goes in one tap, as it
-     * always has. When they have more than one order to hand over, or cash to collect, it asks first, listing every
-     * order of theirs with those still to go ticked: the list is the reminder that there's more than the order that
-     * was opened. A ticked cash order has its cash recorded as it's handed over.
+     * Hands over everything the customer has on the order's drop. The opened order goes in one tap, as it always has,
+     * when it's paid and is all they have to hand over. Otherwise (more than one order to go, cash to collect, or the
+     * one to go isn't the order that was opened) it asks first, listing every order of theirs with those still to go
+     * ticked: the list is the reminder that there's more than the order that was opened. A ticked cash order has its
+     * cash recorded as it's handed over.
      */
     public static function markFulfilled(): Action
     {
@@ -51,7 +52,7 @@ final class OrderActions
             ->modalHidden(function (Order $record): bool {
                 $toHandOver = self::toHandOver($record);
 
-                return $toHandOver->count() === 1 && $toHandOver->sole()->status === OrderStatus::Paid;
+                return $toHandOver->count() === 1 && $toHandOver->sole()->is($record) && $toHandOver->sole()->status === OrderStatus::Paid;
             })
             ->modalHeading(function (Order $record): string {
                 $firstName = $record->firstName();
@@ -66,8 +67,7 @@ final class OrderActions
                     ->options(fn (Order $record): array => self::customerOrders($record)
                         ->mapWithKeys(fn (Order $order): array => [$order->id => self::handOverLabel($order)])
                         ->all())
-                    ->descriptions(fn (Order $record): array => self::customerOrders($record)
-                        ->load('items.product')
+                    ->descriptions(fn (Order $record): array => CustomerOrders::onDrop($record->drop_id, ['items.product'])->of($record)
                         ->mapWithKeys(fn (Order $order): array => [$order->id => DeliveryRun::items($order)])
                         ->all())
                     ->disableOptionWhen(fn (Order $record, int|string $value): bool => ! self::toHandOver($record)->contains('id', (int) $value))

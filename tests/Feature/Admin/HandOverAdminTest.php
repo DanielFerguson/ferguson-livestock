@@ -11,6 +11,8 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\User;
 use Filament\Actions\Testing\TestAction;
+use Filament\Forms\Components\CheckboxList;
+use Filament\Notifications\Notification;
 
 use function Pest\Livewire\livewire;
 
@@ -84,7 +86,7 @@ it('says which order had changed when it was handed over from another phone mean
     $page = livewire(ViewOrder::class, ['record' => $opened->id])->mountAction('markFulfilled');
     Order::query()->whereKey($elsewhere->id)->update(['status' => OrderStatus::Fulfilled, 'fulfilled_at' => now()]);
 
-    $page->callMountedAction()->assertNotified('1 of 2 marked fulfilled');
+    $page->callMountedAction()->assertNotified(Notification::make()->title('1 of 2 marked fulfilled')->body("{$elsewhere->reference()} had changed.")->warning());
 
     expect($opened->refresh()->status)->toBe(OrderStatus::Fulfilled);
 });
@@ -121,6 +123,35 @@ it('offers handing over on an order already collected while another of the custo
     Order::factory()->for($drop)->pickup()->create(['customer_name' => 'Mikele Linke']);
 
     livewire(ViewOrder::class, ['record' => $collected->id])->assertActionVisible('markFulfilled');
+});
+
+it('asks before handing over the customer’s waiting order from one already collected', function (): void {
+    $drop = Drop::factory()->open()->create();
+    $collected = Order::factory()->for($drop)->pickup()->create(['customer_name' => 'Mikele Linke', 'status' => OrderStatus::Fulfilled, 'fulfilled_at' => now()]);
+    $waiting = Order::factory()->for($drop)->pickup()->create(['customer_name' => 'Mikele Linke']);
+
+    livewire(ViewOrder::class, ['record' => $collected->id])
+        ->mountAction('markFulfilled')
+        ->assertActionMounted('markFulfilled')
+        ->assertActionDataSet(['orders' => [$waiting->id]]);
+
+    expect($waiting->refresh()->status)->toBe(OrderStatus::Paid);
+});
+
+it('lists a customer’s order whose payment is still clearing without ticking it, and leaves it clearing', function (): void {
+    $drop = Drop::factory()->open()->create();
+    $clearing = Order::factory()->for($drop)->pickup()->create(['customer_name' => 'Mikele Linke', 'status' => OrderStatus::Processing, 'paid_at' => null]);
+    $waiting = Order::factory()->for($drop)->pickup()->create(['customer_name' => 'Mikele Linke']);
+
+    $page = livewire(ViewOrder::class, ['record' => $clearing->id])
+        ->mountAction('markFulfilled')
+        ->assertActionDataSet(['orders' => [$waiting->id]]);
+    $page->assertMountedActionModalSee($clearing->reference().' · payment still clearing');
+    $page->assertSchemaComponentExists('orders', checkComponentUsing: fn (CheckboxList $orders): bool => array_keys($orders->getEnabledOptions()) === [$waiting->id])
+        ->callMountedAction();
+
+    expect($clearing->refresh()->status)->toBe(OrderStatus::Processing)
+        ->and($waiting->refresh()->status)->toBe(OrderStatus::Fulfilled);
 });
 
 it('stops offering it once everything the customer ordered is handed over', function (): void {
