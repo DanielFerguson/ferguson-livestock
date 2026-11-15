@@ -8,6 +8,7 @@ use App\Http\Controllers\EarlyAccessController;
 use App\Http\Controllers\EarlyAccessStockController;
 use App\Http\Controllers\JoinWaitlistController;
 use App\Http\Controllers\OrderPageController;
+use App\Http\Controllers\Orders\AnnounceArrivalController;
 use App\Http\Controllers\Orders\ChangeDeliveryNightController;
 use App\Http\Controllers\Orders\EmailOrderController;
 use App\Http\Controllers\Orders\LeaveFeedbackController;
@@ -58,6 +59,7 @@ Route::middleware(['throttle:order-page', PreventIndexing::class])->prefix('orde
     Route::post('/night', ChangeDeliveryNightController::class)->name('orders.night');
     Route::post('/email', EmailOrderController::class)->name('orders.email');
     Route::post('/feedback', LeaveFeedbackController::class)->name('orders.feedback');
+    Route::post('/arrived', AnnounceArrivalController::class)->name('orders.arrived');
 });
 
 // Stripe sends customers back here. Neither page is cached: both depend on the order. Both can ask Stripe

@@ -35,6 +35,10 @@
 >
     <div class="bg-cream-dark px-6 py-16 print:hidden">
         <x-confirmation-letter :heading="'Thanks, '.$firstName.'!'" :subheading="$subheading">
+            @if ($canAnnounceArrival || session()->has('order-page.arrival'))
+                @include('pages.order-details._arrival')
+            @endif
+
             @if ($isRefundedInFull)
                 <p>We’ve refunded this order in full. It can take a few business days to reach your account. If anything doesn’t look right, text us.</p>
             @elseif ($order->status === OrderStatus::Processing)

@@ -1,4 +1,4 @@
-{{-- How the order reaches the customer. Expects $order (with its drop), $textUsUrl and $nightChoices (see ChangeDeliveryNight::choicesFor()). --}}
+{{-- How the order reaches the customer. Expects $order (with its drop), $textUsUrl, $nightChoices (see ChangeDeliveryNight::choicesFor()) and $canAnnounceArrival, which shows the arrival directions instead. --}}
 @php
     use App\Enums\DeliveryMethod;
 
@@ -39,7 +39,7 @@
         @if ($isRefundedInFull)
             <p>This order has been refunded, so there’s nothing to collect.</p>
         @else
-            <p>Collect it from {{ config('shop.location.street') }}, {{ config('shop.location.locality') }}, {{ $order->drop->pickupTimes() }}.</p>
+            <p>Collect it from {{ config('shop.location.street') }}, {{ config('shop.location.locality') }}, {{ $order->drop->pickupTimes() }}.@unless ($canAnnounceArrival) Come up the driveway and park anywhere near the house, and one of us will be out to meet you.@endunless</p>
 
             <div class="mt-4 print:hidden">
                 <x-button :href="route('farm')" variant="outline" target="_blank" rel="noopener">

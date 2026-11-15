@@ -187,7 +187,7 @@ it('tells a pickup customer where and when to collect, with the farm’s map', f
 
     $this->get($order->pageUrl())
         ->assertOk()
-        ->assertSeeInOrder(['Farm pickup', '306 Snake Valley-Chepstowe Rd, Snake Valley, Saturday or Sunday, 10am to 4pm', 'Open in Google Maps'])
+        ->assertSeeInOrder(['Farm pickup', '306 Snake Valley-Chepstowe Rd, Snake Valley, Saturday or Sunday, 10am to 4pm', 'Come up the driveway and park anywhere near the house', 'Open in Google Maps'])
         ->assertSee(route('farm'));
 });
 

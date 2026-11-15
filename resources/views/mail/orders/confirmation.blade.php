@@ -25,7 +25,7 @@ Your order **{{ $order->reference() }}** is paid and we’re getting it ready.
 We’ll be in touch to confirm a time. Everything arrives vacuum-sealed in insulated packaging: pop it straight in the freezer or fridge.
 @endif
 @else
-**Farm pickup** from {{ config('shop.location.locality') }}, {{ $order->loadMissing('drop')->drop->pickupTimes() }}.
+**Farm pickup** from {{ config('shop.location.locality') }}, {{ $order->loadMissing('drop')->drop->pickupTimes() }}. Come up the driveway and park anywhere near the house, and one of us will be out to meet you.
 @endif
 @endunless
 

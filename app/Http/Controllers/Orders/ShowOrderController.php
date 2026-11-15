@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Orders;
 
+use App\Actions\Orders\AnnounceArrival;
 use App\Actions\Orders\ChangeDeliveryNight;
 use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
@@ -16,7 +17,7 @@ use Illuminate\Database\Eloquent\Collection;
  */
 class ShowOrderController extends Controller
 {
-    public function __invoke(Order $customerOrder, ChangeDeliveryNight $nights): View
+    public function __invoke(Order $customerOrder, ChangeDeliveryNight $nights, AnnounceArrival $arrival): View
     {
         $customerOrder->load(['items.product', 'drop', 'feedback']);
 
@@ -24,6 +25,7 @@ class ShowOrderController extends Controller
             'order' => $customerOrder,
             'alsoInText' => $this->alsoInText($customerOrder),
             'nightChoices' => $nights->choicesFor($customerOrder),
+            'canAnnounceArrival' => $arrival->isOpenFor($customerOrder),
         ]);
     }
 
