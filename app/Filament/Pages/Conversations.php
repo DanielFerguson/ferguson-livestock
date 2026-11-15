@@ -29,7 +29,9 @@ use Illuminate\Validation\Rule;
 use Livewire\Attributes\Renderless;
 use Livewire\Attributes\Url;
 use Minishlink\WebPush\ContentEncoding;
+use Minishlink\WebPush\MessageSentReport;
 use NotificationChannels\WebPush\PushSubscription;
+use NotificationChannels\WebPush\WebPushChannel;
 use UnitEnum;
 
 /**
@@ -149,15 +151,11 @@ class Conversations extends Page
     }
 
     /**
-     * The key a phone signs up for pushes with. Null until both of the site's push keys are set: with only the public
-     * one, phones could sign up but every push to them would be refused.
+     * The key a phone signs up for pushes with. Null until both of the site's push keys are set.
      */
     public function pushPublicKey(): ?string
     {
-        $publicKey = config('webpush.vapid.public_key');
-        $privateKey = config('webpush.vapid.private_key');
-
-        return is_string($publicKey) && $publicKey !== '' && is_string($privateKey) && $privateKey !== '' ? $publicKey : null;
+        return AdminPush::isSetUp() ? config()->string('webpush.vapid.public_key') : null;
     }
 
     /**
@@ -206,10 +204,34 @@ class Conversations extends Page
         $this->admin()->deletePushSubscription($endpoint);
     }
 
+    /**
+     * The "Send a test" button, which is how the owner checks notifications work, so it says what Apple answered. A
+     * refused test still reaches WarnWhenPushesStop through the push package, like any other push.
+     */
     #[Renderless]
-    public function sendTestPush(): void
+    public function sendTestPush(WebPushChannel $channel): void
     {
-        $this->admin()->notifyNow(AdminPush::test());
+        $reports = $channel->send($this->admin(), AdminPush::test());
+
+        if ($reports === []) {
+            Notification::make()->title('No phone is signed up')->body('Open Ferguson Livestock from your phone’s home screen and tap Turn on notifications in Conversations.')->warning()->send();
+
+            return;
+        }
+
+        $refused = array_find($reports, fn (MessageSentReport $report): bool => ! $report->isSuccess());
+
+        if ($refused instanceof MessageSentReport) {
+            $status = $refused->getResponse()?->getStatusCode();
+
+            Notification::make()
+                ->title('Apple didn’t take the test')
+                ->body($status !== null ? "Apple answered {$status} ({$refused->getReason()})." : "Apple didn’t answer: {$refused->getReason()}")
+                ->danger()
+                ->send();
+
+            return;
+        }
 
         Notification::make()->title('Test sent')->body('It should show up on your phone in a few seconds. If it doesn’t, turn notifications off and on again.')->success()->send();
     }

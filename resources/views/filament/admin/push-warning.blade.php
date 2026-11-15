@@ -3,7 +3,7 @@
     $admin = filament()->auth()->user();
 @endphp
 
-@if ($admin instanceof \App\Models\User && filled(config('webpush.vapid.public_key')) && filled(config('webpush.vapid.private_key')) && $admin->pushSubscriptions()->doesntExist())
+@if ($admin instanceof \App\Models\User && \App\Notifications\AdminPush::isSetUp() && $admin->pushSubscriptions()->doesntExist())
     {{-- Signing up doesn't reload the page, so the push script says when it's done and the banner goes then. --}}
     <div class="fl-push-warning" role="status" x-data x-on:push-subscribed.window="$el.remove()">
         No phone gets a notification for new texts, so check

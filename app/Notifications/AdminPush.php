@@ -47,6 +47,18 @@ class AdminPush extends Notification implements ShouldQueue
     }
 
     /**
+     * Whether the site has both push keys. With only the public one, phones could sign up but every push to them would
+     * be refused.
+     */
+    public static function isSetUp(): bool
+    {
+        $publicKey = config('webpush.vapid.public_key');
+        $privateKey = config('webpush.vapid.private_key');
+
+        return is_string($publicKey) && $publicKey !== '' && is_string($privateKey) && $privateKey !== '';
+    }
+
+    /**
      * @return list<class-string>
      */
     public function via(object $notifiable): array

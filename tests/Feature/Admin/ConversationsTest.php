@@ -9,8 +9,10 @@ use App\Models\ConversationState;
 use App\Models\SmsMessage;
 use App\Models\Subscriber;
 use App\Models\User;
-use App\Notifications\AdminPush;
-use Illuminate\Support\Facades\Notification;
+use Filament\Notifications\Notification;
+use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Exceptions;
+use Illuminate\Support\Facades\Http;
 use NotificationChannels\WebPush\PushSubscription;
 use Tests\Fakes\FakeSmsGateway;
 
@@ -318,12 +320,35 @@ it('stops pushing to this phone when notifications are turned off', function ():
     expect(PushSubscription::query()->count())->toBe(0);
 });
 
-it('sends a test push to the admin’s phones', function (): void {
-    Notification::fake();
+it('sends a test push to the admin’s phones and says when Apple has taken it', function (): void {
+    fakeApplePush(201);
 
-    livewire(Conversations::class)->call('sendTestPush')->assertNotified('Test sent');
+    livewire(Conversations::class)
+        ->call('savePushSubscription', phonePushSignUp())
+        ->call('sendTestPush')
+        ->assertNotified('Test sent');
 
-    Notification::assertSentTo(auth()->user(), AdminPush::class, fn (AdminPush $push): bool => $push->title === 'Notifications are on');
+    Http::assertSent(fn (Request $push): bool => $push->url() === 'https://web.push.apple.com/QGuHRmBXgM');
+});
+
+it('says when Apple refuses the test push, and what it answered', function (): void {
+    fakeApplePush(403);
+    Exceptions::fake();
+
+    livewire(Conversations::class)
+        ->call('savePushSubscription', phonePushSignUp())
+        ->call('sendTestPush')
+        ->assertNotified(Notification::make()->title('Apple didn’t take the test')->body('Apple answered 403 (Forbidden).')->danger());
+
+    Exceptions::assertReported(fn (RuntimeException $exception): bool => str_contains($exception->getMessage(), '403'));
+});
+
+it('says when no phone is signed up for the test push', function (): void {
+    fakeApplePush();
+
+    livewire(Conversations::class)->call('sendTestPush')->assertNotified('No phone is signed up');
+
+    Http::assertNothingSent();
 });
 
 it('offers notifications for new texts once the push keys are set', function (): void {
