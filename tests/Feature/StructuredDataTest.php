@@ -13,7 +13,7 @@ it('describes the farm as one LocalBusiness node on the homepage', function (): 
 
     expect(data_get($home, '@graph.*.@type'))->toBe(['LocalBusiness', 'WebSite', 'WebPage'])
         ->and(data_get($home, '@graph.0.@id'))->toBe('https://fergusonlivestock.com.au/#organization')
-        ->and(data_get($home, '@graph.0.telephone'))->toBe('+61427458706')
+        ->and(data_get($home, '@graph.0.telephone'))->toBe('+61412144625')
         ->and(data_get($home, '@graph.0.address.postalCode'))->toBe('3351')
         ->and(data_get($home, '@graph.0.contactPoint.contactType'))->toBe('sales');
 });

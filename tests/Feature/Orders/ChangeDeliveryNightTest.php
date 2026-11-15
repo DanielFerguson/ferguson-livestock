@@ -83,7 +83,7 @@ it('says it’s too late from 12pm the day before the earlier night', function (
 
     changeNightTo($order, $to)
         ->assertRedirect($order->pageUrl().'#delivery')
-        ->assertSessionHasErrorsIn('night', ['night' => 'It’s too late to change your night here. Text us on 0427 458 706 and we’ll see what we can do.']);
+        ->assertSessionHasErrorsIn('night', ['night' => 'It’s too late to change your night here. Text us on 0412 144 625 and we’ll see what we can do.']);
 
     expect($order->refresh()->delivery_day?->toDateString())->toBe($from);
     Mail::assertNothingQueued();
@@ -107,7 +107,7 @@ it('says it’s too late to move from Sunday to Monday from 12pm on Saturday', f
     travelTo(CarbonImmutable::parse('2026-11-21 12:00', 'Australia/Melbourne'));
     $order = samsWeekendOrder(['delivery_day' => '2026-11-22'], nights: ['2026-11-21', '2026-11-22', '2026-11-23']);
 
-    changeNightTo($order, '2026-11-23')->assertSessionHasErrorsIn('night', ['night' => 'It’s too late to change your night here. Text us on 0427 458 706 and we’ll see what we can do.']);
+    changeNightTo($order, '2026-11-23')->assertSessionHasErrorsIn('night', ['night' => 'It’s too late to change your night here. Text us on 0412 144 625 and we’ll see what we can do.']);
 
     expect($order->refresh()->delivery_day?->toDateString())->toBe('2026-11-22');
     Mail::assertNothingQueued();
@@ -120,7 +120,7 @@ it('takes five changes an hour, so the order’s link can’t fill the farm’s 
         changeNightTo($order, $night)->assertSessionHasNoErrors();
     }
 
-    changeNightTo($order, '2026-11-21')->assertSessionHasErrorsIn('night', ['night' => 'You’ve changed your night a few times now. Text us on 0427 458 706 if it needs to change again.']);
+    changeNightTo($order, '2026-11-21')->assertSessionHasErrorsIn('night', ['night' => 'You’ve changed your night a few times now. Text us on 0412 144 625 if it needs to change again.']);
 
     expect($order->refresh()->delivery_day?->toDateString())->toBe('2026-11-22');
     Mail::assertQueued(DeliveryNightChanged::class, 5);
@@ -167,7 +167,7 @@ it('refuses a pickup, which has no night to change', function (): void {
 it('refuses an order that’s been delivered', function (): void {
     $order = samsWeekendOrder(['status' => OrderStatus::Fulfilled]);
 
-    changeNightTo($order, '2026-11-22')->assertSessionHasErrorsIn('night', ['night' => 'It’s too late to change your night here. Text us on 0427 458 706 and we’ll see what we can do.']);
+    changeNightTo($order, '2026-11-22')->assertSessionHasErrorsIn('night', ['night' => 'It’s too late to change your night here. Text us on 0412 144 625 and we’ll see what we can do.']);
 });
 
 it('refuses an order that’s been refunded in full', function (): void {

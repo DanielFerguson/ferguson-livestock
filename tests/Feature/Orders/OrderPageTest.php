@@ -273,11 +273,11 @@ it('leaves out an order in the same text that someone else placed with the custo
         ->assertDontSee($stranger->access_token);
 });
 
-it('lets the customer text the farm about their order, or call Daniel', function (): void {
+it('lets the customer text or call Daniel about their order', function (): void {
     $order = samsWeekendOrder();
 
     $this->get($order->pageUrl())
         ->assertOk()
-        ->assertSee('sms:+61427458706?&body='.rawurlencode("Hi, about my order {$order->reference()}: "))
+        ->assertSee('sms:+61412144625?&body='.rawurlencode("Hi, about my order {$order->reference()}: "))
         ->assertSee('tel:+61412144625');
 });
