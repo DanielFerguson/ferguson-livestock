@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\Orders\Tables;
 
 use App\Enums\DeliveryMethod;
+use App\Enums\OrderStatus;
 use App\Filament\Resources\Orders\Actions\OrderActions;
 use App\Filament\Resources\Orders\Pages\ListOrders;
 use App\Models\Order;
@@ -54,7 +55,9 @@ class OrdersTable
                         ->all()),
             ])
             ->recordActions([
-                OrderActions::markFulfilled(),
+                // A row offers it for its own order. The order's page also offers it on one already collected while
+                // another of the customer's is waiting.
+                OrderActions::markFulfilled()->visible(fn (Order $record): bool => in_array($record->status, OrderStatus::toFulfil(), true)),
                 OrderActions::markCashReceived(),
                 OrderActions::cancelCashOrder(),
             ])

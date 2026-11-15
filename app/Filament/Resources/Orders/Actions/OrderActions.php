@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\Orders\Actions;
 
 use App\Actions\Orders\GiveFreeItems;
+use App\Actions\Orders\HandOverOrders;
 use App\Actions\Orders\TakeBackFreeItem;
 use App\Checkout\OrderPayments;
 use App\Enums\OrderStatus;
@@ -16,10 +17,12 @@ use App\Models\DropItem;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Stock\DropSales;
+use App\Support\CustomerOrders;
 use App\Support\DeliveryRun;
 use App\Support\Money;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -27,21 +30,61 @@ use Filament\Support\Icons\Heroicon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Number;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 final class OrderActions
 {
+    /**
+     * Hands over everything the customer has on the order's drop. A paid order on its own goes in one tap, as it
+     * always has. When they have more than one order to hand over, or cash to collect, it asks first, listing every
+     * order of theirs with those still to go ticked: the list is the reminder that there's more than the order that
+     * was opened. A ticked cash order has its cash recorded as it's handed over.
+     */
     public static function markFulfilled(): Action
     {
         return Action::make('markFulfilled')
             ->label('Mark fulfilled')
             ->icon(Heroicon::OutlinedCheckBadge)
-            ->visible(fn (Order $record): bool => $record->status === OrderStatus::Paid)
-            ->action(function (Order $record, OrderPayments $orders): void {
-                $orders->markFulfilled($record);
+            ->visible(fn (Order $record): bool => self::toHandOver($record)->isNotEmpty())
+            ->modalHidden(function (Order $record): bool {
+                $toHandOver = self::toHandOver($record);
 
-                Notification::make()->title('Marked fulfilled')->success()->send();
+                return $toHandOver->count() === 1 && $toHandOver->sole()->status === OrderStatus::Paid;
+            })
+            ->modalHeading(function (Order $record): string {
+                $firstName = $record->firstName();
+                $whose = blank($firstName) ? 'their' : "{$firstName}’s";
+
+                return "Hand over {$whose} ".str('order')->plural(self::customerOrders($record)->count()).'?';
+            })
+            ->modalSubmitActionLabel('Mark fulfilled')
+            ->schema([
+                CheckboxList::make('orders')
+                    ->hiddenLabel()
+                    ->options(fn (Order $record): array => self::customerOrders($record)
+                        ->mapWithKeys(fn (Order $order): array => [$order->id => self::handOverLabel($order)])
+                        ->all())
+                    ->descriptions(fn (Order $record): array => self::customerOrders($record)
+                        ->load('items.product')
+                        ->mapWithKeys(fn (Order $order): array => [$order->id => DeliveryRun::items($order)])
+                        ->all())
+                    ->disableOptionWhen(fn (Order $record, int|string $value): bool => ! self::toHandOver($record)->contains('id', (int) $value))
+                    // Any of the customer's orders may come back ticked, not just those ready when this opened, so one
+                    // handed over from another phone meanwhile is reported rather than refused.
+                    ->in(fn (Order $record): array => self::customerOrders($record)->modelKeys())
+                    ->default(fn (Order $record): array => self::toHandOver($record)->modelKeys())
+                    ->required(),
+            ])
+            ->action(function (array $data, Order $record, HandOverOrders $handOver): void {
+                $ticked = is_array($data['orders'] ?? null) ? $data['orders'] : [];
+                $orders = self::customerOrders($record)->whereIn('id', $ticked);
+
+                $notHandedOver = $handOver($orders);
+                $record->refresh();
+
+                self::notifyHandedOver($orders->count() - count($notHandedOver), $notHandedOver);
             });
     }
 
@@ -220,6 +263,68 @@ final class OrderActions
             ->filter(fn (OrderItem $line): bool => $line->free)
             ->mapWithKeys(fn (OrderItem $line): array => [$line->id => "{$line->quantity} × {$line->product->name}"])
             ->all();
+    }
+
+    /**
+     * The customer's placed orders on the order's drop, this one first.
+     *
+     * @return Collection<int, Order>
+     */
+    private static function customerOrders(Order $order): Collection
+    {
+        return CustomerOrders::onDrop($order->drop_id)->of($order);
+    }
+
+    /**
+     * The customer's orders still to hand over: paid ones, and cash ones put aside for them.
+     *
+     * @return Collection<int, Order>
+     */
+    private static function toHandOver(Order $order): Collection
+    {
+        return self::customerOrders($order)
+            ->filter(fn (Order $other): bool => in_array($other->status, OrderStatus::toFulfil(), true))
+            ->values();
+    }
+
+    /**
+     * One of the customer's orders as the hand-over list shows it: "FL-7K2QXM", "FL-7K2QXM · collect $200 cash",
+     * "FL-7K2QXM · already handed over Sat 14 Nov" or "FL-7K2QXM · payment still clearing".
+     */
+    private static function handOverLabel(Order $order): string
+    {
+        $note = match ($order->status) {
+            OrderStatus::CashOwed => 'collect '.Money::format($order->total).' cash',
+            OrderStatus::Fulfilled => trim('already handed over '.($order->fulfilledDay() ?? '')),
+            OrderStatus::Processing => 'payment still clearing',
+            default => null,
+        };
+
+        return $note === null ? $order->reference() : "{$order->reference()} · {$note}";
+    }
+
+    /**
+     * "Marked fulfilled", or "2 orders marked fulfilled". When some had changed since the pop-up opened: how many went,
+     * and which didn't.
+     *
+     * @param  list<Order>  $notHandedOver
+     */
+    private static function notifyHandedOver(int $handedOver, array $notHandedOver): void
+    {
+        if ($notHandedOver === []) {
+            Notification::make()
+                ->title($handedOver === 1 ? 'Marked fulfilled' : Number::format($handedOver).' orders marked fulfilled')
+                ->success()
+                ->send();
+
+            return;
+        }
+
+        Notification::make()
+            ->title(Number::format($handedOver).' of '.Number::format($handedOver + count($notHandedOver)).' marked fulfilled')
+            ->body(Arr::join(array_map(fn (Order $order): string => $order->reference(), $notHandedOver), ', ', ' and ').' had changed.')
+            ->warning()
+            ->send();
     }
 
     private static function dropSelect(): Select

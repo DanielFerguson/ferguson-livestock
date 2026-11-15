@@ -213,6 +213,14 @@ class Order extends Model
     }
 
     /**
+     * The day it was handed over, as the farm's lists put it: "Sat 14 Nov". Null until it's fulfilled.
+     */
+    public function fulfilledDay(): ?string
+    {
+        return $this->fulfilled_at?->setTimezone(config()->string('shop.timezone'))->format('D j M');
+    }
+
+    /**
      * Whether all of it has been given back. A refund leaves the order's status as it was, so this goes by the amount.
      */
     public function isRefundedInFull(): bool

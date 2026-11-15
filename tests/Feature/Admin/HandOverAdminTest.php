@@ -2,10 +2,13 @@
 
 declare(strict_types=1);
 
+use App\Enums\OrderStatus;
 use App\Filament\Resources\Orders\Pages\ListOrders;
+use App\Filament\Resources\Orders\Pages\ViewOrder;
 use App\Models\Drop;
 use App\Models\Order;
 use App\Models\User;
+use Filament\Actions\Testing\TestAction;
 
 use function Pest\Livewire\livewire;
 
@@ -28,4 +31,110 @@ it('says under a customer’s name how many orders they have on the drop, and wh
 
     $page->assertTableColumnHasDescription('customer_name', '2 orders · Sat 14 Nov · Ballarat', $delivery);
     $page->assertTableColumnHasDescription('customer_name', null, $alone);
+});
+
+it('fulfils a lone paid order in one tap', function (): void {
+    $order = Order::factory()->pickup()->create(['customer_name' => 'Sam Buyer']);
+
+    livewire(ViewOrder::class, ['record' => $order->id])
+        ->mountAction('markFulfilled')
+        ->assertNotified('Marked fulfilled');
+
+    expect($order->refresh()->status)->toBe(OrderStatus::Fulfilled);
+});
+
+it('asks before handing over a customer’s orders, ticking each one still to hand over', function (): void {
+    $drop = Drop::factory()->open()->create();
+    $opened = Order::factory()->for($drop)->pickup()->create(['customer_name' => 'Mikele Linke']);
+    $forgotten = Order::factory()->for($drop)->pickup()->cashOwed()->create(['customer_name' => 'Mikele Linke', 'total' => 11000]);
+    $collected = Order::factory()->for($drop)->pickup()->create(['customer_name' => 'Mikele Linke', 'status' => OrderStatus::Fulfilled, 'fulfilled_at' => '2026-11-14 01:00:00']);
+
+    livewire(ViewOrder::class, ['record' => $opened->id])
+        ->mountAction('markFulfilled')
+        ->assertActionMounted('markFulfilled')
+        ->assertActionDataSet(['orders' => [$opened->id, $forgotten->id]])
+        ->assertMountedActionModalSee([$forgotten->reference().' · collect $110 cash', $collected->reference().' · already handed over Sat 14 Nov']);
+
+    expect($opened->refresh()->status)->toBe(OrderStatus::Paid);
+});
+
+it('hands over the ticked orders, taking the cash for a cash order, and leaves the rest', function (): void {
+    $drop = Drop::factory()->open()->create();
+    $opened = Order::factory()->for($drop)->pickup()->create(['customer_name' => 'Tanya Bransgrove', 'phone' => '+61488176630']);
+    $cash = Order::factory()->for($drop)->pickup()->cashOwed()->create(['customer_name' => 'Tanya', 'phone' => '+61488176630']);
+    $notToday = Order::factory()->for($drop)->pickup()->create(['customer_name' => 'Tanya Bransgrove']);
+
+    livewire(ViewOrder::class, ['record' => $opened->id])
+        ->callAction('markFulfilled', ['orders' => [$opened->id, $cash->id]])
+        ->assertHasNoActionErrors()
+        ->assertNotified('2 orders marked fulfilled');
+
+    expect($opened->refresh()->status)->toBe(OrderStatus::Fulfilled)
+        ->and($cash->refresh()->status)->toBe(OrderStatus::Fulfilled)
+        ->and($cash->paid_at)->not->toBeNull()
+        ->and($notToday->refresh()->status)->toBe(OrderStatus::Paid);
+});
+
+it('says which order had changed when it was handed over from another phone meanwhile', function (): void {
+    $drop = Drop::factory()->open()->create();
+    $opened = Order::factory()->for($drop)->pickup()->create(['customer_name' => 'Mikele Linke']);
+    $elsewhere = Order::factory()->for($drop)->pickup()->create(['customer_name' => 'Mikele Linke']);
+    $page = livewire(ViewOrder::class, ['record' => $opened->id])->mountAction('markFulfilled');
+    Order::query()->whereKey($elsewhere->id)->update(['status' => OrderStatus::Fulfilled, 'fulfilled_at' => now()]);
+
+    $page->callMountedAction()->assertNotified('1 of 2 marked fulfilled');
+
+    expect($opened->refresh()->status)->toBe(OrderStatus::Fulfilled);
+});
+
+it('won’t hand over with nothing ticked', function (): void {
+    $drop = Drop::factory()->open()->create();
+    $opened = Order::factory()->for($drop)->pickup()->create(['customer_name' => 'Mikele Linke']);
+    Order::factory()->for($drop)->pickup()->create(['customer_name' => 'Mikele Linke']);
+
+    livewire(ViewOrder::class, ['record' => $opened->id])
+        ->callAction('markFulfilled', ['orders' => []])
+        ->assertHasActionErrors(['orders' => 'required']);
+
+    expect($opened->refresh()->status)->toBe(OrderStatus::Paid);
+});
+
+it('won’t hand over someone else’s order', function (): void {
+    $drop = Drop::factory()->open()->create();
+    $opened = Order::factory()->for($drop)->pickup()->create(['customer_name' => 'Mikele Linke']);
+    Order::factory()->for($drop)->pickup()->create(['customer_name' => 'Mikele Linke']);
+    $stranger = Order::factory()->for($drop)->pickup()->create(['customer_name' => 'Sam Buyer']);
+
+    livewire(ViewOrder::class, ['record' => $opened->id])
+        ->callAction('markFulfilled', ['orders' => [$opened->id, $stranger->id]])
+        ->assertHasActionErrors();
+
+    expect($opened->refresh()->status)->toBe(OrderStatus::Paid)
+        ->and($stranger->refresh()->status)->toBe(OrderStatus::Paid);
+});
+
+it('offers handing over on an order already collected while another of the customer’s is waiting', function (): void {
+    $drop = Drop::factory()->open()->create();
+    $collected = Order::factory()->for($drop)->pickup()->create(['customer_name' => 'Mikele Linke', 'status' => OrderStatus::Fulfilled, 'fulfilled_at' => now()]);
+    Order::factory()->for($drop)->pickup()->create(['customer_name' => 'Mikele Linke']);
+
+    livewire(ViewOrder::class, ['record' => $collected->id])->assertActionVisible('markFulfilled');
+});
+
+it('stops offering it once everything the customer ordered is handed over', function (): void {
+    $collected = Order::factory()->pickup()->create(['status' => OrderStatus::Fulfilled, 'fulfilled_at' => now()]);
+
+    livewire(ViewOrder::class, ['record' => $collected->id])->assertActionHidden('markFulfilled');
+});
+
+it('offers Mark fulfilled on a list row only while that order is still to hand over', function (): void {
+    $drop = Drop::factory()->open()->create();
+    $paid = Order::factory()->for($drop)->pickup()->create(['customer_name' => 'Mikele Linke']);
+    $owed = Order::factory()->for($drop)->pickup()->cashOwed()->create(['customer_name' => 'Mikele Linke']);
+    $collected = Order::factory()->for($drop)->pickup()->create(['customer_name' => 'Mikele Linke', 'status' => OrderStatus::Fulfilled, 'fulfilled_at' => now()]);
+
+    livewire(ListOrders::class)
+        ->assertActionVisible(TestAction::make('markFulfilled')->table($paid))
+        ->assertActionVisible(TestAction::make('markFulfilled')->table($owed))
+        ->assertActionHidden(TestAction::make('markFulfilled')->table($collected));
 });
