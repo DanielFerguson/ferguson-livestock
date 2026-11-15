@@ -46,7 +46,7 @@
             @elseif ($order->status === OrderStatus::Fulfilled)
                 <p>Thank you for supporting our small family farm. We hope you enjoy every bit of it, and we’d love to hear how it went at the bottom of this page.</p>
             @else
-                <p>Thank you for supporting our small family farm! We’re packing everything fresh and vacuum-sealing it, ready for you.</p>
+                <p>Thank you for supporting our small family farm! Your beef is cut and vacuum-sealed fresh at a licensed facility in Colac. It’s never frozen, and we’ll have it ready for you.</p>
             @endif
 
             @include('pages.order-details._fulfilment')

@@ -2,7 +2,7 @@
     $steps = [
         ['Check the current drop', 'See which boxes and individual cuts are available now.'],
         ['Choose what suits you', 'Pick a 5kg or 10kg box, then add any available extra cuts.'],
-        ['Professionally prepared', 'A licensed local facility prepares and vacuum-seals each cut before collection or delivery.'],
+        ['Professionally prepared', 'A licensed facility in Colac prepares and vacuum-seals each cut fresh, never frozen, before collection or delivery.'],
         ['Delivery or pickup', 'Choose personal delivery across the '.config('shop.delivery.area_name').' or free farm pickup in '.config('shop.location.locality').', '.config('shop.pickup.days').', '.config('shop.pickup.hours').'.'],
     ];
 @endphp

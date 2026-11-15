@@ -54,7 +54,7 @@ final readonly class Faqs
             ],
             [
                 'question' => 'How is the beef processed and packed?',
-                'answer' => 'The cattle are processed through a licensed local facility, and the cuts are professionally prepared and vacuum-sealed before collection or personal delivery.',
+                'answer' => 'The cattle are processed at a licensed facility in Colac, where the cuts are prepared and vacuum-sealed fresh. Your beef is never frozen before collection or personal delivery.',
             ],
             [
                 'question' => 'What happens when a drop sells out?',
