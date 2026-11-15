@@ -1,6 +1,7 @@
 @php
     use App\Enums\DeliveryMethod;
     use App\Enums\OrderStatus;
+    use App\Enums\PaymentMethod;
 
     /** @var \App\Models\Order $order */
     $firstName = $order->firstName() ?? 'friend';
@@ -11,6 +12,13 @@
         $order->status === OrderStatus::Fulfilled && $order->delivery_method === DeliveryMethod::Delivery => 'Your order has been delivered',
         $order->status === OrderStatus::Fulfilled => 'You’ve collected your order',
         default => 'We’re getting your order ready',
+    };
+
+    $payment = match (true) {
+        $order->status === OrderStatus::CashOwed => 'Cash, still to pay',
+        $order->payment_method === PaymentMethod::Cash => 'Paid in cash',
+        $order->status === OrderStatus::Processing => 'Bank payment, clearing',
+        default => 'Paid online',
     };
 
     // Opens their messages app with a text to the farm already started, on iPhones and Android phones alike.
@@ -25,7 +33,7 @@
     :fonts="['source-sans', 'cormorant', 'caveat']"
     :ad-tracking="false"
 >
-    <div class="bg-cream-dark px-6 py-16 print:bg-white print:py-0">
+    <div class="bg-cream-dark px-6 py-16 print:hidden">
         <x-confirmation-letter :heading="'Thanks, '.$firstName.'!'" :subheading="$subheading">
             @if ($isRefundedInFull)
                 <p>We’ve refunded this order in full. It can take a few business days to reach your account. If anything doesn’t look right, text us.</p>
@@ -50,4 +58,6 @@
             </x-slot:actions>
         </x-confirmation-letter>
     </div>
+
+    @include('pages.order-details._printed-receipt')
 </x-layouts.app>

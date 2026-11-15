@@ -220,6 +220,22 @@ it('says on the receipt how the order was paid', function (Order $order, string 
     'cash received' => [fn (): Order => samsWeekendOrder(['payment_method' => PaymentMethod::Cash, 'email' => null]), 'Paid in cash'],
 ]);
 
+it('prints a plain receipt that says whether and when it was paid', function (Order $order, string $status, string $date, string $method, bool $isPaid): void {
+    $response = $this->get($order->pageUrl())
+        ->assertOk()
+        ->assertSeeInOrder(['Receipt from Ferguson Livestock', '$175', $status, $date, $method, 'Total']);
+
+    if ($isPaid) {
+        $response->assertSee('Amount paid');
+    } else {
+        $response->assertDontSee('Amount paid');
+    }
+})->with([
+    'paid online' => [fn (): Order => samsWeekendOrder(['paid_at' => '2026-11-14 01:00:00']), 'Paid 14 November 2026', 'Date paid', 'Online', true],
+    'cash still owed' => [fn (): Order => samsWeekendOrder(['status' => OrderStatus::CashOwed, 'payment_method' => PaymentMethod::Cash, 'email' => null, 'paid_at' => null]), 'Cash, still to pay', 'Date ordered', 'Cash', false],
+    'refunded in full' => [fn (): Order => samsWeekendOrder(['paid_at' => '2026-11-14 01:00:00', 'amount_refunded' => 17500, 'refunded_at' => '2026-11-16 01:00:00']), 'Refunded 16 November 2026', 'Date paid', 'Online', true],
+]);
+
 it('shows what the customer typed as plain text', function (): void {
     $order = samsWeekendOrder([
         'customer_name' => '<script>alert(1)</script>',

@@ -1,16 +1,8 @@
-{{-- What the order cost. Expects $order with items.product. Prints with the letter above it; the forms and cards below hide. --}}
+{{-- What the order cost. Expects $order with items.product, and $payment. Printing shows _printed-receipt instead. --}}
 @php
-    use App\Enums\OrderStatus;
-    use App\Enums\PaymentMethod;
     use App\Support\Money;
 
     /** @var \App\Models\Order $order */
-    $payment = match (true) {
-        $order->status === OrderStatus::CashOwed => 'Cash, still to pay',
-        $order->payment_method === PaymentMethod::Cash => 'Paid in cash',
-        $order->status === OrderStatus::Processing => 'Bank payment, clearing',
-        default => 'Paid online',
-    };
 @endphp
 
 <section aria-labelledby="receipt-heading" class="border-t border-gray-100 pt-6 text-base">
