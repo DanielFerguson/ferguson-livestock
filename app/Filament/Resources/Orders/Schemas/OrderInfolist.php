@@ -30,11 +30,10 @@ class OrderInfolist
         $timezone = config()->string('shop.timezone');
 
         return $schema
-            ->columns(2)
+            ->columns(1)
             ->components([
                 Section::make(fn (Order $record): string => self::itemsHeading($record, CustomerOrders::onDrop($record->drop_id)->of($record)))
                     ->key('customer-orders')
-                    ->columnSpanFull()
                     ->schema([
                         ViewEntry::make('customer_orders')
                             ->hiddenLabel()
@@ -88,7 +87,6 @@ class OrderInfolist
                             ->visible(fn (Order $record): bool => $record->delivery_method === DeliveryMethod::Delivery),
                     ]),
                 Section::make('Feedback')
-                    ->columnSpanFull()
                     ->visible(fn (Order $record): bool => $record->feedback !== null)
                     ->schema([
                         TextEntry::make('feedback_stars')->label('Rating')->state(fn (Order $record): ?string => $record->feedback?->stars()),
@@ -97,7 +95,6 @@ class OrderInfolist
                     ]),
                 Section::make('Stripe')
                     ->collapsed()
-                    ->columnSpanFull()
                     ->visible(fn (Order $record): bool => $record->payment_method === PaymentMethod::Stripe)
                     ->schema([
                         TextEntry::make('stripe_payment_intent_id')
@@ -125,14 +122,15 @@ class OrderInfolist
 
     /**
      * The customer's orders on the drop, this one first, each with what to pack for it. The delivery fee isn't
-     * packed, so it's left out. An order that wasn't placed comes back as the page's own record, which Livewire
-     * restores without its items after the first request, so they're loaded here.
+     * packed, so it's left out. Items are loaded on just these orders, which for an order that wasn't placed is the
+     * page's own record: Livewire restores it without its items after the first request.
      *
      * @return array<int, array{reference: string, status: OrderStatus, note: string|null, items: array<int, array{line: string, free: bool}>}>
      */
     private static function customerOrders(Order $record): array
     {
-        return CustomerOrders::onDrop($record->drop_id, ['items.product'])->of($record->loadMissing('items.product'))
+        return CustomerOrders::onDrop($record->drop_id)->of($record)
+            ->load('items.product')
             ->map(fn (Order $order): array => [
                 'reference' => $order->reference(),
                 'status' => $order->status,

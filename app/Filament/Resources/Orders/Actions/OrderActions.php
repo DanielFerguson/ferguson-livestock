@@ -65,9 +65,10 @@ final class OrderActions
                 CheckboxList::make('orders')
                     ->hiddenLabel()
                     ->options(fn (Order $record): array => self::customerOrders($record)
-                        ->mapWithKeys(fn (Order $order): array => [$order->id => self::handOverLabel($order)])
+                        ->mapWithKeys(fn (Order $order): array => [$order->id => self::handOverLabel($order, $record)])
                         ->all())
-                    ->descriptions(fn (Order $record): array => CustomerOrders::onDrop($record->drop_id, ['items.product'])->of($record)
+                    ->descriptions(fn (Order $record): array => self::customerOrders($record)
+                        ->load('items.product')
                         ->mapWithKeys(fn (Order $order): array => [$order->id => DeliveryRun::items($order)])
                         ->all())
                     ->disableOptionWhen(fn (Order $record, int|string $value): bool => self::toHandOver($record)->doesntContain('id', (int) $value))
@@ -199,7 +200,7 @@ final class OrderActions
             ->label('Mark fulfilled')
             ->icon(Heroicon::OutlinedCheckBadge)
             ->requiresConfirmation()
-            ->modalDescription('Only paid orders change. Orders whose payment is still clearing are left as they are.')
+            ->modalDescription('Only paid orders change. Cash orders and orders still clearing are left as they are.')
             ->action(function (Collection $records, OrderPayments $orders): void {
                 $fulfilled = $records->filter(fn (Model $order): bool => $order instanceof Order && $orders->markFulfilled($order))->count();
 
@@ -289,18 +290,24 @@ final class OrderActions
 
     /**
      * One of the customer's orders as the hand-over list shows it: "FL-7K2QXM", "FL-7K2QXM · collect $200 cash",
-     * "FL-7K2QXM · already handed over Sat 14 Nov" or "FL-7K2QXM · payment still clearing".
+     * "FL-7K2QXM · already handed over Sat 14 Nov" or "FL-7K2QXM · payment still clearing". How it goes out is added
+     * when that's not how the opened order does, so a delivery isn't handed over at pickup unnoticed: "FL-7K2QXM ·
+     * Delivery, Sun 15 Nov" or "FL-7K2QXM · collect $110 cash · Farm pickup".
      */
-    private static function handOverLabel(Order $order): string
+    private static function handOverLabel(Order $order, Order $opened): string
     {
-        $note = match ($order->status) {
+        $statusNote = match ($order->status) {
             OrderStatus::CashOwed => 'collect '.Money::format($order->total).' cash',
             OrderStatus::Fulfilled => trim('already handed over '.($order->fulfilledDay() ?? '')),
             OrderStatus::Processing => 'payment still clearing',
             default => null,
         };
 
-        return $note === null ? $order->reference() : "{$order->reference()} · {$note}";
+        return implode(' · ', array_filter([
+            $order->reference(),
+            $statusNote,
+            $order->deliverySummary() !== $opened->deliverySummary() ? $order->deliverySummary() : null,
+        ], filled(...)));
     }
 
     /**

@@ -27,15 +27,12 @@ final readonly class CustomerOrders
 
     /**
      * The drop's placed orders (paid, clearing, fulfilled or owed in cash), grouped by customer.
-     *
-     * @param  list<string>  $with  relations to load on each order
      */
-    public static function onDrop(int $dropId, array $with = []): self
+    public static function onDrop(int $dropId): self
     {
         $orders = Order::query()
             ->where('drop_id', $dropId)
             ->whereIn('status', OrderStatus::placed())
-            ->with($with)
             ->oldest()
             ->oldest('id')
             ->get()

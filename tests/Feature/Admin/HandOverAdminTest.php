@@ -62,6 +62,16 @@ it('asks before handing over a customer’s orders, ticking each one still to ha
     expect($opened->refresh()->status)->toBe(OrderStatus::Paid);
 });
 
+it('says in the pop-up when one of the customer’s orders goes out another way', function (): void {
+    $drop = Drop::factory()->open()->create(['delivery_days' => ['2026-11-15']]);
+    $opened = Order::factory()->for($drop)->pickup()->create(['customer_name' => 'Mikele Linke']);
+    $delivery = Order::factory()->for($drop)->create(['customer_name' => 'Mikele Linke', 'delivery_day' => '2026-11-15']);
+
+    $page = livewire(ViewOrder::class, ['record' => $opened->id])->mountAction('markFulfilled');
+    $page->assertMountedActionModalSee($delivery->reference().' · Delivery, Sun 15 Nov');
+    $page->assertMountedActionModalDontSee($opened->reference().' · ');
+});
+
 it('hands over the ticked orders, taking the cash for a cash order, and leaves the rest', function (): void {
     $drop = Drop::factory()->open()->create();
     $opened = Order::factory()->for($drop)->pickup()->create(['customer_name' => 'Tanya Bransgrove', 'phone' => '+61488176630']);
@@ -181,7 +191,7 @@ it('lists everything the customer has on the drop on each of their orders, this 
     OrderItem::factory()->for($mince)->for(Product::factory()->create(['name' => '5kg Beef Mince Pack']))->create();
 
     livewire(ViewOrder::class, ['record' => $mince->id])
-        ->assertSeeText(['Cash owed · Mikele Linke · Farm pickup'])
+        ->assertSeeText(['Cash owed, collect $110 · Mikele Linke · Farm pickup'])
         ->assertSeeTextInOrder([
             'Everything for Mikele · 2 orders',
             $mince->reference(), 'This one', 'Collect $110 cash', '5kg Beef Mince Pack',
