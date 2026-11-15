@@ -58,7 +58,8 @@ a subscription when the push service reports it gone. VAPID keys come from `VAPI
 - `TwilioInboundController`: after storing a text, if it was just created and isn't STOP or START, notify the admin.
   The admin lookup is shared with `CheckDropBeforeItOpens`.
 - Conversations page "Notifications" control: Livewire methods to save the phone's subscription, remove it, and
-  send a test push to the admin. A small script asks permission and subscribes with the public VAPID key. Outside
+  send a test push to the admin. The test reports what Apple said (sent, refused with its reason, or no phone
+  signed up), because it's the owner's check that pushes work. A small script asks permission and subscribes with the public VAPID key. Outside
   the installed app it says to add it to the Home Screen first. When permission was denied it explains how to turn
   it on in Settings.
 - Badge sync: the admin passes the attention count to the page on load, and again after a conversation is opened
@@ -81,4 +82,14 @@ Feature tests:
 - No admin account means no push.
 - The Conversations page saves and removes a subscription for the logged-in admin and sends a test push.
 
-The service worker and the phone side are checked by hand on the owner's phone.
+A browser test checks the page script loads, the service worker registers for `/admin` and the control settles
+without JavaScript errors. Headless Chromium denies notifications, so turning them on, the push itself and the tap
+are checked by hand on the owner's phone.
+
+## Found in review
+
+- The push library caches its signed VAPID token, which lasts 12 hours, and only clears the cache once a batch's
+  results have all been handled. If handling throws part way, the next push can reuse the old token, and more than
+  12 hours later Apple refuses it. `AppServiceProvider` turns that reuse off, so each push is signed fresh.
+- "Send a test" sends through the channel directly and says whether Apple took it.
+- The lapse email goes at most once a day, and a mail failure can't fail the push.

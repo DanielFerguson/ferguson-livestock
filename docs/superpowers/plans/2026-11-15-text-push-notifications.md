@@ -1282,8 +1282,8 @@ git commit -m "Email the admin when no phone gets pushes for new texts any more"
 
 **Step 1: Document the keys**
 
-In `docs/laravel-cloud.md`, add `VAPID_PUBLIC_KEY=...` and `VAPID_PRIVATE_KEY=...` to the environment variable
-block after `TWILIO_FROM_NUMBER`. After the Twilio section (the paragraph ending "Keep it out of anywhere less
+In `docs/laravel-cloud.md`, leave the environment variable block alone: it lists staging's variables, and staging
+doesn't need the push keys (production-only variables, like `META_*`, are described in prose). After the Twilio section (the paragraph ending "Keep it out of anywhere less
 trusted than production, such as preview environments."), add:
 
 ```markdown
