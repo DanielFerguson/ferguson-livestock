@@ -9,12 +9,9 @@ use App\Support\CustomerOrders;
 
 it('puts orders together when they share a phone, email or name', function (array $first, array $second): void {
     $drop = Drop::factory()->open()->create();
-    $one = Order::factory()->for($drop)->create($first);
-    $two = Order::factory()->for($drop)->create($second);
+    $orders = Order::factory()->for($drop)->count(2)->sequence($first, $second)->create();
 
-    $orders = CustomerOrders::onDrop($drop->id)->of($one);
-
-    expect($orders->modelKeys())->toBe([$one->id, $two->id]);
+    expect(CustomerOrders::onDrop($drop->id)->of($orders->firstOrFail())->modelKeys())->toBe($orders->modelKeys());
 })->with([
     'the same mobile, however it was written' => [
         ['phone' => '+61412345678', 'email' => 'sam@example.test', 'customer_name' => 'Sam Buyer'],
@@ -27,6 +24,10 @@ it('puts orders together when they share a phone, email or name', function (arra
     'the same name, ignoring case and spaces' => [
         ['phone' => '+61412345678', 'email' => 'sam@example.test', 'customer_name' => 'Sam Buyer'],
         ['phone' => null, 'email' => null, 'customer_name' => ' sam  BUYER '],
+    ],
+    'the same name with a curly apostrophe' => [
+        ['phone' => '+61412345678', 'email' => 'kate@example.test', 'customer_name' => 'Kate O’Brien'],
+        ['phone' => '+61487654321', 'email' => 'katie@example.test', 'customer_name' => "kate o'brien"],
     ],
 ]);
 
@@ -55,6 +56,15 @@ it('puts together orders linked only through another of the customer’s orders'
     expect(CustomerOrders::onDrop($drop->id)->of($byName)->modelKeys())->toBe([$byName->id, $byPhone->id, $both->id]);
 });
 
+it('matches an order by any detail on the customer’s earlier orders, not just the latest', function (): void {
+    $drop = Drop::factory()->open()->create();
+    $first = Order::factory()->for($drop)->create(['phone' => '+61437984526', 'email' => 'aaron@example.test', 'customer_name' => 'Aaron Baker']);
+    $nameOnly = Order::factory()->for($drop)->cashOwed()->create(['phone' => null, 'customer_name' => 'Aaron Baker']);
+    $phoneOnly = Order::factory()->for($drop)->create(['phone' => '+61437984526', 'email' => null, 'customer_name' => 'A Baker']);
+
+    expect(CustomerOrders::onDrop($drop->id)->of($first)->modelKeys())->toBe([$first->id, $nameOnly->id, $phoneOnly->id]);
+});
+
 it('starts with the order asked about, then the rest oldest first', function (): void {
     $drop = Drop::factory()->open()->create();
     $first = Order::factory()->for($drop)->create(['customer_name' => 'Sam Buyer']);
@@ -71,6 +81,18 @@ it('leaves out the customer’s orders on other drops', function (): void {
 
     expect(CustomerOrders::onDrop($drop->id)->of($order)->modelKeys())->toBe([$order->id]);
 });
+
+it('puts in the customer’s orders that are clearing, handed over or owed in cash', function (OrderStatus $status): void {
+    $drop = Drop::factory()->open()->create();
+    $order = Order::factory()->for($drop)->create(['customer_name' => 'Sam Buyer']);
+    $other = Order::factory()->for($drop)->create(['customer_name' => 'Sam Buyer', 'status' => $status]);
+
+    expect(CustomerOrders::onDrop($drop->id)->of($order)->modelKeys())->toBe([$order->id, $other->id]);
+})->with([
+    'clearing' => OrderStatus::Processing,
+    'handed over' => OrderStatus::Fulfilled,
+    'owed in cash' => OrderStatus::CashOwed,
+]);
 
 it('leaves out checkouts that didn’t become orders', function (OrderStatus $status): void {
     $drop = Drop::factory()->open()->create();
