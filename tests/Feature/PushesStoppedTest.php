@@ -9,25 +9,20 @@ use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Notification;
 use Minishlink\WebPush\MessageSentReport;
-use NotificationChannels\WebPush\Events\NotificationFailed;
 use NotificationChannels\WebPush\PushSubscription;
+use NotificationChannels\WebPush\ReportHandler;
 use NotificationChannels\WebPush\WebPushMessage;
 
 beforeEach(fn () => config(['shop.admin_email' => 'daniel@example.com']));
 
 /**
- * What the push package reports when Apple answers a push with this status. Like the package, it deletes the
- * sign-up first when Apple says it's gone.
+ * Apple answers a push to this phone with this status, and the push package handles the answer as it would a real one.
  */
-function failedPush(PushSubscription $subscription, int $status): NotificationFailed
+function failedPush(PushSubscription $subscription, int $status): void
 {
     $report = new MessageSentReport(new Request('POST', $subscription->endpoint), new Response($status), false, 'Apple said no');
 
-    if ($report->isSubscriptionExpired()) {
-        $subscription->delete();
-    }
-
-    return new NotificationFailed($report, $subscription, new WebPushMessage);
+    app(ReportHandler::class)->handleReport($report, $subscription, new WebPushMessage);
 }
 
 it('emails the admin when the last phone signed up for pushes isn’t any more', function (int $status): void {
@@ -35,7 +30,7 @@ it('emails the admin when the last phone signed up for pushes isn’t any more',
     $admin = User::factory()->create(['email' => 'daniel@example.com']);
     $phone = $admin->updatePushSubscription('https://web.push.apple.com/old-phone', 'BKey', 'authSecret', 'aes128gcm');
 
-    event(failedPush($phone, $status));
+    failedPush($phone, $status);
 
     Notification::assertSentTo($admin, PushesStopped::class);
 })->with([404, 410]);
@@ -46,9 +41,41 @@ it('stays quiet while another phone still gets pushes', function (): void {
     $oldPhone = $admin->updatePushSubscription('https://web.push.apple.com/old-phone', 'BKey', 'authSecret', 'aes128gcm');
     $admin->updatePushSubscription('https://web.push.apple.com/new-phone', 'BKey', 'authSecret', 'aes128gcm');
 
-    event(failedPush($oldPhone, 410));
+    failedPush($oldPhone, 410);
 
     Notification::assertNothingSent();
+});
+
+it('emails once a day however often the last phone lapses', function (): void {
+    Notification::fake();
+    $admin = User::factory()->create(['email' => 'daniel@example.com']);
+
+    failedPush($admin->updatePushSubscription('https://web.push.apple.com/old-phone', 'BKey', 'authSecret', 'aes128gcm'), 410);
+    failedPush($admin->updatePushSubscription('https://web.push.apple.com/old-phone', 'BKey', 'authSecret', 'aes128gcm'), 410);
+
+    Notification::assertSentToTimes($admin, PushesStopped::class, 1);
+});
+
+it('emails again when the last phone lapses the next day', function (): void {
+    Notification::fake();
+    $admin = User::factory()->create(['email' => 'daniel@example.com']);
+
+    failedPush($admin->updatePushSubscription('https://web.push.apple.com/old-phone', 'BKey', 'authSecret', 'aes128gcm'), 410);
+    $this->travel(25)->hours();
+    failedPush($admin->updatePushSubscription('https://web.push.apple.com/new-phone', 'BKey', 'authSecret', 'aes128gcm'), 410);
+
+    Notification::assertSentToTimes($admin, PushesStopped::class, 2);
+});
+
+it('reports an email that won’t send, rather than failing the push', function (): void {
+    Exceptions::fake();
+    Notification::shouldReceive('send')->andThrow(new RuntimeException('Resend is down'));
+    $admin = User::factory()->create(['email' => 'daniel@example.com']);
+    $phone = $admin->updatePushSubscription('https://web.push.apple.com/old-phone', 'BKey', 'authSecret', 'aes128gcm');
+
+    failedPush($phone, 410);
+
+    Exceptions::assertReported(fn (RuntimeException $exception): bool => $exception->getMessage() === 'Resend is down');
 });
 
 it('reports a push that fails for another reason as an error, without the lapsed-phone email', function (): void {
@@ -57,7 +84,7 @@ it('reports a push that fails for another reason as an error, without the lapsed
     $admin = User::factory()->create(['email' => 'daniel@example.com']);
     $phone = $admin->updatePushSubscription('https://web.push.apple.com/old-phone', 'BKey', 'authSecret', 'aes128gcm');
 
-    event(failedPush($phone, 403));
+    failedPush($phone, 403);
 
     Exceptions::assertReported(fn (RuntimeException $exception): bool => str_contains($exception->getMessage(), '403') && str_contains($exception->getMessage(), 'Apple said no'));
     Notification::assertNothingSent();

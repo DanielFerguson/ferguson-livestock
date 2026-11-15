@@ -8,6 +8,7 @@
     <div class="fl-push-warning" role="status" x-data x-on:push-subscribed.window="$el.remove()">
         No phone gets a notification for new texts, so check
         <a href="{{ \App\Filament\Pages\Conversations::getUrl() }}">Conversations</a> yourself. To turn them on, open
-        Ferguson Livestock from your phone’s home screen and tap Turn on notifications in Conversations.
+        Ferguson Livestock from your phone’s home screen (if it isn’t there, add it from Safari: Share, then Add to Home
+        Screen) and tap Turn on notifications in Conversations.
     </div>
 @endif

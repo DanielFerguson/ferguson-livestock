@@ -26,10 +26,10 @@ class PushesStopped extends Notification
     {
         return (new MailMessage)
             ->subject('Your phone has stopped getting notifications for new texts')
-            ->greeting('Texts aren’t reaching your phone.')
+            ->greeting('Notifications for new texts have stopped.')
             ->line('The site just tried to send your phone a notification, and Apple says it isn’t signed up any more. That happens when Ferguson Livestock is taken off the home screen, or on a new phone.')
             ->line('Until notifications are back on, check Conversations for new texts yourself.')
             ->action('Open Conversations', Conversations::getUrl())
-            ->line('To turn them back on, open Ferguson Livestock from your phone’s home screen, go to Conversations and tap Turn on notifications.');
+            ->line('To turn them back on, open Conversations in Safari on your phone. If Ferguson Livestock isn’t on your home screen, tap Share, then Add to Home Screen, and open it from there. Then tap Turn on notifications in Conversations.');
     }
 }

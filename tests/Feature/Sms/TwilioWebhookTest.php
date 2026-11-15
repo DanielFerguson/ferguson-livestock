@@ -9,6 +9,7 @@ use App\Models\Subscriber;
 use App\Models\User;
 use App\Notifications\AdminPush;
 use Illuminate\Notifications\SendQueuedNotifications;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Testing\TestResponse;
@@ -219,6 +220,18 @@ it('doesn’t push STOP or START texts, which need no answer', function (string 
 
     Notification::assertNothingSent();
 })->with(['Stop please', 'START']);
+
+it('keeps a text and answers Twilio when its push can’t be queued, reporting why', function (): void {
+    Exceptions::fake();
+    Notification::shouldReceive('send')->andThrow(new RuntimeException('The queue is down'));
+    config(['shop.admin_email' => 'daniel@example.com']);
+    User::factory()->create(['email' => 'daniel@example.com']);
+
+    postFromTwilio('webhooks.twilio.inbound', ['MessageSid' => 'SMreply1', 'From' => '+61499999999', 'To' => '+61400000000', 'Body' => 'Hello'])->assertOk();
+
+    expect(SmsMessage::query()->sole()->body)->toBe('Hello');
+    Exceptions::assertReported(fn (RuntimeException $exception): bool => $exception->getMessage() === 'The queue is down');
+});
 
 it('keeps a text without pushing it while there’s no admin account', function (): void {
     Notification::fake();
