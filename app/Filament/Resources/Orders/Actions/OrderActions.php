@@ -70,7 +70,7 @@ final class OrderActions
                     ->descriptions(fn (Order $record): array => CustomerOrders::onDrop($record->drop_id, ['items.product'])->of($record)
                         ->mapWithKeys(fn (Order $order): array => [$order->id => DeliveryRun::items($order)])
                         ->all())
-                    ->disableOptionWhen(fn (Order $record, int|string $value): bool => ! self::toHandOver($record)->contains('id', (int) $value))
+                    ->disableOptionWhen(fn (Order $record, int|string $value): bool => self::toHandOver($record)->doesntContain('id', (int) $value))
                     // Any of the customer's orders may come back ticked, not just those ready when this opened, so one
                     // handed over from another phone meanwhile is reported rather than refused.
                     ->in(fn (Order $record): array => self::customerOrders($record)->modelKeys())

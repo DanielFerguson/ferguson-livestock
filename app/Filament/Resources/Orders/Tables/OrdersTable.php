@@ -81,7 +81,7 @@ class OrdersTable
             $query->orderByRaw('delivery_day asc nulls last')->orderByRaw("lower(shipping_address->>'city')")->orderByRaw("shipping_address->>'postal_code'");
         }
 
-        return $query->orderByDesc('created_at');
+        return $query->latest();
     }
 
     /**
