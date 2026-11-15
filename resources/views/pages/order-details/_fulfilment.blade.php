@@ -42,7 +42,7 @@
             <p>Collect it from {{ config('shop.location.street') }}, {{ config('shop.location.locality') }}, {{ $order->drop->pickupTimes() }}.</p>
 
             <div class="mt-4 print:hidden">
-                <x-button :href="route('farm')" variant="outline">
+                <x-button :href="route('farm')" variant="outline" target="_blank" rel="noopener">
                     Open in Google Maps
                     <x-svg-icon name="arrow-right" />
                 </x-button>
