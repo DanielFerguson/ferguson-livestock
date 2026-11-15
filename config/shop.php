@@ -51,9 +51,16 @@ return [
     // The admin's mobile in E.164 (+614...), for test texts of broadcasts.
     'admin_phone' => env('SHOP_ADMIN_PHONE'),
 
+    // The shop's texting number: texts to it land in the admin's Conversations.
     'phone' => [
         'international' => '+61427458706',
         'display' => '0427 458 706',
+    ],
+
+    // Daniel's mobile, for customers on their order page who'd rather call than text.
+    'call' => [
+        'international' => '+61412144625',
+        'display' => '0412 144 625',
     ],
 
     'location' => [
