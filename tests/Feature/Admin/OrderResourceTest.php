@@ -19,6 +19,7 @@ use App\Support\DeliveryRun;
 use Filament\Actions\Testing\TestAction;
 use Filament\Forms\Components\Repeater;
 use Illuminate\Support\Arr;
+use Livewire\Livewire;
 use Tests\Fixtures\StockedDrop;
 
 use function Pest\Livewire\livewire;
@@ -104,10 +105,20 @@ it('lists the deliveries still to go out in delivery-run order', function (): vo
     $saturdayCreswick = paidOrder($drop, 'Creswick', '3363', ['delivery_day' => '2026-11-14']);
     $eitherNight = paidOrder($drop, 'Ballarat', '3350', ['delivery_day' => null]);
     $saturdayBallarat = paidOrder($drop, 'Ballarat', '3350', ['delivery_day' => '2026-11-14']);
+    $saturdayBallarat3355 = paidOrder($drop, 'Ballarat', '3355', ['delivery_day' => '2026-11-14']);
 
     livewire(ListOrders::class)
         ->set('activeTab', 'to-deliver')
-        ->assertCanSeeTableRecords([$saturdayBallarat, $saturdayCreswick, $sundayBallarat, $eitherNight], inOrder: true);
+        ->assertCanSeeTableRecords([$saturdayBallarat, $saturdayBallarat3355, $saturdayCreswick, $sundayBallarat, $eitherNight], inOrder: true);
+});
+
+it('opens an old link to the To fulfil tab on the first tab', function (): void {
+    $abandoned = Order::factory()->pending()->create(['status' => OrderStatus::Expired]);
+
+    Livewire::withQueryParams(['tab' => 'to-fulfil'])
+        ->test(ListOrders::class)
+        ->assertSet('activeTab', 'all')
+        ->assertCanNotSeeTableRecords([$abandoned]);
 });
 
 it('marks orders fulfilled, leaving any that aren’t paid', function (): void {

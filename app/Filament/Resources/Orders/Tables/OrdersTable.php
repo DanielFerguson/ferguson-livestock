@@ -13,6 +13,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 class OrdersTable
 {
@@ -21,7 +22,7 @@ class OrdersTable
         $timezone = config()->string('shop.timezone');
 
         return $table
-            ->defaultSort('created_at', 'desc')
+            ->defaultSort(fn (Builder $query, ListOrders $livewire): Builder => self::defaultOrder($query, inRunOrder: $livewire->activeTab === 'to-deliver'), 'desc')
             ->columns([
                 TextColumn::make('public_id')
                     ->label('Order')
@@ -60,6 +61,24 @@ class OrdersTable
             ->toolbarActions([
                 OrderActions::markSelectedFulfilled(),
             ]);
+    }
+
+    /**
+     * Newest first, except that To deliver comes in delivery-run order, as the printed run has it: by night,
+     * either-night ones last, then by suburb and postcode, with newest first breaking ties. It's the table's default
+     * sort rather than part of the tab's query so that a column header picked to sort by comes first, and so that the
+     * counts Filament takes from the tab's query carry no ORDER BY, which Postgres refuses alongside count(*).
+     *
+     * @param  Builder<Model>  $query
+     * @return Builder<Model>
+     */
+    private static function defaultOrder(Builder $query, bool $inRunOrder): Builder
+    {
+        if ($inRunOrder) {
+            $query->orderByRaw('delivery_day asc nulls last')->orderByRaw("lower(shipping_address->>'city')")->orderByRaw("shipping_address->>'postal_code'");
+        }
+
+        return $query->orderByDesc('created_at');
     }
 
     /**

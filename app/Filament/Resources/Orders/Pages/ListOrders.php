@@ -53,13 +53,31 @@ class ListOrders extends ListRecords
     }
 
     /**
-     * How many orders the order's customer has on its drop, counting this one.
+     * How many orders the order's customer has on its drop, counting this one. An order that wasn't placed (still at
+     * checkout, abandoned or failed) is on its own, so the Not paid tab doesn't group whole drops for nothing.
      */
     public function customerOrderCount(Order $order): int
     {
+        if (! in_array($order->status, OrderStatus::placed(), true)) {
+            return 1;
+        }
+
         $this->customerOrders[$order->drop_id] ??= CustomerOrders::onDrop($order->drop_id);
 
         return $this->customerOrders[$order->drop_id]->of($order)->count();
+    }
+
+    /**
+     * Sends an old link or bookmark to a tab that's gone, such as To fulfil, to the first tab, rather than listing
+     * every order with no tab picked.
+     */
+    protected function loadDefaultActiveTab(): void
+    {
+        if ($this->activeTab !== null && ! array_key_exists($this->activeTab, $this->getCachedTabs())) {
+            $this->activeTab = null;
+        }
+
+        parent::loadDefaultActiveTab();
     }
 
     /**
@@ -88,17 +106,14 @@ class ListOrders extends ListRecords
 
     /**
      * Orders still to hand over by pickup or by delivery: paid ones, and cash ones put aside for friends, with a count
-     * of them when there are any. Deliveries come in delivery-run order: by night, either-night ones last, then by
-     * suburb.
+     * of them when there are any. The table's default sort puts To deliver in delivery-run order.
      */
     private function toHandOverTab(string $label, DeliveryMethod $method): Tab
     {
         $toHandOver = fn (Builder $query): Builder => $query->whereIn('status', OrderStatus::toFulfil())->where('delivery_method', $method);
 
         return Tab::make($label)
-            ->modifyQueryUsing(fn (Builder $query): Builder => $method === DeliveryMethod::Delivery
-                ? $toHandOver($query)->orderByRaw('delivery_day asc nulls last')->orderByRaw("lower(shipping_address->>'city')")
-                : $toHandOver($query))
+            ->modifyQueryUsing($toHandOver)
             ->badge(function () use ($toHandOver): ?int {
                 $count = $toHandOver(Order::query())->count();
 
