@@ -187,7 +187,9 @@ it('shows everything about an order', function (): void {
     OrderItem::factory()->for($order)->create(['quantity' => 1, 'unit_price' => 1500]);
 
     livewire(ViewOrder::class, ['record' => $order->id])
-        ->assertSee(['Sam Buyer', 'buyer@example.test', '1 Main St', 'Ballarat', $order->reference(), '$24', '$15']);
+        ->assertSee(['Sam Buyer', 'buyer@example.test', '1 Main St', 'Ballarat', $order->reference(), '$175'])
+        ->assertSeeText('Items')
+        ->assertDontSeeText('Everything for');
 });
 
 it('keeps the delivery run behind the admin sign-in', function (): void {

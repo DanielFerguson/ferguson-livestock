@@ -7,6 +7,8 @@ use App\Filament\Resources\Orders\Pages\ListOrders;
 use App\Filament\Resources\Orders\Pages\ViewOrder;
 use App\Models\Drop;
 use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Product;
 use App\Models\User;
 use Filament\Actions\Testing\TestAction;
 
@@ -137,4 +139,20 @@ it('offers Mark fulfilled on a list row only while that order is still to hand o
         ->assertActionVisible(TestAction::make('markFulfilled')->table($paid))
         ->assertActionVisible(TestAction::make('markFulfilled')->table($owed))
         ->assertActionHidden(TestAction::make('markFulfilled')->table($collected));
+});
+
+it('lists everything the customer has on the drop on each of their orders, this one first', function (): void {
+    $drop = Drop::factory()->open()->create(['delivery_days' => ['2026-11-14']]);
+    $box = Order::factory()->for($drop)->create(['customer_name' => 'Mikele Linke', 'delivery_day' => '2026-11-14']);
+    OrderItem::factory()->for($box)->for(Product::factory()->create(['name' => '10kg Beef Box']))->create();
+    $mince = Order::factory()->for($drop)->pickup()->cashOwed()->create(['customer_name' => 'Mikele Linke', 'total' => 11000]);
+    OrderItem::factory()->for($mince)->for(Product::factory()->create(['name' => '5kg Beef Mince Pack']))->create();
+
+    livewire(ViewOrder::class, ['record' => $mince->id])
+        ->assertSeeText(['Cash owed · Mikele Linke · Farm pickup'])
+        ->assertSeeTextInOrder([
+            'Everything for Mikele · 2 orders',
+            $mince->reference(), 'This one', 'Collect $110 cash', '5kg Beef Mince Pack',
+            $box->reference(), 'Delivery, Sat 14 Nov', '10kg Beef Box',
+        ]);
 });

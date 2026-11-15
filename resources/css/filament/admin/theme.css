@@ -71,3 +71,24 @@
 .fl-push-menu-status {
     @apply px-3 py-2.5 text-sm text-gray-600 dark:text-gray-300;
 }
+
+/* A customer's orders on the order page, from resources/views/filament/orders/customer-orders.blade.php. */
+.fl-customer-order + .fl-customer-order {
+    @apply mt-4 border-t border-gray-200 pt-4 dark:border-white/10;
+}
+
+.fl-customer-order-heading {
+    @apply mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold text-gray-950 dark:text-white;
+}
+
+.fl-customer-order-note {
+    @apply font-normal text-gray-500 dark:text-gray-400;
+}
+
+.fl-customer-order-items {
+    @apply space-y-1.5 text-sm text-gray-950 dark:text-white;
+}
+
+.fl-customer-order-items li {
+    @apply flex flex-wrap items-center gap-2;
+}

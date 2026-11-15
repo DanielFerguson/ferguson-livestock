@@ -5,16 +5,24 @@ declare(strict_types=1);
 namespace App\Filament\Resources\Orders\Schemas;
 
 use App\Enums\DeliveryMethod;
+use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
+use App\Enums\ProductType;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Support\AustralianMobile;
+use App\Support\CustomerOrders;
 use App\Support\Money;
-use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\ViewEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Collection;
 
+/**
+ * The order's page, laid out for handing over on a phone: what to pack comes first, for every order the customer has
+ * on the drop, and the details are folded away below.
+ */
 class OrderInfolist
 {
     public static function configure(Schema $schema): Schema
@@ -24,7 +32,16 @@ class OrderInfolist
         return $schema
             ->columns(2)
             ->components([
+                Section::make(fn (Order $record): string => self::itemsHeading($record, CustomerOrders::onDrop($record->drop_id)->of($record)))
+                    ->columnSpanFull()
+                    ->schema([
+                        ViewEntry::make('customer_orders')
+                            ->hiddenLabel()
+                            ->view('filament.orders.customer-orders')
+                            ->state(fn (Order $record): array => self::customerOrders($record)),
+                    ]),
                 Section::make('Order')
+                    ->collapsed()
                     ->columns(2)
                     ->schema([
                         TextEntry::make('reference')->state(fn (Order $record): string => $record->reference()),
@@ -47,6 +64,7 @@ class OrderInfolist
                             ->columnSpanFull(),
                     ]),
                 Section::make('Customer')
+                    ->collapsed()
                     ->schema([
                         TextEntry::make('customer_name')->label('Name')->placeholder('Not given yet'),
                         TextEntry::make('email')->url(fn (Order $record): ?string => $record->email === null ? null : "mailto:{$record->email}")->placeholder('—'),
@@ -56,6 +74,7 @@ class OrderInfolist
                             ->placeholder('—'),
                     ]),
                 Section::make('Delivery')
+                    ->collapsed()
                     ->schema([
                         TextEntry::make('delivery_method')->label('How'),
                         TextEntry::make('delivery_day')->label('Night')->date('l j F')->placeholder('Either night')->visible(fn (Order $record): bool => $record->delivery_method === DeliveryMethod::Delivery),
@@ -66,17 +85,6 @@ class OrderInfolist
                             ], fn (?string $part): bool => $part !== null && $part !== '')))
                             ->placeholder('—')
                             ->visible(fn (Order $record): bool => $record->delivery_method === DeliveryMethod::Delivery),
-                    ]),
-                Section::make('Items')
-                    ->schema([
-                        RepeatableEntry::make('items')
-                            ->hiddenLabel()
-                            ->columns(3)
-                            ->schema([
-                                TextEntry::make('product.name')->hiddenLabel(),
-                                TextEntry::make('quantity')->hiddenLabel()->formatStateUsing(fn (int $state): string => "× {$state}"),
-                                TextEntry::make('line_total')->hiddenLabel()->state(fn (OrderItem $record): string => $record->free ? 'Free' : Money::format($record->lineTotal())),
-                            ]),
                     ]),
                 Section::make('Feedback')
                     ->columnSpanFull()
@@ -98,5 +106,57 @@ class OrderInfolist
                         TextEntry::make('stripe_checkout_session_id')->label('Checkout session')->placeholder('—'),
                     ]),
             ]);
+    }
+
+    /**
+     * "Items" for an order on its own, or "Everything for Mikele · 2 orders" when the customer has more on the drop.
+     *
+     * @param  Collection<int, Order>  $orders
+     */
+    private static function itemsHeading(Order $record, Collection $orders): string
+    {
+        $firstName = $record->firstName();
+
+        return $orders->count() === 1
+            ? 'Items'
+            : 'Everything for '.(blank($firstName) ? 'this customer' : $firstName).' · '.$orders->count().' orders';
+    }
+
+    /**
+     * The customer's orders on the drop, this one first, each with what to pack for it. The delivery fee isn't
+     * packed, so it's left out.
+     *
+     * @return array<int, array{reference: string, status: OrderStatus, note: string|null, opened: bool, items: array<int, array{line: string, free: bool}>}>
+     */
+    private static function customerOrders(Order $record): array
+    {
+        return CustomerOrders::onDrop($record->drop_id, ['items.product'])->of($record)
+            ->map(fn (Order $order): array => [
+                'reference' => $order->reference(),
+                'status' => $order->status,
+                'note' => self::orderNote($order, $record),
+                'opened' => $order->is($record),
+                'items' => $order->items
+                    ->reject(fn (OrderItem $item): bool => $item->product->type === ProductType::Delivery)
+                    ->map(fn (OrderItem $item): array => ['line' => "{$item->quantity} × {$item->product->name}", 'free' => $item->free])
+                    ->values()
+                    ->all(),
+            ])
+            ->all();
+    }
+
+    /**
+     * What else to know about one of the customer's orders, beside its status: the cash to collect, the day it was
+     * handed over, and how it goes out when that's not how the opened order does.
+     */
+    private static function orderNote(Order $order, Order $opened): ?string
+    {
+        $note = array_filter([
+            $order->status === OrderStatus::CashOwed ? 'Collect '.Money::format($order->total).' cash' : null,
+            $order->status === OrderStatus::Fulfilled ? $order->fulfilledDay() : null,
+            $order->deliverySummary() !== $opened->deliverySummary() ? $order->deliverySummary() : null,
+        ], filled(...));
+
+        return $note === [] ? null : implode(' · ', $note);
     }
 }
