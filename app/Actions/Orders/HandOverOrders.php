@@ -11,7 +11,8 @@ use App\Models\Order;
 /**
  * Hands orders over at pickup or on the doorstep: each is marked fulfilled, a cash order having its cash recorded
  * first. Every step is OrderPayments' compare-and-set on the status, so an order that changed since it was shown
- * (handed over from another phone, or a cash order cancelled) is left as it now is and given back.
+ * (handed over from another phone, or a cash order cancelled) is left as it now is and given back. Callers pass
+ * orders still to hand over (Paid or Cash owed); anything else comes back as not handed over.
  */
 final readonly class HandOverOrders
 {
