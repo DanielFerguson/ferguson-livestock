@@ -32,6 +32,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
+use Minishlink\WebPush\WebPush;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -82,6 +83,10 @@ class AppServiceProvider extends ServiceProvider
 
         // Root-relative asset URLs keep srcsets short and work on every host (staging, previews, production).
         Vite::createAssetPathsUsing(fn (string $path): string => '/'.ltrim($path, '/'));
+
+        // The push package keeps each push's signature to reuse, and a queue worker keeps the same sender for as long
+        // as it runs. A send cut short leaves the signature behind, and Apple refuses it 12 hours after it was signed.
+        $this->app->afterResolving(WebPush::class, fn (WebPush $webPush): WebPush => $webPush->setReuseVAPIDHeaders(false));
 
         View::composer(['pages.home', 'pages.beef-boxes', 'pages.delivery'], fn (\Illuminate\View\View $view) => $view->with('catalogue', $this->app->make(Catalogue::class)));
         View::composer(['pages.home', 'pages.faq'], fn (\Illuminate\View\View $view) => $view->with('faqs', $this->app->make(Faqs::class)->all()));

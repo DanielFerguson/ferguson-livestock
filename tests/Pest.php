@@ -12,6 +12,7 @@ use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
+use Minishlink\WebPush\VAPID;
 use Tests\TestCase;
 
 /*
@@ -62,6 +63,25 @@ function fakeTurnstile(bool $genuine): void
 
     Http::preventStrayRequests();
     Http::fake([Turnstile::VERIFY_URL => Http::response(['success' => $genuine, 'error-codes' => $genuine ? [] : ['invalid-input-response']])]);
+}
+
+/**
+ * Give the site a pair of push keys, made fresh so none is kept in the repo, and have Apple answer each push with
+ * the next of $statuses.
+ */
+function fakeApplePush(int ...$statuses): void
+{
+    $keys = VAPID::createVapidKeys();
+    config(['webpush.vapid.public_key' => $keys['publicKey'], 'webpush.vapid.private_key' => $keys['privateKey']]);
+
+    $answers = Http::sequence();
+
+    foreach ($statuses as $status) {
+        $answers->push('', $status);
+    }
+
+    Http::preventStrayRequests();
+    Http::fake(['web.push.apple.com/*' => $answers]);
 }
 
 /**
